@@ -1,0 +1,306 @@
+service: serverless-api
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+frameworkVersion: "3"
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-domain-manager
+
+custom:
+  domain:
+    dev: api-dev.abewriting.org
+    qa: api-qa.abewriting.org
+    prod: api.abewriting.org
+  customDomain:
+    domainName: ${self:custom.domain.${opt:stage, 'dev'}}
+    basePath: "docs" # api root url becomes: api.abewriting.org/docs
+    # certificateName: '*.mentorpal.org' didnt work
+    # certificateName: 'c6107db7-c2ef-4e85-a21f-bee7d1ac008a' didnt work either
+    stage: ${self:provider.stage}
+    endpointType: regional
+    apiType: rest
+    createRoute53Record: true
+    securityPolicy: tls_1_2
+    autoDomain: true
+    # Using same domain in multiple services. https://github.com/amplify-education/serverless-domain-manager/issues/484#issuecomment-1028713546
+    preserveExternalPathMappings: true
+
+  stages:
+    dev:
+      GOOGLE_SERVICE_CREDS: ${ssm:/ABE/google_service_account_creds, ''}
+      GOOGLE_DRIVE_FOLDER_ID: ${ssm:/ABE/dev/google_drive_folder_id, ''}
+      ADMIN_EMAILS: ${ssm:/ABE/admin_emails, ''}
+      OPENAI_API_KEY: ${ssm:/ABE/openai_api_key, ''}
+      GOOGLE_API_ENDPOINT: "https://api-dev.abewriting.org/docs"
+      GRAPHQL_ENDPOINT: "https://api-dev.abewriting.org/graphql/graphql"
+      WEBACL_ARN: ${ssm:/abewriting-abe/api_firewall_arn, ''}
+      SECRET_HEADER_NAME: ${ssm:/abewriting-abe/secret_header_name, ''}
+      SECRET_HEADER_VALUE: ${ssm:/abewriting-abe/secret_header_value, ''}
+      JWT_SECRET: ${ssm:/ABE/dev/jwt_secret, ''}
+    qa:
+      ADMIN_EMAILS: ${ssm:/ABE/admin_emails, ''}
+      OPENAI_API_KEY: ${ssm:/ABE/openai_api_key, ''}
+      GOOGLE_API_ENDPOINT: "https://api-qa.abewriting.org/docs"
+      GRAPHQL_ENDPOINT: "https://api-qa.abewriting.org/graphql/graphql"
+      WEBACL_ARN: ${ssm:/abewriting-abe/api_firewall_arn, ''}
+      SECRET_HEADER_NAME: ${ssm:/abewriting-abe/secret_header_name, ''}
+      SECRET_HEADER_VALUE: ${ssm:/abewriting-abe/secret_header_value, ''}
+      JWT_SECRET: ${ssm:/ABE/qa/jwt_secret, ''}
+      GOOGLE_SERVICE_CREDS: ${ssm:/ABE/google_service_account_creds, ''}
+      GOOGLE_DRIVE_FOLDER_ID: ${ssm:/ABE/qa/google_drive_folder_id, ''}
+    prod:
+      ADMIN_EMAILS: ${ssm:/ABE/admin_emails, ''}
+      OPENAI_API_KEY: ${ssm:/ABE/openai_api_key, ''}
+      GOOGLE_API_ENDPOINT: "https://api.abewriting.org/docs"
+      GRAPHQL_ENDPOINT: "https://api.abewriting.org/graphql/graphql"
+      WEBACL_ARN: ${ssm:/abewriting-abe/api_firewall_arn, ''}
+      SECRET_HEADER_NAME: ${ssm:/abewriting-abe/secret_header_name, ''}
+      SECRET_HEADER_VALUE: ${ssm:/abewriting-abe/secret_header_value, ''}
+      JWT_SECRET: ${ssm:/ABE/prod/jwt_secret, ''}
+      GOOGLE_SERVICE_CREDS: ${ssm:/ABE/google_service_account_creds, ''}
+      GOOGLE_DRIVE_FOLDER_ID: ${ssm:/ABE/prod/google_drive_folder_id, ''}
+
+  serverlessPluginTypescript:
+    tsConfigFileLocation: './tsconfig.json'
+
+package:
+ patterns:
+    # exclude unneccesary large node_modules:
+      - '!./node_modules/aws-sdk/**'
+      - '!./node_modules/@aws-sdk/**'
+      - '!./node_modules/@types/**'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+
+  environment:
+    GOOGLE_SERVICE_CREDS: ${self:custom.stages.${self:provider.stage}.GOOGLE_SERVICE_CREDS}
+    GOOGLE_DRIVE_FOLDER_ID: ${self:custom.stages.${self:provider.stage}.GOOGLE_DRIVE_FOLDER_ID}
+    ADMIN_EMAILS: ${self:custom.stages.${self:provider.stage}.ADMIN_EMAILS}
+    OPENAI_API_KEY: ${self:custom.stages.${self:provider.stage}.OPENAI_API_KEY}
+    GOOGLE_API_ENDPOINT: ${self:custom.stages.${self:provider.stage}.GOOGLE_API_ENDPOINT}
+    GRAPHQL_ENDPOINT: ${self:custom.stages.${self:provider.stage}.GRAPHQL_ENDPOINT}
+    SECRET_HEADER_NAME: ${self:custom.stages.${self:provider.stage}.SECRET_HEADER_NAME}
+    SECRET_HEADER_VALUE: ${self:custom.stages.${self:provider.stage}.SECRET_HEADER_VALUE}
+
+  # iam permissions for all lambda functions
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+          Resource:
+            Fn::GetAtt: [JobsTable, Arn]
+
+functions:
+  authorizer_func:
+    handler: src/functions/authorizer.handler
+    environment:
+      JWT_SECRET: ${self:custom.stages.${self:provider.stage}.JWT_SECRET}
+  create_google_doc:
+    handler: src/functions/create_google_doc.handler
+    timeout: 20
+    events:
+      - http:
+          path: /create_google_doc
+          method: post
+          request:
+            parameters:
+              querystrings:
+                emails: false
+                userId: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
+  get_doc_revisions:
+    handler: src/functions/get_doc_revisions.handler
+    timeout: 20
+    events:
+      - http:
+          path: /doc_revisions/{docs_id}
+          method: get
+          request:
+            parameters:
+              paths:
+                docs_id: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
+  get_doc_data:
+    handler: src/functions/get_doc_data.handler
+    timeout: 20
+    events:
+      - http:
+          path: /get_doc_data/{docs_id}
+          method: get
+          request:
+            parameters:
+              paths:
+                docs_id: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
+  google_doc_text_modify:
+    handler: src/functions/google_doc_text_modify.handler
+    timeout: 20
+    events:
+      - http:
+          path: /google_doc_text_modify/
+          method: get
+          request:
+            parameters:
+              querystrings:
+                docId: true
+                text: true
+                action: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
+  open_ai_doc_question:
+    handler: src/functions/openai/open_ai.handler
+    timeout: 30
+    events:
+      - http:
+          path: /open_ai_doc_question/
+          method: any
+          request:
+            parameters:
+              querystrings:
+                docId: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
+  open_ai_async_request:
+    handler: src/functions/openai/async_open_ai_request.handler
+    timeout: 30
+    environment:
+      JOBS_TABLE_NAME: open-ai-jobs-${self:provider.stage}
+    events:
+      - http:
+          path: /async_open_ai_doc_question/
+          method: any
+          request:
+            parameters:
+              querystrings:
+                docId: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
+  open_ai_async_process:
+    description: Triggered by new records in dynamo, implements async processing of openai requests
+    handler: src/functions/openai/async_open_ai_process.handler
+    memorySize: 2048
+    timeout: 900 # max
+    environment:
+      JOBS_TABLE_NAME: open-ai-jobs-${self:provider.stage}
+    events:
+      - stream:
+          type: dynamodb
+          maximumRetryAttempts: 3
+          arn:
+            Fn::GetAtt: [JobsTable, StreamArn]
+          # to avoid triggers on status update, make sure it's only when a new job is added:
+          filterPatterns:
+            - eventName: [INSERT]
+  open_ai_async_status:
+    handler: src/functions/openai/async_open_ai_job_status.handler
+    timeout: 30
+    environment:
+      JOBS_TABLE_NAME: open-ai-jobs-${self:provider.stage}
+    events:
+      - http:
+          path: /async_open_ai_doc_question_status/
+          method: any
+          request:
+            parameters:
+              querystrings:
+                jobId: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
+
+
+resources:
+  Resources:
+    # this fails on first deploy because CloudFormation tries to create
+    # association but the gateway does not yet exist
+    # Workaround: Disable this resource on first deploy, when first deploy is successful, enable this resource and deploy again
+    FirewallAssociation:
+      Type: AWS::WAFv2::WebACLAssociation
+      DependsOn: 'ApiGatewayRestApi'
+      Properties:
+        ResourceArn:
+          Fn::Sub: 'arn:aws:apigateway:${AWS::Region}::/restapis/${ApiGatewayRestApi}/stages/${self:provider.stage}'
+        WebACLArn: '${self:custom.stages.${self:provider.stage}.WEBACL_ARN}'
+
+    Response5xx:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: 'method.request.header.origin'
+        ResponseType: DEFAULT_5XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    Response4xx:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: 'method.request.header.origin'
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    JobsTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Delete
+      UpdateReplacePolicy: Delete
+      Properties:
+        TableName: open-ai-jobs-${self:provider.stage}
+        BillingMode: PAY_PER_REQUEST
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        # to cleanup jobs after a while set this attribute as a number
+        TimeToLiveSpecification: 
+          AttributeName: ttl
+          Enabled: true

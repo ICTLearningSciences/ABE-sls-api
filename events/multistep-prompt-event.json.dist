@@ -1,0 +1,13 @@
+{
+    "body": "{\"openAiPromptSteps\":[{\"prompts\":[{\"promptRole\":\"user\",\"promptText\":\"What is 1 improvement I can do with this essay?\",\"includeEssay\":true}],\"outputDataType\":\"TEXT\"},{\"prompts\":[{\"promptRole\":\"user\",\"promptText\":\"Do you agree that my essay would benefit with this improvement? Please ONLY respond in valid JSON\",\"includeEssay\":true}],\"outputDataType\":\"JSON\"}]}",
+    "httpMethod": "POST",
+    "queryStringParameters": {
+        "docId": "1ZJDajRda33L8iKE7mM7tiD1AzrDJipUtEtIq7BFATzI",
+        "userAction": "MULTISTEP_PROMPTS",
+        "userId": "653ad42b6e601e65dbf756d0",
+        "openAiModel": "gpt-4"
+    },
+    "headers":{
+        "Authorization": "bearer xxxx"
+    }
+}

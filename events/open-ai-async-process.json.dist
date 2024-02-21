@@ -1,0 +1,37 @@
+{
+    "Records": [
+        {
+            "eventID": "xxxx",
+            "eventName": "INSERT",
+            "eventVersion": "1.1",
+            "eventSource": "aws:dynamodb",
+            "awsRegion": "us-east-1",
+            "dynamodb": {
+                "ApproximateCreationDateTime": 1708040810,
+                "Keys": {
+                    "id": {
+                        "S": "9dfaa440-0394-4be1-9d2f-ed9083f5bd2d"
+                    }
+                },
+                "NewImage": {
+                    "openAiRequestData": {
+                        "S": "{\"docsId\":\"1ZJDajRda33L8iKE7mM7tiD1AzrDJipUtEtIq7BFATzI\",\"userId\":\"653ad42b6e601e65dbf756d0\",\"systemPrompt\":\"\",\"openAiModel\":\"gpt-4\",\"openAiPromptSteps\":[{\"prompts\":[{\"promptRole\":\"user\",\"promptText\":\"What is 1 improvement I can do with this essay?\",\"includeEssay\":true}],\"outputDataType\":\"TEXT\"},{\"prompts\":[{\"promptRole\":\"user\",\"promptText\":\"Do you agree that my essay would benefit with this improvement? Please ONLY respond in valid JSON\",\"includeEssay\":true}],\"outputDataType\":\"JSON\"}],\"authHeaders\":{\"Authorization\":\"bearer xxxx\"}}"
+                    },
+                    "answer": {
+                        "S": ""
+                    },
+                    "id": {
+                        "S": "xxxx"
+                    },
+                    "status": {
+                        "S": "IN_PROGRESS"
+                    }
+                },
+                "SequenceNumber": "xxxx",
+                "SizeBytes": 898,
+                "StreamViewType": "NEW_IMAGE"
+            },
+            "eventSourceARN": "xxxx"
+        }
+    ]
+}
