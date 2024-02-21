@@ -22,7 +22,7 @@ phases:
   build:
     commands:
     # this is just to compile ts; serverless will run its own build at deploy
-      - npm run build
+      # - npm run build
 
 artifacts:
   files:
