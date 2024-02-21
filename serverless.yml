@@ -23,9 +23,9 @@ custom:
     apiType: rest
     createRoute53Record: true
     securityPolicy: tls_1_2
-    autoDomain: true
+    autoDomain: false # set to true if preserveExternalPathMappings is true
     # Using same domain in multiple services. https://github.com/amplify-education/serverless-domain-manager/issues/484#issuecomment-1028713546
-    preserveExternalPathMappings: true
+    # preserveExternalPathMappings: true
 
   stages:
     dev:
