@@ -11,7 +11,7 @@ phases:
   pre_build:
     on-failure: ABORT # or CONTINUE
     commands:
-      - cd node
+      # - cd node
       # - npm run test:format
       # - npm run test:license
       # - npm run test:lint
