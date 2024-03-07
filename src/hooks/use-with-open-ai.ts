@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { OPENAI_MODEL, OPENAI_DEFAULT_TEMP, RETRY_ATTEMPTS, MAX_OPEN_AI_CHAIN_REQUESTS, MAX_OPEN_AI_MESSAGES } from '../constants.js';
+import { OPENAI_DEFAULT_TEMP, RETRY_ATTEMPTS, MAX_OPEN_AI_CHAIN_REQUESTS, MAX_OPEN_AI_MESSAGES, DEFAULT_GPT_MODEL } from '../constants.js';
 import { getDocData } from '../api.js';
 import { AuthHeaders, OpenAiActions } from '../functions/openai/open_ai.js';
 import { ChatCompletionCreateParamsNonStreaming, ChatCompletionMessageParam } from 'openai/resources/index.js';
@@ -71,7 +71,7 @@ export function useWithOpenAI(){
             })
             const params: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
                 messages: messages,
-                model: openAiModel,
+                model: openAiModel || curOpenAiStep.targetGptModel || DEFAULT_GPT_MODEL
             };
 
             let result = await executeOpenAi(params);

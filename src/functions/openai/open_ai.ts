@@ -3,7 +3,6 @@ import OpenAI from 'openai';
 import {useWithOpenAI} from '../../hooks/use-with-open-ai.js';
 import { createResponseJson, extractErrorMessageFromError, getFieldFromEventBody } from '../../helpers.js';
 import { OpenAiPromptStep } from '../../types.js';
-import { OPENAI_MODEL } from '../../constants.js';
 import { APIGatewayEvent } from 'aws-lambda';
 
 export type AuthHeaders = Record<string, string>;
@@ -49,7 +48,7 @@ export function extractOpenAiRequestData(event: APIGatewayEvent): ExtractedOpenA
     const docsId = event.queryStringParameters?.["docId"];
     const userId = event.queryStringParameters?.["userId"];
     const systemPrompt = event.queryStringParameters?.["systemPrompt"] || "";
-    const openAiModel = event.queryStringParameters?.["openAiModel"] || OPENAI_MODEL;
+    const openAiModel = event.queryStringParameters?.["openAiModel"] || "";
     const openAiPromptSteps: OpenAiPromptStep[] = getFieldFromEventBody<OpenAiPromptStep[]>(event, "openAiPromptSteps");
     const authHeaders = getAuthHeaders(event);
     if(!docsId){

@@ -43,8 +43,14 @@ export interface PromptConfiguration{
   promptRole?: PromptRoles
 }
 
+export enum GptModels {
+  GPT_3_5 = 'gpt-3.5-turbo-16k',
+  GPT_4 = 'gpt-4'
+}
+
 export interface OpenAiPromptStep{
   prompts: PromptConfiguration[],
+  targetGptModel: GptModels,
   outputDataType: PromptOutputTypes
 }
 
@@ -71,4 +77,3 @@ export enum OpenAiAsyncJobStatus{
   COMPLETE = "COMPLETE",
   FAILED = "FAILED"
 }
-
