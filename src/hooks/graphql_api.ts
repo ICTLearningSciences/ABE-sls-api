@@ -86,6 +86,5 @@ export async function storeGoogleDoc(
       console.log(err.response.data);
       throw err;
     })
-    console.log(res.data)
     return res.data.data.storePromptRun;
   }

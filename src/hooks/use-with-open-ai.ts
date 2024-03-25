@@ -3,7 +3,7 @@ import { OPENAI_DEFAULT_TEMP, RETRY_ATTEMPTS, MAX_OPEN_AI_CHAIN_REQUESTS, MAX_OP
 import { getDocData } from '../api.js';
 import { AuthHeaders, OpenAiActions } from '../functions/openai/open_ai.js';
 import { ChatCompletionCreateParamsNonStreaming, ChatCompletionMessageParam } from 'openai/resources/index.js';
-import { InputQuestionResponse, OpenAiPromptResponse, PromptConfiguration, PromptOutputTypes, PromptRoles, OpenAiPromptStep, SinglePromptResponse } from '../types.js';
+import { InputQuestionResponse, OpenAiPromptResponse, PromptConfiguration, PromptOutputTypes, PromptRoles, OpenAiPromptStep, SinglePromptResponse, OpenAIReqRes } from '../types.js';
 import { storePromptRun } from './graphql_api.js';
 import { isJsonString } from '../helpers.js';
 
@@ -11,6 +11,8 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   timeout: 30 * 1000, // 30 seconds (default is 10 minutes)
 });
+
+const temparature = OPENAI_DEFAULT_TEMP;
 
 async function executeOpenAi(params: ChatCompletionCreateParamsNonStreaming){
     const result = await openai.chat.completions.create(params);
@@ -24,8 +26,76 @@ async function executeOpenAi(params: ChatCompletionCreateParamsNonStreaming){
     return result;
 }
 
+interface ExecutePromptSyncRes{
+    reqRes: OpenAIReqRes,
+    answer:string
+}
+
+async function executeOpenAiPromptStepSync(curOpenAiStep: OpenAiPromptStep, docsPlainText: string, systemPrompt: string, openAiModel: string, previousOutput?: string): Promise<ExecutePromptSyncRes>{
+    const messages: ChatCompletionMessageParam[] = [];
+    messages.push({
+        role: "system",
+        content: systemPrompt
+    })
+    if(previousOutput){
+        messages.push({role: "assistant", content: previousOutput})
+    }
+    curOpenAiStep.prompts.forEach((prompt)=>{
+        const role = prompt.promptRole || PromptRoles.USER;
+        const content = prompt.promptText;
+        if(prompt.includeEssay){
+            messages.push({role: PromptRoles.SYSTEM, content: `\n\nHere is the users essay: -----------\n\n${docsPlainText}`})
+        }
+        messages.push({role, content})
+    })
+    const params: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
+        messages: messages,
+        model: openAiModel || curOpenAiStep.targetGptModel || DEFAULT_GPT_MODEL
+    };
+
+    let result = await executeOpenAi(params);
+    let answer = result.choices[0].message.content;
+    if(curOpenAiStep.outputDataType == PromptOutputTypes.JSON){
+        console.log("validating output is json")
+        let isJsonResponse = isJsonString(answer);
+        if(!isJsonResponse){
+            for(let j = 0; j < RETRY_ATTEMPTS; j++){
+                console.log(`Attempt ${j}`)
+                if(isJsonResponse){
+                    break;
+                }
+                const newParams: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
+                    ...params,
+                    temperature: temparature + j * 0.1
+                }
+                result = await executeOpenAi(newParams);
+                answer = result.choices[0].message.content;
+                if(!answer){
+                    throw new Error('OpenAI API Error: No response message content.');
+                }
+                isJsonResponse = isJsonString(answer);
+            }
+        }
+        if(!isJsonResponse){
+            throw new Error(`OpenAI API Error: No valid JSON response after ${RETRY_ATTEMPTS} attempts.`);
+        }
+    }
+
+    if(!answer){
+        throw new Error('OpenAI API Error: No response message content.');
+    }
+
+    return {
+        reqRes: {
+            openAiPrompt: params,
+            openAiResponse: result.choices,
+            originalRequestPrompts: curOpenAiStep
+        },
+        answer
+    }
+}
+
 export function useWithOpenAI(){
-    const temparature = OPENAI_DEFAULT_TEMP;
     
     async function asyncAskAboutGDoc(docsId: string, userId:string, openAiPromptSteps: OpenAiPromptStep[], systemPrompt: string, authHeaders:AuthHeaders, openAiModel: string): Promise<OpenAiPromptResponse>{
         const response = await openAiMultistepPrompts(openAiPromptSteps, docsId, userId, authHeaders, systemPrompt, openAiModel);
@@ -53,69 +123,11 @@ export function useWithOpenAI(){
         let previousOutput = "";
         for(let i = 0; i < openAiSteps.length; i++){
             const curOpenAiStep = openAiSteps[i];
-            const messages: ChatCompletionMessageParam[] = []
-            messages.push({
-                role: "system",
-                content: systemPrompt
-            })
-            if(previousOutput){
-                messages.push({role: "assistant", content: previousOutput})
-            }
-            curOpenAiStep.prompts.forEach((prompt)=>{
-                const role = prompt.promptRole || PromptRoles.USER;
-                const content = prompt.promptText;
-                if(prompt.includeEssay){
-                    messages.push({role: PromptRoles.SYSTEM, content: `\n\nHere is the users essay: -----------\n\n${docsPlainText}`})
-                }
-                messages.push({role, content})
-            })
-            const params: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
-                messages: messages,
-                model: openAiModel || curOpenAiStep.targetGptModel || DEFAULT_GPT_MODEL
-            };
-
-            let result = await executeOpenAi(params);
-            let answer = result.choices[0].message.content;
-            if(curOpenAiStep.outputDataType == PromptOutputTypes.JSON){
-                console.log("validating output is json")
-                let isJsonResponse = isJsonString(answer);
-                if(!isJsonResponse){
-                    for(let j = 0; j < RETRY_ATTEMPTS; j++){
-                        console.log(`Attempt ${j}`)
-                        if(isJsonResponse){
-                            break;
-                        }
-                        const newParams: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
-                            ...params,
-                            temperature: temparature + j * 0.1
-                        }
-                        result = await executeOpenAi(newParams);
-                        answer = result.choices[0].message.content;
-                        if(!answer){
-                            throw new Error('OpenAI API Error: No response message content.');
-                        }
-                        isJsonResponse = isJsonString(answer);
-                    }
-                }
-                if(!isJsonResponse){
-                    throw new Error(`OpenAI API Error: No valid JSON response after ${RETRY_ATTEMPTS} attempts.`);
-                }
-            }
-
-            if(!answer){
-                throw new Error('OpenAI API Error: No response message content.');
-            }
-
-            openAiResponses.openAiData.push({
-                openAiPrompt: params,
-                openAiResponse: result.choices,
-                originalRequestPrompts: curOpenAiStep
-            })
+            const {reqRes, answer} = await executeOpenAiPromptStepSync(curOpenAiStep, docsPlainText, systemPrompt, openAiModel, previousOutput);
+            openAiResponses.openAiData.push(reqRes)
             previousOutput = answer;
             openAiResponses.answer = answer;
         }
-        console.log(JSON.stringify(openAiResponses, null, 2))
-
         try{
             await storePromptRun(docsId, userId, openAiSteps, openAiResponses.openAiData)
         }catch(err){
