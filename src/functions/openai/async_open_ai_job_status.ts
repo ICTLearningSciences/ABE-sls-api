@@ -23,9 +23,11 @@ export const handler = async (event: APIGatewayEvent) => {
         }
         const jobStatus = data.Item.job_status.S;
         const _openAiResponse = data.Item.openAiResponse.S;
+        const answer = data.Item.answer.S || ""
         const openAiResponse: OpenAiPromptResponse | null = _openAiResponse ? JSON.parse(_openAiResponse) : null;
         return createResponseJson(200, {response: {
             openAiResponse,
+            answer,
             jobStatus
         }})
     }catch(err){

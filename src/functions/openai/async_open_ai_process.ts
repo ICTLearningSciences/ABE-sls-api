@@ -3,7 +3,7 @@ import {useWithOpenAI} from '../../hooks/use-with-open-ai.js';
 import { DynamoDBStreamEvent } from 'aws-lambda';
 import { ExtractedOpenAiRequestData } from './open_ai.js';
 import { OpenAiAsyncJobStatus } from '../../types.js';
-import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import requireEnv from '../../helpers.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
@@ -23,10 +23,10 @@ export const handler = async (event: DynamoDBStreamEvent) => {
         const {asyncAskAboutGDoc} = useWithOpenAI();
         try{
             // Don't need to return anything, just need to process the async request.
-            const openAiResponse = await asyncAskAboutGDoc(docsId, userId, openAiPromptSteps, systemPrompt, authHeaders, openAiModel);
-            // Update the job in dynamo db
             const dynamoDbClient = new DynamoDB({ region: "us-east-1"});
-            const tableRequest = {
+            const openAiResponse = await asyncAskAboutGDoc(docsId, userId, openAiPromptSteps, systemPrompt, authHeaders, openAiModel, jobId);
+            // Update the job in dynamo db
+            const tableRequest: UpdateItemCommandInput = {
                 TableName: jobsTableName,
                 Key: {
                     "id":{
@@ -48,6 +48,8 @@ export const handler = async (event: DynamoDBStreamEvent) => {
             }
             await dynamoDbClient.updateItem(tableRequest).catch((err) => {
                 console.error(err);
+            }).then(()=>{
+                console.log("Updated dynamo db record")
             })
         }
         catch(err){
