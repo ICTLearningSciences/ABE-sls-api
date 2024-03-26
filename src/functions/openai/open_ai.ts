@@ -72,7 +72,7 @@ export const handler = async (event: APIGatewayEvent) => {
     const {docsId, userId, systemPrompt, openAiModel, openAiPromptSteps, authHeaders} = extractOpenAiRequestData(event);
     const { askAboutGDoc } = useWithOpenAI()
     try{
-        const openAiResponse = await askAboutGDoc(docsId, userId, openAiPromptSteps, systemPrompt, authHeaders, openAiModel)
+        const openAiResponse = await askAboutGDoc(docsId, userId, openAiPromptSteps, systemPrompt, authHeaders, openAiModel, "")
         return createResponseJson(200, {response: openAiResponse})
     }catch(err){
         if(err instanceof OpenAI.APIError){
