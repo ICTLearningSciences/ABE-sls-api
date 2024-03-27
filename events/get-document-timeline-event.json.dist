@@ -1,0 +1,11 @@
+{
+    "body": "",
+    "httpMethod": "GET",
+    "queryStringParameters": {
+        "docId": "1L0TD7UkW2x0d0U9elMY-2KRXxdZmnus3_2nnR1a49FM",
+        "userId": "653972706e601e65dbc3acea"
+    },
+    "headers":{
+        "Authorization": "bearer xxxx"
+    }
+}

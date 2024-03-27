@@ -254,6 +254,28 @@ functions:
             resultTtlInSeconds: 300
             identitySource: method.request.header.Authorization
             type: token
+  get_document_timeline:
+    handler: src/functions/timeline/get_document_timeline.handler
+    timeout: 30
+    environment:
+      JOBS_TABLE_NAME: open-ai-jobs-${self:provider.stage}
+    events:
+      - http:
+          path: /get_document_timeline/
+          method: any
+          request:
+            parameters:
+              querystrings:
+                docId: true
+                userId: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
+  
 
 
 resources:

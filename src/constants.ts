@@ -24,3 +24,7 @@ export const MAX_OPEN_AI_CHAIN_REQUESTS = 10;
 export const MAX_OPEN_AI_MESSAGES = 10;
 
 export const DEFAULT_GPT_MODEL = GptModels.GPT_3_5;
+
+export const UPDATE_DYNAMO_ANSWER_THRESHOLD = 100;
+
+export const MAX_DYNAMO_PUT_REQUESTS = 10;
