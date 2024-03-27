@@ -61,7 +61,10 @@ async function changeSummaryPromptRequest(lastMajorVersion: GQLIGDocVersion, cur
         messages: [
             {role: "assistant", content: `Previous Version: ${lastMajorVersion.plainText}`},
             {role: "assistant", content: `Current Version: ${currentVersion.plainText}`},
-            {role: "system", content: "Provided are two versions of a text document, a previous version and a current version. Please summarize the differences between the two versions. If no changes are present, please indicate that."},
+            {role: "system", content: `Provided are two versions of a text document, a previous version and a current version.
+            Please summarize the differences between the two versions in 1 to 3 sentences.
+            The first sentence should give a clear statement on biggest changes and the scope of the changes such as major additions / deletions, major revisions, minor changes. The second and third sentences should clearly refer to what specific areas of the document changed substantially, with more specifics about what changed.
+            The second and third sentences are optional and are not needed if only minor changes were made.`},
         ],
         model: DEFAULT_GPT_MODEL
     };

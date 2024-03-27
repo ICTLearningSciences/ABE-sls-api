@@ -2,10 +2,10 @@
     "body": "",
     "httpMethod": "GET",
     "queryStringParameters": {
-        "docId": "1L0TD7UkW2x0d0U9elMY-2KRXxdZmnus3_2nnR1a49FM",
+        "docId": "1_toEJ46fGZxG1XhxGaQrX69xio2C5Rw8Q_nPNTmJvCw",
         "userId": "653972706e601e65dbc3acea"
     },
     "headers":{
-        "Authorization": "bearer xxxx"
+        "Authorization": "bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1Mzk3MjcwNmU2MDFlNjVkYmMzYWNlYSIsInJvbGUiOiJBRE1JTiIsImV4cGlyYXRpb25EYXRlIjoiMjAyNC0wMy0yOFQxODo0MDowOS44MTJaIiwiaWF0IjoxNzExNTY0ODA5LCJleHAiOjE3MTE2NTEyMDl9.uBmQUhBy5-XR6eeQrIPX470AGJvaJEgk3GhZ9vU2pac"
     }
 }
