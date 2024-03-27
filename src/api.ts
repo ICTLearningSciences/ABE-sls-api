@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig, Method, AxiosResponse, AxiosInstance } from 'axios';
-import { DocData } from './types';
-import { AuthHeaders } from './functions/openai/open_ai';
+import { DocData } from './types.js';
+import { AuthHeaders } from './functions/openai/open_ai.js';
 
 const GOOGLE_API_ENDPOINT = process.env.GOOGLE_API_ENDPOINT || '';
 const GRAPHQL_ENDPOINT = process.env.GRAPHQL_ENDPOINT || '';
@@ -110,4 +110,19 @@ export async function getDocData(docId: string, authHeaders: AuthHeaders): Promi
     headers: headers,
   });
   return res.data;
+}
+
+export async function execGql<T>(
+  query: GQLQuery,
+  opts?: HttpRequestConfig
+): Promise<T> {
+  return execHttp<T>('POST', GRAPHQL_ENDPOINT, {
+    // axiosMiddleware: applyAppTokenRefreshInterceptor,
+    ...(opts || {}),
+    axiosConfig: {
+      timeout: REQUEST_TIMEOUT_GRAPHQL_DEFAULT, // default timeout can be overriden by passed-in config
+      ...(opts?.axiosConfig || {}),
+      data: query,
+    },
+  });
 }

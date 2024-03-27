@@ -38,7 +38,7 @@ async function updateDynamoAnswer(answer: string, dynamoJobId: string){
     })
 }
 
-async function executeOpenAi(params: ChatCompletionCreateParamsNonStreaming){
+export async function executeOpenAi(params: ChatCompletionCreateParamsNonStreaming){
     const result = await openai.chat.completions.create(params);
     if(!result.choices.length){
         throw new Error('OpenAI API Error: No choices provided.');
