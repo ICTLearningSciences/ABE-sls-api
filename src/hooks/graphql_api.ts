@@ -134,8 +134,8 @@ export async function fetchDocTimeline(userId: string, docId: string): Promise<G
           user
           timelinePoints{
               type
-              time
-              document{
+              versionTime
+              version{
                   docId
                   plainText
                   lastChangedId
@@ -174,7 +174,7 @@ export async function storeDocTimeline(docTimeline: GQLDocumentTimeline): Promis
   const inputDocs = docTimeline.timelinePoints.map((timelinePoint) => {
     return{
       ...timelinePoint,
-      document: omit(timelinePoint.document, ['createdAt', 'updatedAt'])
+      version: omit(timelinePoint.version, ['createdAt', 'updatedAt'])
     }
   });
   return await execGql<GQLDocumentTimeline>({
@@ -184,8 +184,8 @@ export async function storeDocTimeline(docTimeline: GQLDocumentTimeline): Promis
           user
           timelinePoints{
               type
-              time
-              document{
+              versionTime
+              version{
                   docId
                   plainText
                   lastChangedId

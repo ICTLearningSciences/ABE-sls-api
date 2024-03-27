@@ -10,14 +10,14 @@ export enum TimelinePointType {
 export interface TimelineSlice{
     startReason: TimelinePointType;
     index: number;
-    documents: IGDocVersion[]
+    versions: IGDocVersion[]
 }
 
 
 export interface GQLTimelinePoint{
     type: TimelinePointType;
-    time: string;
-    document: IGDocVersion;
+    versionTime: string;
+    version: IGDocVersion;
     intent: string;
     changeSummary: string;
     reverseOutline: string;
