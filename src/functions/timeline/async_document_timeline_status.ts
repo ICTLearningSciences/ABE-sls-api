@@ -2,8 +2,8 @@
 // Note: had to add .js to find this file in serverless
 import requireEnv, { createResponseJson } from '../../helpers.js';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
-import { OpenAiPromptResponse } from '../../types.js';
 import {APIGatewayEvent} from 'aws-lambda';
+import { GQLDocumentTimeline } from './types.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
@@ -13,8 +13,6 @@ export const handler = async (event: APIGatewayEvent) => {
     if(!jobId){
         return createResponseJson(400, {response: {error: "jobId query string parameter is required"}})
     }
-    // Queue the job
-    // Store the job in dynamo db, triggers async lambda
     const dynamoDbClient = new DynamoDB({ region: "us-east-1"});
     try{
         const data = await dynamoDbClient.getItem({TableName: jobsTableName, Key: {id: {S: jobId}}})
@@ -22,12 +20,10 @@ export const handler = async (event: APIGatewayEvent) => {
             return createResponseJson(404, {response: {error: "Job not found"}})
         }
         const jobStatus = data.Item.job_status.S;
-        const _openAiResponse = data.Item.openAiResponse.S;
-        const answer = data.Item.answer.S || ""
-        const openAiResponse: OpenAiPromptResponse | null = _openAiResponse ? JSON.parse(_openAiResponse) : null;
+        const documentTimelineData = data.Item.documentTimeline.S;
+        const documentTimeline: GQLDocumentTimeline = documentTimelineData ? JSON.parse(documentTimelineData) : null;
         return createResponseJson(200, {response: {
-            openAiResponse,
-            answer,
+            documentTimeline,
             jobStatus
         }})
     }catch(err){
