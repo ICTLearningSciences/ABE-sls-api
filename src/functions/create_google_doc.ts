@@ -14,7 +14,7 @@ export const handler = async (event:any) => {
   const copyFromDocId = queryParams && "copyFromDocId" in queryParams ? event["queryStringParameters"]["copyFromDocId"] : ""
   const newDocTitle = queryParams && "newDocTitle" in queryParams ? event["queryStringParameters"]["newDocTitle"] : ""
   const isAdminDoc = queryParams && "isAdminDoc" in queryParams ? event["queryStringParameters"]["isAdminDoc"] : ""
-  if(!userId && !isAdminDoc){
+  if(!userId){
     return createResponseJson(400, {error: "userId is required"})
   }
   const {docId, webViewLink, createdTime} = await createGoogleDoc(drive, [...adminEmails, ...userEmails], copyFromDocId, newDocTitle)

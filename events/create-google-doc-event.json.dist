@@ -1,0 +1,10 @@
+{
+    "body": "",
+    "httpMethod": "GET",
+    "queryStringParameters": {
+        "userId": "653972706e601e65dbc3acea"
+    },
+    "headers":{
+        "Authorization": "bearer xxxx"
+    }
+}

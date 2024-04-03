@@ -7,4 +7,4 @@ serverless invoke local --function open_ai_async_request -p events/multistep-pro
 serverless invoke local --function open_ai_async_process -p events/open-ai-async-process.json.dist --aws-profile abe
 serverless invoke local --function open_ai_async_status -p events/open-ai-async-status-event.json.dist --aws-profile abe
 
-serverless invoke local --function get_document_timeline -p events/get-document-timeline-event.json.dist --aws-profile abe
+serverless invoke local --function create_google_doc -p events/create-google-doc-event.json.dist --aws-profile abe

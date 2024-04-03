@@ -40,10 +40,18 @@ export interface ChatItem {
     message: string;
   }
 
+  export interface IIntention {
+    description: string;
+    createdAt: string;
+  }
+
 export interface IGDocVersion {
     docId: string;
     plainText: string;
     lastChangedId: string;
+    sessionId: string;
+    sessionIntention: IIntention;
+    dayIntention: IIntention;
     chatLog: ChatItem[];
     activity: string;
     intent: string;

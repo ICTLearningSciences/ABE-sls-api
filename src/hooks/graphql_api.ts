@@ -16,17 +16,19 @@ export async function storeGoogleDoc(
     title?: string
   ): Promise<void> {
     const res = await axios.post(GRAPHQL_ENDPOINT, {
-      query: `mutation StoreGoogleDoc($googleDocId: String!, $user: ID, $isAdminDoc: Boolean, $title: String) {
-        storeGoogleDoc(googleDocId: $googleDocId, user: $user, isAdminDoc: $isAdminDoc, title: $title) {
+      query: `mutation StoreGoogleDoc($googleDoc: GoogleDocInputType!) {
+        storeGoogleDoc(googleDoc: $googleDoc) {
             googleDocId
             user
                 }
             }`,
       variables: {
-        googleDocId: docId,
-        user: userId,
-        isAdminDoc: isAdminDoc,
-        title: title
+        googleDoc:{
+          googleDocId: docId,
+          user: userId,
+          admin: isAdminDoc,
+          title: title
+        }
       },
     },
     {
@@ -100,6 +102,15 @@ export async function storeGoogleDoc(
           docId
           plainText
           lastChangedId
+          sessionId
+          sessionIntention{
+            description
+            createdAt
+          }
+          dayIntention{
+            description
+            createdAt
+          }
           chatLog {
             sender
             message
@@ -139,6 +150,15 @@ export async function fetchDocTimeline(userId: string, docId: string): Promise<G
                   docId
                   plainText
                   lastChangedId
+                  sessionId
+                  sessionIntention{
+                    description
+                    createdAt
+                  }
+                  dayIntention{
+                    description
+                    createdAt
+                  }
                   chatLog{
                       sender
                       message
@@ -189,6 +209,15 @@ export async function storeDocTimeline(docTimeline: GQLDocumentTimeline): Promis
                   docId
                   plainText
                   lastChangedId
+                  sessionId
+                  sessionIntention{
+                    description
+                    createdAt
+                  }
+                  dayIntention{
+                    description
+                    createdAt
+                  }
                   chatLog{
                       sender
                       message
