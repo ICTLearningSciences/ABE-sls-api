@@ -5,7 +5,7 @@ import { DEFAULT_GPT_MODEL } from "../../constants.js";
 import { executeOpenAi } from "../../hooks/use-with-open-ai.js";
 
 function isNextTimelinePoint(lastTimelinePoint: IGDocVersion, nextVersion: IGDocVersion): TimelinePointType{
-    if(nextVersion.activity !== lastTimelinePoint.activity){
+    if(nextVersion.activity !== lastTimelinePoint.activity || nextVersion.sessionId !== lastTimelinePoint.sessionId){
         return TimelinePointType.NEW_ACTIVITY;
     }
     const hasEightHoursPassed = (new Date(nextVersion.createdAt).getTime() - new Date(lastTimelinePoint.createdAt).getTime()) > 8 * 60 * 60 * 1000;

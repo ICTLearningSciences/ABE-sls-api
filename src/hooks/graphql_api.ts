@@ -159,6 +159,10 @@ export async function fetchDocTimeline(userId: string, docId: string): Promise<G
                     description
                     createdAt
                   }
+                  documentIntention{
+                    description
+                    createdAt
+                  }
                   dayIntention{
                     description
                     createdAt
@@ -221,6 +225,10 @@ export async function storeDocTimeline(docTimeline: GQLDocumentTimeline): Promis
                   lastChangedId
                   sessionId
                   sessionIntention{
+                    description
+                    createdAt
+                  }
+                  documentIntention{
                     description
                     createdAt
                   }
