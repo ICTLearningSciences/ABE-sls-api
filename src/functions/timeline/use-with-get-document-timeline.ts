@@ -201,8 +201,6 @@ export function useWithGetDocumentTimeline(){
             user: userId,
             timelinePoints: timelinePoints
         }
-        // console.log("documentTimeline")
-        // console.log(JSON.stringify(documentTimeline, null, 2))
         // store timeline in gql
 
 

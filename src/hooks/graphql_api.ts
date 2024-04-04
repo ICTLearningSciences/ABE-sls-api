@@ -111,6 +111,10 @@ export async function storeGoogleDoc(
             description
             createdAt
           }
+          documentIntention{
+            description
+            createdAt
+          }
           chatLog {
             sender
             message
@@ -192,9 +196,15 @@ export async function fetchDocTimeline(userId: string, docId: string): Promise<G
 export async function storeDocTimeline(docTimeline: GQLDocumentTimeline): Promise<GQLDocumentTimeline>{
   // remove createdAt and updatedAt from document, unexpected by gql
   const inputDocs = docTimeline.timelinePoints.map((timelinePoint) => {
+    const omittedTimestamps = omit(timelinePoint.version, ['createdAt', 'updatedAt'])
     return{
       ...timelinePoint,
-      version: omit(timelinePoint.version, ['createdAt', 'updatedAt'])
+      version: {
+        ...omittedTimestamps,
+        dayIntention: timelinePoint.version.dayIntention ? omit(timelinePoint.version.dayIntention, ['createdAt']) : undefined,
+        sessionIntention: timelinePoint.version.sessionIntention ? omit(timelinePoint.version.sessionIntention, ['createdAt']) : undefined,
+        documentIntention: timelinePoint.version.documentIntention ? omit(timelinePoint.version.documentIntention, ['createdAt']) : undefined
+      }
     }
   });
   return await execGql<GQLDocumentTimeline>({

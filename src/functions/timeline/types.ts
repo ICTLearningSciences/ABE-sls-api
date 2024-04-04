@@ -50,8 +50,9 @@ export interface IGDocVersion {
     plainText: string;
     lastChangedId: string;
     sessionId: string;
-    sessionIntention: IIntention;
-    dayIntention: IIntention;
+    sessionIntention?: IIntention;
+    documentIntention?: IIntention;
+    dayIntention?: IIntention;
     chatLog: ChatItem[];
     activity: string;
     intent: string;
