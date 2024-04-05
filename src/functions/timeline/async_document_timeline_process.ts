@@ -4,6 +4,7 @@ import { OpenAiAsyncJobStatus } from '../../types.js';
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import requireEnv from '../../helpers.js';
 import { useWithGetDocumentTimeline } from './use-with-get-document-timeline.js';
+import { useWithGoogleApi } from '../../hooks/google_api.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
@@ -25,11 +26,14 @@ export const handler = async (event: DynamoDBStreamEvent) => {
             continue;
         }
         const {docId, userId} = docTimelineRequestData;
+        const {getGoogleAPIs, getGoogleDocVersions} = useWithGoogleApi()
+        const {drive, docs, accessToken} = await getGoogleAPIs()
+        const googleDocVersions = await getGoogleDocVersions(drive, docId, accessToken || "");
         const {getDocumentTimeline} = useWithGetDocumentTimeline();
         try{
             // Don't need to return anything, just need to process the async request.
             const dynamoDbClient = new DynamoDB({ region: "us-east-1"});
-            const documentTimelineRes = await getDocumentTimeline(userId, docId);
+            const documentTimelineRes = await getDocumentTimeline(userId, docId, googleDocVersions);
             // Update the job in dynamo db
             const tableRequest: UpdateItemCommandInput = {
                 TableName: jobsTableName,

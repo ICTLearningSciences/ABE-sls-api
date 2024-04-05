@@ -1,0 +1,34 @@
+{
+    "Records": [
+        {
+            "eventID": "xxxx",
+            "eventName": "INSERT",
+            "eventVersion": "1.1",
+            "eventSource": "aws:dynamodb",
+            "awsRegion": "us-east-1",
+            "dynamodb": {
+                "ApproximateCreationDateTime": 1708040810,
+                "Keys": {
+                    "id": {
+                        "S": "9dfaa440-0394-4be1-9d2f-ed9083f5bd2d"
+                    }
+                },
+                "NewImage": {
+                    "timelineRequestData": {
+                        "S": "{\"docId\":\"1FNfuMjrDjPmdZ0yihQtmzm7zbA54c-khNRvSvM6IAlg\",\"userId\":\"653972706e601e65dbc3acea\",\"authHeaders\":{\"Authorization\":\"bearer xxxx\"}}"
+                    },
+                    "id": {
+                        "S": "xxxx"
+                    },
+                    "status": {
+                        "S": "IN_PROGRESS"
+                    }
+                },
+                "SequenceNumber": "xxxx",
+                "SizeBytes": 898,
+                "StreamViewType": "NEW_IMAGE"
+            },
+            "eventSourceARN": "xxxx"
+        }
+    ]
+}

@@ -1,23 +1,27 @@
 import { google, drive_v3, docs_v1} from 'googleapis';
 import axios from 'axios'
 
-export interface DocRevisions{
+export interface GoogleDocVersion{
   id: string,
   modifiedTime: string,
   rawText: string,
   exportLinks: any
 }
 
-async function convertGoogleDocRevisions(driveRevisions: drive_v3.Schema$Revision[]): Promise<DocRevisions[]>{
-  const requests: Promise<DocRevisions>[] = driveRevisions.map(async (revision) => {
-      if(!revision["exportLinks"]){
+async function convertGoogleDocRevisions(driveRevisions: drive_v3.Schema$Revision[], driveAccessToken: string): Promise<GoogleDocVersion[]>{
+  const requests: Promise<GoogleDocVersion | undefined>[] = driveRevisions.map(async (revision) => {
+    if(!revision["exportLinks"]){
           throw new Error('Google Doc revision exportLinks is empty');
       }
       const textUrl = revision["exportLinks"]["text/plain"]
       if(!textUrl){
           throw new Error('Google Doc revision textUrl is empty');
       }
-      const res = await axios.get(textUrl)
+      const res = await axios.get(textUrl, {
+        headers:{
+          Authorization: `Bearer ${driveAccessToken}`
+        }
+      })
       return {
           id: revision["id"] || "",
           modifiedTime: revision["modifiedTime"] || "",
@@ -29,7 +33,9 @@ async function convertGoogleDocRevisions(driveRevisions: drive_v3.Schema$Revisio
       };
   })
   const allRevisions = await Promise.all(requests)
-  return allRevisions;
+  return allRevisions.filter((revision) => {
+    return revision !== undefined
+    }) as GoogleDocVersion[];
 }
 
 interface InspectParagraph{
@@ -112,7 +118,8 @@ export function useWithGoogleApi(){
       google.options({auth});
       const drive = google.drive({version: 'v3'});
       const docs = google.docs({version: 'v1'});
-      return {drive, docs}
+      const accessToken = await auth.getAccessToken();
+      return {drive, docs, accessToken}
     }
 
     async function createGoogleDoc(driveAPI: drive_v3.Drive, emailsToGiveAccess: string[] = [], copyFromDocId: string = "", newDocTitle: string = ""){
@@ -200,12 +207,12 @@ export function useWithGoogleApi(){
       return driveFileLastModifier.data.lastModifyingUser
     }
 
-    async function getGoogleDocRevisions(driveAPI: drive_v3.Drive, docsId: string): Promise<DocRevisions[]>{
+    async function getGoogleDocVersions(driveAPI: drive_v3.Drive, docsId: string, driveAccessToken: string): Promise<GoogleDocVersion[]>{
       const revisions = await driveAPI.revisions.list({
         fileId: docsId,
         fields: 'revisions(id,modifiedTime,lastModifyingUser,originalFilename,keepForever, exportLinks)',
-      });
-      return convertGoogleDocRevisions(revisions.data.revisions || []);
+      })
+      return convertGoogleDocRevisions(revisions.data.revisions || [], driveAccessToken);
     }
 
     async function highlightGoogleDocText(docsAPI: docs_v1.Docs, docId: string, textToHighlight: string){
@@ -335,7 +342,7 @@ export function useWithGoogleApi(){
     return {
         getGoogleAPIs,
         createGoogleDoc,
-        getGoogleDocRevisions,
+        getGoogleDocVersions,
         highlightGoogleDocText,
         removeGoogleDocText,
         insertGoogleDocText,

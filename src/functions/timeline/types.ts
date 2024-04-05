@@ -4,12 +4,12 @@ export enum TimelinePointType {
     MOST_RECENT = 'MOST_RECENT',
     NEW_ACTIVITY = 'NEW_ACTIVITY',
     TIME_DIFFERENCE = 'TIME_DIFFERENCE',
+    EDITED_OUTSIDE_OF_ABE = 'EDITED_OUTSIDE_OF_ABE',
     NONE = ''
 }
 
 export interface TimelineSlice{
     startReason: TimelinePointType;
-    index: number;
     versions: IGDocVersion[]
 }
 

@@ -3,6 +3,8 @@ import { fetchDocTimeline, fetchGoogleDocVersion, storeDocTimeline } from "../..
 import { GQLDocumentTimeline, GQLIGDocVersion, GQLTimelinePoint, IGDocVersion, TimelinePointType, TimelineSlice } from "./types.js";
 import { DEFAULT_GPT_MODEL } from "../../constants.js";
 import { executeOpenAi } from "../../hooks/use-with-open-ai.js";
+import { GoogleDocVersion } from "../../hooks/google_api.js";
+import { collectGoogleDocSlicesOutsideOfSessions } from "./google-doc-version-handlers.js";
 
 function isNextTimelinePoint(lastTimelinePoint: IGDocVersion, nextVersion: IGDocVersion): TimelinePointType{
     if(nextVersion.activity !== lastTimelinePoint.activity || nextVersion.sessionId !== lastTimelinePoint.sessionId){
@@ -15,7 +17,7 @@ function isNextTimelinePoint(lastTimelinePoint: IGDocVersion, nextVersion: IGDoc
     return TimelinePointType.NONE;
 }
 
-function createSlices(versions: IGDocVersion[]): TimelineSlice[] {
+function createSlices(versions: IGDocVersion[], googleDocVersions: GoogleDocVersion[]): TimelineSlice[] {
     const slices: TimelineSlice[] = [];
     let currentSlice: IGDocVersion[] = [];
     let lastStartSliceReason = TimelinePointType.START;
@@ -33,7 +35,6 @@ function createSlices(versions: IGDocVersion[]): TimelineSlice[] {
             if (currentSlice.length > 0) {
                 slices.push({
                     startReason: lastStartSliceReason,
-                    index: i,
                     versions: currentSlice
                 });
                 lastStartSliceReason = nextTimelinePointType;
@@ -47,12 +48,12 @@ function createSlices(versions: IGDocVersion[]): TimelineSlice[] {
     if (currentSlice.length > 0) {
         slices.push({
             startReason: lastStartSliceReason,
-            index: versions.length - 1,
             versions: currentSlice
         });
     }
 
-    return slices;
+    const googleDocSlicesOutsideOfSessions = collectGoogleDocSlicesOutsideOfSessions(slices, googleDocVersions);
+    return [...slices, ...googleDocSlicesOutsideOfSessions];
 }
 
 
@@ -127,11 +128,19 @@ function fillInReverseOutlines(timelinePoints: GQLTimelinePoint[]){
     })
 }
 
+function sortDocumentTimelinePoints(timelinePoints: GQLTimelinePoint[]){
+    return timelinePoints.sort((a, b) => {
+        const aTime = new Date(a.versionTime).getTime();
+        const bTime = new Date(b.versionTime).getTime();
+        return aTime - bTime;
+    })
+}
+
 export function useWithGetDocumentTimeline(){
 
-    async function getDocumentTimeline(userId: string, docId: string): Promise<GQLDocumentTimeline>{
+    async function getDocumentTimeline(userId: string, docId: string, googleDocVersions: GoogleDocVersion[]): Promise<GQLDocumentTimeline>{
         const docVersions = await fetchGoogleDocVersion(docId);
-        const docTimelineSlices = createSlices(docVersions);
+        const docTimelineSlices = createSlices(docVersions, googleDocVersions);
         const timelinePoints: GQLTimelinePoint[] = docTimelineSlices.map(slice => {
             const type = slice.startReason;
             const version = slice.versions[slice.versions.length - 1]; //NOTE: picks last item as version (end of session changes)
@@ -199,7 +208,7 @@ export function useWithGetDocumentTimeline(){
         const documentTimeline: GQLDocumentTimeline = {
             docId,
             user: userId,
-            timelinePoints: timelinePoints
+            timelinePoints: sortDocumentTimelinePoints(timelinePoints)
         }
         // store timeline in gql
 
