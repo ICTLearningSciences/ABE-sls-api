@@ -5,6 +5,12 @@
   "main": "handler.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "test:lint": "eslint src --max-warnings 0",
+    "test:types": "tsc --noEmit",
+    "test:format": "prettier --check \"src/**/*.{js,ts,tsx}\"",
+    "format": "prettier --write \"src/**/*.{js,ts,tsx}\"",
+    "license:fix": "license-check-and-add remove -f license-config.json && license-check-and-add add -f license-config.json",
+    "test:license": "license-check-and-add check -f license-config.json",
     "deploy:dev": "sls deploy -s dev",
     "deploy:qa": "sls deploy -s dev",
     "deploy:prod": "sls deploy -s prod"
@@ -15,6 +21,7 @@
     "@aws-sdk/client-dynamodb": "^3.515.0",
     "aws-lambda": "^1.0.7",
     "axios": "^1.4.0",
+    "eslint": "^9.0.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^122.0.0",
     "jsonschema": "^1.4.1",
@@ -30,6 +37,8 @@
     "@types/lodash": "4.14.91",
     "@types/node": "^11.13.0",
     "@types/uuid": "^9.0.8",
+    "license-check-and-add": "^4.0.5",
+    "prettier": "^3.2.5",
     "serverless-plugin-typescript": "^2.1.5",
     "typescript": "^5.1.6"
   },

@@ -1,17 +1,23 @@
-import { APIGatewayEvent } from "aws-lambda";
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+/*
+This software is Copyright ©️ 2020 The University of Southern California. All Rights Reserved. 
+Permission to use, copy, modify, and distribute this software and its documentation for educational, research and non-profit purposes, without fee, and without a written agreement is hereby granted, provided that the above copyright notice and subject to the full license file found in the root of this software deliverable. Permission to make commercial use of this software may be obtained by contacting:  USC Stevens Center for Innovation University of Southern California 1150 S. Olive Street, Suite 2300, Los Angeles, CA 90115, USA Email: accounting@stevens.usc.edu
+
+The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
+*/
+import { APIGatewayEvent } from 'aws-lambda';
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 export function createResponseJson(statusCode: number, body: any) {
   return {
     statusCode: statusCode,
     headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Credentials": true,
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true,
     },
     body: JSON.stringify({
-      data: body
+      data: body,
     }),
-  }
+  };
 }
 
 export function extractErrorMessageFromError(err: any | unknown): string {
@@ -40,7 +46,7 @@ export default function requireEnv(name: string): string {
 }
 
 export function isJsonString(str: string | undefined | null): boolean {
-  if(!str) {
+  if (!str) {
     return false;
   }
   try {
@@ -52,40 +58,47 @@ export function isJsonString(str: string | undefined | null): boolean {
   return true;
 }
 
-export function getFieldFromEventBody<T>(event: APIGatewayEvent, field: string): T {
+export function getFieldFromEventBody<T>(
+  event: APIGatewayEvent,
+  field: string
+): T {
   const body = event.body ? JSON.parse(event.body) : null;
-  if(!body){
+  if (!body) {
     throw new Error('Body is empty');
   }
-  try{
+  try {
     return body[field];
-  }catch(err){
+  } catch (err) {
     throw new Error(`No ${field} in body`);
   }
 }
 
-export const exponentialBackoff = (maxRetries: number, delayMs: number, requestConfig: AxiosRequestConfig): Promise<AxiosResponse> => {
+export const exponentialBackoff = (
+  maxRetries: number,
+  delayMs: number,
+  requestConfig: AxiosRequestConfig
+): Promise<AxiosResponse> => {
   return new Promise((resolve, reject) => {
-      const doRequest = (retryCount: number) => {
-          if(retryCount > 0){
-              console.log(`Retrying request, retry count: ${retryCount}`);
-              console.log(requestConfig)
+    const doRequest = (retryCount: number) => {
+      if (retryCount > 0) {
+        console.log(`Retrying request, retry count: ${retryCount}`);
+        console.log(requestConfig);
+      }
+      axios(requestConfig)
+        .then((response) => {
+          resolve(response);
+        })
+        .catch((error) => {
+          if (retryCount >= maxRetries) {
+            reject(error);
+            return;
           }
-          axios(requestConfig)
-              .then(response => {
-                  resolve(response);
-              })
-              .catch(error => {
-                  if (retryCount >= maxRetries) {
-                      reject(error);
-                      return;
-                  }
-                  const backoffTime = Math.pow(2, retryCount) * delayMs;
-                  setTimeout(() => {
-                      doRequest(retryCount + 1);
-                  }, backoffTime);
-              });
-      };
-      doRequest(0); // Start with retryCount = 0
+          const backoffTime = Math.pow(2, retryCount) * delayMs;
+          setTimeout(() => {
+            doRequest(retryCount + 1);
+          }, backoffTime);
+        });
+    };
+    doRequest(0); // Start with retryCount = 0
   });
 };
