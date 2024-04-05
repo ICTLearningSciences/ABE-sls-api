@@ -154,13 +154,9 @@ export function useWithGetDocumentTimeline(){
                 relatedFeedback: ''
             }
         })
-        console.log("timelinePoints")
-        console.log(JSON.stringify(timelinePoints, null, 2))
         // use existing document timeline to fill in changeSummary and reverseOutlines
         // TODO: instead of getting the existing document timeline, check hash key outline storage.
         const existingDocumentTimeline = await fetchDocTimeline(userId, docId);
-        console.log("existingDocumentTimeline")
-        console.log(JSON.stringify(existingDocumentTimeline, null, 2))
         if(existingDocumentTimeline){
             existingDocumentTimeline.timelinePoints.forEach(existingTimelinePoint => {
                 const matchingTimelinePoint = timelinePoints.find(timelinePoint => timelinePoint.version.docId === existingTimelinePoint.version.docId && timelinePoint.versionTime === existingTimelinePoint.versionTime);
@@ -170,8 +166,6 @@ export function useWithGetDocumentTimeline(){
                 }
             })
         }
-        console.log("timelinePoints after merging existingDocumentTimeline")
-        console.log(JSON.stringify(timelinePoints, null, 2))
         // Generate summary and reverse outline in parallel for timeline points without these values
         const changeSummaryRequests = timelinePoints.map(async (timelinePoint, i) => {
             const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
@@ -198,11 +192,7 @@ export function useWithGetDocumentTimeline(){
             }
         })
         await Promise.all([...changeSummaryRequests, ...reverseOutlineRequests]);
-        console.log("timelinePoints after openai requests")
-        console.log(JSON.stringify(timelinePoints, null, 2))
         fillInReverseOutlines(timelinePoints);
-        console.log("timelinePoints after fillInReverseOutlines")
-        console.log(JSON.stringify(timelinePoints, null, 2))
 
 
         const documentTimeline: GQLDocumentTimeline = {

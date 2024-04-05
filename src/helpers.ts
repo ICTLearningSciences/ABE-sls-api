@@ -1,5 +1,5 @@
 import { APIGatewayEvent } from "aws-lambda";
-import axios from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
 export function createResponseJson(statusCode: number, body: any) {
   return {
@@ -63,3 +63,29 @@ export function getFieldFromEventBody<T>(event: APIGatewayEvent, field: string):
     throw new Error(`No ${field} in body`);
   }
 }
+
+export const exponentialBackoff = (maxRetries: number, delayMs: number, requestConfig: AxiosRequestConfig): Promise<AxiosResponse> => {
+  return new Promise((resolve, reject) => {
+      const doRequest = (retryCount: number) => {
+          if(retryCount > 0){
+              console.log(`Retrying request, retry count: ${retryCount}`);
+              console.log(requestConfig)
+          }
+          axios(requestConfig)
+              .then(response => {
+                  resolve(response);
+              })
+              .catch(error => {
+                  if (retryCount >= maxRetries) {
+                      reject(error);
+                      return;
+                  }
+                  const backoffTime = Math.pow(2, retryCount) * delayMs;
+                  setTimeout(() => {
+                      doRequest(retryCount + 1);
+                  }, backoffTime);
+              });
+      };
+      doRequest(0); // Start with retryCount = 0
+  });
+};

@@ -1,5 +1,6 @@
 import { google, drive_v3, docs_v1} from 'googleapis';
-import axios from 'axios'
+import axios, { AxiosRequestConfig } from 'axios'
+import { exponentialBackoff } from '../helpers.js';
 
 export interface GoogleDocVersion{
   id: string,
@@ -17,11 +18,14 @@ async function convertGoogleDocRevisions(driveRevisions: drive_v3.Schema$Revisio
       if(!textUrl){
           throw new Error('Google Doc revision textUrl is empty');
       }
-      const res = await axios.get(textUrl, {
-        headers:{
+      const requestConfig: AxiosRequestConfig = {
+        url: textUrl,
+        method: 'get',
+        headers: {
           Authorization: `Bearer ${driveAccessToken}`
         }
-      })
+      }
+      const res = await exponentialBackoff(5, 1000, requestConfig)
       return {
           id: revision["id"] || "",
           modifiedTime: revision["modifiedTime"] || "",

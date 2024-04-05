@@ -17,7 +17,7 @@ function convertGoogleDocVersionToIGdocVersion(googleDocVersion: GoogleDocVersio
         chatLog: [],
         activity: "",
         intent: '',
-        title: '',
+        title: lastRealVersion.title,
         lastModifyingUser: '',
         modifiedTime: googleDocVersion.modifiedTime,
         createdAt: googleDocVersion.modifiedTime,
