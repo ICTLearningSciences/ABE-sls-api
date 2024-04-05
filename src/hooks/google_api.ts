@@ -15,7 +15,7 @@ export interface GoogleDocVersion {
   exportLinks: any;
 }
 
-async function convertGoogleDocRevisions(
+export async function convertGoogleDocRevisions(
   driveRevisions: drive_v3.Schema$Revision[],
   driveAccessToken: string
 ): Promise<GoogleDocVersion[]> {
@@ -246,16 +246,13 @@ export function useWithGoogleApi() {
     driveAPI: drive_v3.Drive,
     docsId: string,
     driveAccessToken: string
-  ): Promise<GoogleDocVersion[]> {
+  ): Promise<drive_v3.Schema$Revision[]> {
     const revisions = await driveAPI.revisions.list({
       fileId: docsId,
       fields:
         'revisions(id,modifiedTime,lastModifyingUser,originalFilename,keepForever, exportLinks)',
     });
-    return convertGoogleDocRevisions(
-      revisions.data.revisions || [],
-      driveAccessToken
-    );
+    return revisions.data.revisions || [];
   }
 
   async function highlightGoogleDocText(

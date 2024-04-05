@@ -28,7 +28,8 @@ export const handler = async (event: APIGatewayEvent) => {
   const documentTimeline = await getDocumentTimeline(
     userId,
     documentId,
-    revisions
+    revisions,
+    accessToken || ''
   );
   return createResponseJson(200, documentTimeline);
 };

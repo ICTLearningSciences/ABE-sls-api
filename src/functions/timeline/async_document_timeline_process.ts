@@ -41,19 +41,22 @@ export const handler = async (event: DynamoDBStreamEvent) => {
     try {
       const { docId, userId } = docTimelineRequestData;
       const { getGoogleAPIs, getGoogleDocVersions } = useWithGoogleApi();
-      const { drive, docs, accessToken } = await getGoogleAPIs();
-      const googleDocVersions = await getGoogleDocVersions(
+      const { drive, docs, accessToken: _accessToken } = await getGoogleAPIs();
+      const accessToken = _accessToken || '';
+      const externalGoogleDocRevisions = await getGoogleDocVersions(
         drive,
         docId,
-        accessToken || ''
+        accessToken
       );
       const { getDocumentTimeline } = useWithGetDocumentTimeline();
       // Don't need to return anything, just need to process the async request.
       const documentTimelineRes = await getDocumentTimeline(
         userId,
         docId,
-        googleDocVersions
+        externalGoogleDocRevisions,
+        accessToken
       );
+      console.log(JSON.stringify(documentTimelineRes, null, 2));
       // Update the job in dynamo db
       const tableRequest: UpdateItemCommandInput = {
         TableName: jobsTableName,
