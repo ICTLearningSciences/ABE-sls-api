@@ -4,6 +4,7 @@ import { OpenAiAsyncJobStatus } from '../../types.js';
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import requireEnv from '../../helpers.js';
 import { useWithGetDocumentTimeline } from './use-with-get-document-timeline.js';
+import { useWithGoogleApi } from '../../hooks/google_api.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
@@ -24,12 +25,15 @@ export const handler = async (event: DynamoDBStreamEvent) => {
             console.error("docTimelineRequestData/jobId not found in dynamo db record");
             continue;
         }
-        const {docId, userId} = docTimelineRequestData;
-        const {getDocumentTimeline} = useWithGetDocumentTimeline();
+        const dynamoDbClient = new DynamoDB({ region: "us-east-1"});
         try{
+            const {docId, userId} = docTimelineRequestData;
+            const {getGoogleAPIs, getGoogleDocVersions} = useWithGoogleApi()
+            const {drive, docs, accessToken} = await getGoogleAPIs()
+            const googleDocVersions = await getGoogleDocVersions(drive, docId, accessToken || "");
+            const {getDocumentTimeline} = useWithGetDocumentTimeline();
             // Don't need to return anything, just need to process the async request.
-            const dynamoDbClient = new DynamoDB({ region: "us-east-1"});
-            const documentTimelineRes = await getDocumentTimeline(userId, docId);
+            const documentTimelineRes = await getDocumentTimeline(userId, docId, googleDocVersions);
             // Update the job in dynamo db
             const tableRequest: UpdateItemCommandInput = {
                 TableName: jobsTableName,
@@ -55,7 +59,24 @@ export const handler = async (event: DynamoDBStreamEvent) => {
             })
         }
         catch(err){
-            console.error(err);
+            const failedRequest: UpdateItemCommandInput = {
+                TableName: jobsTableName,
+                Key: {
+                    "id":{
+                        S: jobId
+                    }
+                },
+                UpdateExpression: "set job_status = :job_status",
+                ExpressionAttributeValues: {
+                    ":job_status": {
+                        S: OpenAiAsyncJobStatus.FAILED
+                    },
+                }
+            }
+            await dynamoDbClient.updateItem(failedRequest).catch((err) => {
+                console.error(err);
+                throw err
+            })
         }
     }
 }

@@ -7,9 +7,9 @@ export const handler = async (event:any) => {
     if(!docsId){
         throw new Error('Google Doc ID is empty');
     }
-    const {getGoogleAPIs, getGoogleDocRevisions } = useWithGoogleApi()
-    const {drive, docs} = await getGoogleAPIs()
-    const revisions = await getGoogleDocRevisions(drive, docsId);
+    const {getGoogleAPIs, getGoogleDocVersions } = useWithGoogleApi()
+    const {drive, docs, accessToken} = await getGoogleAPIs()
+    const revisions = await getGoogleDocVersions(drive, docsId, accessToken || "");
     
     const response = {
         statusCode: 200,

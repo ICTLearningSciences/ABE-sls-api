@@ -3,6 +3,8 @@ import { fetchDocTimeline, fetchGoogleDocVersion, storeDocTimeline } from "../..
 import { GQLDocumentTimeline, GQLIGDocVersion, GQLTimelinePoint, IGDocVersion, TimelinePointType, TimelineSlice } from "./types.js";
 import { DEFAULT_GPT_MODEL } from "../../constants.js";
 import { executeOpenAi } from "../../hooks/use-with-open-ai.js";
+import { GoogleDocVersion } from "../../hooks/google_api.js";
+import { collectGoogleDocSlicesOutsideOfSessions } from "./google-doc-version-handlers.js";
 
 function isNextTimelinePoint(lastTimelinePoint: IGDocVersion, nextVersion: IGDocVersion): TimelinePointType{
     if(nextVersion.activity !== lastTimelinePoint.activity || nextVersion.sessionId !== lastTimelinePoint.sessionId){
@@ -15,7 +17,7 @@ function isNextTimelinePoint(lastTimelinePoint: IGDocVersion, nextVersion: IGDoc
     return TimelinePointType.NONE;
 }
 
-function createSlices(versions: IGDocVersion[]): TimelineSlice[] {
+function createSlices(versions: IGDocVersion[], googleDocVersions: GoogleDocVersion[]): TimelineSlice[] {
     const slices: TimelineSlice[] = [];
     let currentSlice: IGDocVersion[] = [];
     let lastStartSliceReason = TimelinePointType.START;
@@ -33,7 +35,6 @@ function createSlices(versions: IGDocVersion[]): TimelineSlice[] {
             if (currentSlice.length > 0) {
                 slices.push({
                     startReason: lastStartSliceReason,
-                    index: i,
                     versions: currentSlice
                 });
                 lastStartSliceReason = nextTimelinePointType;
@@ -47,12 +48,12 @@ function createSlices(versions: IGDocVersion[]): TimelineSlice[] {
     if (currentSlice.length > 0) {
         slices.push({
             startReason: lastStartSliceReason,
-            index: versions.length - 1,
             versions: currentSlice
         });
     }
 
-    return slices;
+    const googleDocSlicesOutsideOfSessions = collectGoogleDocSlicesOutsideOfSessions(slices, googleDocVersions);
+    return [...slices, ...googleDocSlicesOutsideOfSessions];
 }
 
 
@@ -127,11 +128,19 @@ function fillInReverseOutlines(timelinePoints: GQLTimelinePoint[]){
     })
 }
 
+function sortDocumentTimelinePoints(timelinePoints: GQLTimelinePoint[]){
+    return timelinePoints.sort((a, b) => {
+        const aTime = new Date(a.versionTime).getTime();
+        const bTime = new Date(b.versionTime).getTime();
+        return aTime - bTime;
+    })
+}
+
 export function useWithGetDocumentTimeline(){
 
-    async function getDocumentTimeline(userId: string, docId: string): Promise<GQLDocumentTimeline>{
+    async function getDocumentTimeline(userId: string, docId: string, googleDocVersions: GoogleDocVersion[]): Promise<GQLDocumentTimeline>{
         const docVersions = await fetchGoogleDocVersion(docId);
-        const docTimelineSlices = createSlices(docVersions);
+        const docTimelineSlices = createSlices(docVersions, googleDocVersions);
         const timelinePoints: GQLTimelinePoint[] = docTimelineSlices.map(slice => {
             const type = slice.startReason;
             const version = slice.versions[slice.versions.length - 1]; //NOTE: picks last item as version (end of session changes)
@@ -145,13 +154,9 @@ export function useWithGetDocumentTimeline(){
                 relatedFeedback: ''
             }
         })
-        console.log("timelinePoints")
-        console.log(JSON.stringify(timelinePoints, null, 2))
         // use existing document timeline to fill in changeSummary and reverseOutlines
         // TODO: instead of getting the existing document timeline, check hash key outline storage.
         const existingDocumentTimeline = await fetchDocTimeline(userId, docId);
-        console.log("existingDocumentTimeline")
-        console.log(JSON.stringify(existingDocumentTimeline, null, 2))
         if(existingDocumentTimeline){
             existingDocumentTimeline.timelinePoints.forEach(existingTimelinePoint => {
                 const matchingTimelinePoint = timelinePoints.find(timelinePoint => timelinePoint.version.docId === existingTimelinePoint.version.docId && timelinePoint.versionTime === existingTimelinePoint.versionTime);
@@ -161,8 +166,6 @@ export function useWithGetDocumentTimeline(){
                 }
             })
         }
-        console.log("timelinePoints after merging existingDocumentTimeline")
-        console.log(JSON.stringify(timelinePoints, null, 2))
         // Generate summary and reverse outline in parallel for timeline points without these values
         const changeSummaryRequests = timelinePoints.map(async (timelinePoint, i) => {
             const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
@@ -189,17 +192,13 @@ export function useWithGetDocumentTimeline(){
             }
         })
         await Promise.all([...changeSummaryRequests, ...reverseOutlineRequests]);
-        console.log("timelinePoints after openai requests")
-        console.log(JSON.stringify(timelinePoints, null, 2))
         fillInReverseOutlines(timelinePoints);
-        console.log("timelinePoints after fillInReverseOutlines")
-        console.log(JSON.stringify(timelinePoints, null, 2))
 
 
         const documentTimeline: GQLDocumentTimeline = {
             docId,
             user: userId,
-            timelinePoints: timelinePoints
+            timelinePoints: sortDocumentTimelinePoints(timelinePoints)
         }
         // store timeline in gql
 
