@@ -57,6 +57,7 @@ export enum GptModels {
 export interface OpenAiPromptStep {
   prompts: PromptConfiguration[];
   targetGptModel: GptModels;
+  customSystemRole?: string;
   outputDataType: PromptOutputTypes;
 }
 

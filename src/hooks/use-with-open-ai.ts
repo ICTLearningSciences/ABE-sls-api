@@ -95,7 +95,7 @@ async function executeOpenAiPromptStepStream(
   const messages: ChatCompletionMessageParam[] = [];
   messages.push({
     role: 'system',
-    content: systemPrompt,
+    content: curOpenAiStep.customSystemRole || systemPrompt,
   });
   if (previousOutput) {
     messages.push({ role: 'assistant', content: previousOutput });
@@ -168,7 +168,7 @@ async function executeOpenAiPromptStepSync(
   const messages: ChatCompletionMessageParam[] = [];
   messages.push({
     role: 'system',
-    content: systemPrompt,
+    content: curOpenAiStep.customSystemRole || systemPrompt,
   });
   if (previousOutput) {
     messages.push({ role: 'assistant', content: previousOutput });
