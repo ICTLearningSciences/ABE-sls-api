@@ -40,7 +40,6 @@ export enum PromptRoles {
   SYSTEM = 'system',
   USER = 'user',
   ASSISSANT = 'assistant',
-  FUNCTION = 'function',
 }
 
 export interface PromptConfiguration {
@@ -52,6 +51,7 @@ export interface PromptConfiguration {
 export enum GptModels {
   GPT_3_5 = 'gpt-3.5-turbo-16k',
   GPT_4 = 'gpt-4',
+  GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
 }
 
 export interface OpenAiPromptStep {

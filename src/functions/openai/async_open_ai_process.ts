@@ -38,9 +38,8 @@ export const handler = async (event: DynamoDBStreamEvent) => {
       authHeaders,
     } = openAiRequestData;
     const { asyncAskAboutGDoc } = useWithOpenAI();
+    const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
     try {
-      // Don't need to return anything, just need to process the async request.
-      const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
       const openAiResponse = await asyncAskAboutGDoc(
         docsId,
         userId,
@@ -82,6 +81,25 @@ export const handler = async (event: DynamoDBStreamEvent) => {
         });
     } catch (err) {
       console.error(err);
+
+      const failedRequest: UpdateItemCommandInput = {
+        TableName: jobsTableName,
+        Key: {
+          id: {
+            S: jobId,
+          },
+        },
+        UpdateExpression: 'set job_status = :job_status',
+        ExpressionAttributeValues: {
+          ':job_status': {
+            S: OpenAiAsyncJobStatus.FAILED,
+          },
+        },
+      };
+      await dynamoDbClient.updateItem(failedRequest).catch((err) => {
+        console.error(err);
+        throw err;
+      });
     }
   }
 };

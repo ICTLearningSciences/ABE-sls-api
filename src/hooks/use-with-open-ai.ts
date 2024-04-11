@@ -147,10 +147,11 @@ async function executeOpenAiPromptStepStream(
         {
           message: {
             content: answer,
-            role: 'system',
+            role: 'assistant',
           },
           finish_reason: 'stop',
           index: 0,
+          logprobs: null,
         },
       ],
       originalRequestPrompts: curOpenAiStep,
