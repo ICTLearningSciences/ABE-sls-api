@@ -207,39 +207,33 @@ export function useWithGetDocumentTimeline() {
       externalGoogleDocRevisions,
       googleAccessToken
     );
-    const timelinePoints: GQLTimelinePoint[] = docTimelineSlices.map(
-      (slice) => {
-        const type = slice.startReason;
-        const version = slice.versions[slice.versions.length - 1]; //NOTE: picks last item as version (end of session changes)
-        return {
-          type,
-          version,
-          versionTime: version.createdAt,
-          intent: '',
-          changeSummary: '',
-          userInputSummary: '',
-          reverseOutline: '',
-          relatedFeedback: '',
-        };
-      }
-    );
-    // use existing document timeline to fill in changeSummary and reverseOutlines
+    let timelinePoints: GQLTimelinePoint[] = docTimelineSlices.map((slice) => {
+      const type = slice.startReason;
+      const version = slice.versions[slice.versions.length - 1]; //NOTE: picks last item as version (end of session changes)
+      return {
+        type,
+        version,
+        versionTime: version.createdAt,
+        intent: '',
+        changeSummary: '',
+        userInputSummary: '',
+        reverseOutline: '',
+        relatedFeedback: '',
+      };
+    });
     // TODO: instead of getting the existing document timeline, check hash key outline storage.
     const existingDocumentTimeline = await fetchDocTimeline(userId, docId);
     if (existingDocumentTimeline) {
       existingDocumentTimeline.timelinePoints.forEach(
         (existingTimelinePoint) => {
-          const matchingTimelinePoint = timelinePoints.find(
+          let matchingTimelinePointIndex = timelinePoints.findIndex(
             (timelinePoint) =>
               timelinePoint.version.docId ===
                 existingTimelinePoint.version.docId &&
               timelinePoint.versionTime === existingTimelinePoint.versionTime
           );
-          if (matchingTimelinePoint) {
-            matchingTimelinePoint.changeSummary =
-              existingTimelinePoint.changeSummary;
-            matchingTimelinePoint.reverseOutline =
-              existingTimelinePoint.reverseOutline;
+          if (matchingTimelinePointIndex !== -1) {
+            timelinePoints[matchingTimelinePointIndex] = existingTimelinePoint;
           }
         }
       );
