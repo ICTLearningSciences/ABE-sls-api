@@ -221,7 +221,7 @@ export function useWithGetDocumentTimeline() {
         relatedFeedback: '',
       };
     });
-    // TODO: instead of getting the existing document timeline, check hash key outline storage.
+    // TODO: instead of getting the existing document timeline, check key outline storage.
     const existingDocumentTimeline = await fetchDocTimeline(userId, docId);
     if (existingDocumentTimeline) {
       existingDocumentTimeline.timelinePoints.forEach(
@@ -289,9 +289,7 @@ export function useWithGetDocumentTimeline() {
     // store timeline in gql
 
     const res = await storeDocTimeline(documentTimeline);
-    // TODO LATER: intention collection
     // TODO LATER: relatedFeedback
-
     return res;
   }
 
