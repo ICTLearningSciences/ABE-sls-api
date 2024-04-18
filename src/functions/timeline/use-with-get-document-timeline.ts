@@ -96,30 +96,55 @@ async function createSlices(
 }
 
 async function changeSummaryPromptRequest(
-  lastMajorVersion: GQLIGDocVersion,
-  currentVersion: GQLIGDocVersion
+  lastVersionText: string,
+  currentVersionText: string
 ) {
-  const params: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
-    messages: [
-      {
-        role: 'assistant',
-        content: `Previous Version: ${lastMajorVersion.plainText}`,
-      },
-      {
-        role: 'assistant',
-        content: `Current Version: ${currentVersion.plainText}`,
-      },
-      {
-        role: 'system',
-        content: `Provided are two versions of a text document, a previous version and a current version.
+  const isCurrentVersionFirstVersion = !lastVersionText;
+
+  const compareVersionsParams: OpenAI.Chat.Completions.ChatCompletionCreateParams =
+    {
+      messages: [
+        {
+          role: 'assistant',
+          content: `Previous Version: ${lastVersionText}`,
+        },
+        {
+          role: 'assistant',
+          content: `Current Version: ${currentVersionText}`,
+        },
+        {
+          role: 'system',
+          content: `Provided are two versions of a text document, a previous version and a current version.
             Please summarize the differences between the two versions in 1 to 3 sentences.
             The first sentence should give a clear statement on biggest changes and the scope of the changes such as major additions / deletions, major revisions, minor changes. The second and third sentences should clearly refer to what specific areas of the document changed substantially, with more specifics about what changed.
-            The second and third sentences are optional and are not needed if only minor changes were made.`,
-      },
-    ],
-    model: DEFAULT_GPT_MODEL,
-  };
-  const res = await executeOpenAi(params);
+            The second and third sentences are optional and are not needed if only minor changes were made.
+            `,
+        },
+      ],
+      model: DEFAULT_GPT_MODEL,
+    };
+
+  const summarizeVersionParams: OpenAI.Chat.Completions.ChatCompletionCreateParams =
+    {
+      messages: [
+        {
+          role: 'assistant',
+          content: `Here is the essay: ${currentVersionText}`,
+        },
+        {
+          role: 'system',
+          content: `Please summarize the essay in 3 sentences.
+            `,
+        },
+      ],
+      model: DEFAULT_GPT_MODEL,
+    };
+
+  const res = await executeOpenAi(
+    isCurrentVersionFirstVersion
+      ? summarizeVersionParams
+      : compareVersionsParams
+  );
   return res.choices[0].message.content || '';
 }
 
@@ -242,6 +267,12 @@ export function useWithGetDocumentTimeline() {
     const changeSummaryRequests = timelinePoints.map(
       async (timelinePoint, i) => {
         const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
+        if (!timelinePoint.changeSummary && !previousTimelinePoint) {
+          timelinePoint.changeSummary = await changeSummaryPromptRequest(
+            '',
+            timelinePoint.version.plainText
+          );
+        }
         if (!timelinePoint.changeSummary && previousTimelinePoint) {
           if (
             previousTimelinePoint?.version.plainText ===
@@ -252,8 +283,8 @@ export function useWithGetDocumentTimeline() {
           } else {
             console.log('Change Summary: making request to openai');
             timelinePoint.changeSummary = await changeSummaryPromptRequest(
-              previousTimelinePoint.version,
-              timelinePoint.version
+              previousTimelinePoint.version.plainText,
+              timelinePoint.version.plainText
             );
           }
         }

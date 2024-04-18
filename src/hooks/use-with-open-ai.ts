@@ -70,7 +70,9 @@ export async function executeOpenAi(
   params: ChatCompletionCreateParamsNonStreaming
 ) {
   let id = uuid();
-  console.log(`Executing OpenAI request ${id} starting at ${new Date().toISOString()}`)
+  console.log(
+    `Executing OpenAI request ${id} starting at ${new Date().toISOString()}`
+  );
   const result = await openai.chat.completions.create(params);
   if (!result.choices.length) {
     throw new Error('OpenAI API Error: No choices provided.');
@@ -79,7 +81,9 @@ export async function executeOpenAi(
   if (!answer) {
     throw new Error('OpenAI API Error: No response message content.');
   }
-  console.log(`Executing OpenAI request ${id} ending at ${new Date().toISOString()}`)
+  console.log(
+    `Executing OpenAI request ${id} ending at ${new Date().toISOString()}`
+  );
   return result;
 }
 
@@ -120,7 +124,9 @@ async function executeOpenAiPromptStepStream(
     model: openAiModel || curOpenAiStep.targetGptModel || DEFAULT_GPT_MODEL,
     stream: true,
   };
-  console.log(`Executing OpenAI stream request ${dynamoJobId} starting at ${new Date().toISOString()}`)
+  console.log(
+    `Executing OpenAI stream request ${dynamoJobId} starting at ${new Date().toISOString()}`
+  );
   const stream = await openai.chat.completions.create(params);
   let answer = '';
   let previouslyStoredAnswer = '';
@@ -145,7 +151,9 @@ async function executeOpenAiPromptStepStream(
       }
     }
   }
-  console.log(`Executing OpenAI stream request ${dynamoJobId} ending at ${new Date().toISOString()}`)
+  console.log(
+    `Executing OpenAI stream request ${dynamoJobId} ending at ${new Date().toISOString()}`
+  );
   return {
     reqRes: {
       openAiPrompt: params,
