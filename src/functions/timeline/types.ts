@@ -25,6 +25,7 @@ export interface GQLTimelinePoint {
   version: IGDocVersion;
   intent: string;
   changeSummary: string;
+  userInputSummary: string;
   reverseOutline: string;
   relatedFeedback: string;
 }

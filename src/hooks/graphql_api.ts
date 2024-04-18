@@ -293,6 +293,7 @@ export async function storeDocTimeline(
               }
               intent
               changeSummary
+              userInputSummary
               reverseOutline
               relatedFeedback
           }
