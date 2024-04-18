@@ -210,6 +210,7 @@ export async function fetchDocTimeline(
               }
               intent
               changeSummary
+              userInputSummary
               reverseOutline
               relatedFeedback
           }

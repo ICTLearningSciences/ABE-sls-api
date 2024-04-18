@@ -217,6 +217,7 @@ export function useWithGetDocumentTimeline() {
           versionTime: version.createdAt,
           intent: '',
           changeSummary: '',
+          userInputSummary: '',
           reverseOutline: '',
           relatedFeedback: '',
         };
