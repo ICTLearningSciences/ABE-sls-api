@@ -6,6 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 import jwt from 'jsonwebtoken';
 import requireEnv from '../helpers.js';
+import { wrapHandler } from '../sentry-helpers.js';
 
 const JWT_SECRET = requireEnv('JWT_SECRET');
 
@@ -28,7 +29,7 @@ function extract_token_from_header(request: any) {
   }
 }
 
-export const handler = async (event: any) => {
+export const handler = wrapHandler(async (event: any) => {
   try {
     const payload = extract_token_from_header(event);
     return {
@@ -64,4 +65,4 @@ export const handler = async (event: any) => {
       },
     };
   }
-};
+});

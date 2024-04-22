@@ -11,6 +11,7 @@ import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import requireEnv from '../../helpers.js';
 import { useWithGetDocumentTimeline } from './use-with-get-document-timeline.js';
 import { useWithGoogleApi } from '../../hooks/google_api.js';
+import { wrapHandler } from '../../sentry-helpers.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
@@ -20,7 +21,7 @@ interface ExtractedDocumentTimelineRequestData {
 }
 
 // modern module syntax
-export const handler = async (event: DynamoDBStreamEvent) => {
+export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
   const records = event.Records.filter(
     (record) => record.eventName === 'INSERT' && record.dynamodb?.NewImage
   );
@@ -105,4 +106,4 @@ export const handler = async (event: DynamoDBStreamEvent) => {
       });
     }
   }
-};
+});

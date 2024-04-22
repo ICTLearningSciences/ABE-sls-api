@@ -9,13 +9,11 @@ import {
   OPENAI_DEFAULT_TEMP,
   RETRY_ATTEMPTS,
   MAX_OPEN_AI_CHAIN_REQUESTS,
-  MAX_OPEN_AI_MESSAGES,
   DEFAULT_GPT_MODEL,
   UPDATE_DYNAMO_ANSWER_THRESHOLD,
   MAX_DYNAMO_PUT_REQUESTS,
 } from '../constants.js';
 import { getDocData } from '../api.js';
-import { AuthHeaders, OpenAiActions } from '../functions/openai/open_ai.js';
 import {
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionMessageParam,
@@ -35,6 +33,7 @@ import { storePromptRun } from './graphql_api.js';
 import requireEnv, { isJsonString } from '../helpers.js';
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import { v4 as uuid } from 'uuid';
+import { AuthHeaders } from '../functions/openai/helpers.js';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

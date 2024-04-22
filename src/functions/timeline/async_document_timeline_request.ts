@@ -10,11 +10,12 @@ import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { OpenAiAsyncJobStatus } from '../../types.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
+import { wrapHandler } from '../../sentry-helpers.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
 // modern module syntax
-export const handler = async (event: APIGatewayEvent) => {
+export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const documentId = event.queryStringParameters?.['docId'];
   const userId = event.queryStringParameters?.['userId'];
   if (!documentId || !userId) {
@@ -53,4 +54,4 @@ export const handler = async (event: APIGatewayEvent) => {
       response: { error: 'Failed to add job to dynamo db' },
     });
   }
-};
+});

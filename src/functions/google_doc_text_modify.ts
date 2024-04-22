@@ -5,8 +5,10 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 // Note: had to add .js to find this file in serverless
+import { APIGatewayEvent } from 'aws-lambda';
 import { createResponseJson } from '../helpers.js';
 import { useWithGoogleApi } from '../hooks/google_api.js';
+import { wrapHandler } from '../sentry-helpers.js';
 
 export enum GoogleDocTextModifyActions {
   HIGHLIGHT = 'HIGHLIGHT',
@@ -15,7 +17,7 @@ export enum GoogleDocTextModifyActions {
 }
 
 // modern module syntax
-export const handler = async (event: any) => {
+export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const {
     getGoogleAPIs,
     highlightGoogleDocText,
@@ -25,20 +27,14 @@ export const handler = async (event: any) => {
   const { drive, docs } = await getGoogleAPIs();
   const queryParams = event['queryStringParameters'];
   const action =
-    queryParams && 'action' in queryParams
-      ? event['queryStringParameters']['action']
-      : '';
+    queryParams && 'action' in queryParams ? queryParams['action'] : '';
   const targetText =
-    queryParams && 'text' in queryParams
-      ? event['queryStringParameters']['text']
-      : '';
+    queryParams && 'text' in queryParams ? queryParams['text'] : '';
   const docId =
-    queryParams && 'docId' in queryParams
-      ? event['queryStringParameters']['docId']
-      : '';
+    queryParams && 'docId' in queryParams ? queryParams['docId'] : '';
   const insertAfterText =
     queryParams && 'insertAfterText' in queryParams
-      ? event['queryStringParameters']['insertAfterText']
+      ? queryParams['insertAfterText']
       : '';
 
   if (!targetText) {
@@ -82,4 +78,4 @@ export const handler = async (event: any) => {
   }
 
   return createResponseJson(200, {});
-};
+});

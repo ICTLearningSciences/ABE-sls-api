@@ -11,7 +11,7 @@ import axios, {
   AxiosInstance,
 } from 'axios';
 import { DocData } from './types.js';
-import { AuthHeaders } from './functions/openai/open_ai.js';
+import { AuthHeaders } from './functions/openai/helpers.js';
 
 const GOOGLE_API_ENDPOINT = process.env.GOOGLE_API_ENDPOINT || '';
 const GRAPHQL_ENDPOINT = process.env.GRAPHQL_ENDPOINT || '';

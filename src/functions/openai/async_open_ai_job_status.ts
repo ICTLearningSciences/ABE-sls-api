@@ -10,11 +10,12 @@ import requireEnv, { createResponseJson } from '../../helpers.js';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { OpenAiPromptResponse } from '../../types.js';
 import { APIGatewayEvent } from 'aws-lambda';
+import { wrapHandler } from '../../sentry-helpers.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
 // modern module syntax
-export const handler = async (event: APIGatewayEvent) => {
+export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const jobId = event.queryStringParameters?.jobId;
   if (!jobId) {
     return createResponseJson(400, {
@@ -51,4 +52,4 @@ export const handler = async (event: APIGatewayEvent) => {
       response: { error: `failed to get item from db for jobId: ${jobId}` },
     });
   }
-};
+});

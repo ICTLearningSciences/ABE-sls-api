@@ -7,15 +7,16 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import { useWithOpenAI } from '../../hooks/use-with-open-ai.js';
 import { DynamoDBStreamEvent } from 'aws-lambda';
-import { ExtractedOpenAiRequestData } from './open_ai.js';
 import { OpenAiAsyncJobStatus } from '../../types.js';
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import requireEnv from '../../helpers.js';
+import { wrapHandler } from '../../sentry-helpers.js';
+import { ExtractedOpenAiRequestData } from './helpers.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
 // modern module syntax
-export const handler = async (event: DynamoDBStreamEvent) => {
+export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
   const records = event.Records.filter(
     (record) => record.eventName === 'INSERT' && record.dynamodb?.NewImage
   );
@@ -102,4 +103,4 @@ export const handler = async (event: DynamoDBStreamEvent) => {
       });
     }
   }
-};
+});

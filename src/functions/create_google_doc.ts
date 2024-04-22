@@ -5,12 +5,12 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 // Note: had to add .js to find this file in serverless
+import { APIGatewayEvent } from 'aws-lambda';
 import { createResponseJson } from '../helpers.js';
 import { useWithGoogleApi } from '../hooks/google_api.js';
 import { storeGoogleDoc } from '../hooks/graphql_api.js';
-
-// modern module syntax
-export const handler = async (event: any) => {
+import { wrapHandler } from '../sentry-helpers.js';
+export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const { getGoogleAPIs, createGoogleDoc } = useWithGoogleApi();
   const { drive, docs } = await getGoogleAPIs();
   const queryParams = event['queryStringParameters'];
@@ -18,27 +18,21 @@ export const handler = async (event: any) => {
     ? process.env.ADMIN_EMAILS.split(',')
     : [];
   const userId =
-    queryParams && 'userId' in queryParams
-      ? event['queryStringParameters']['userId']
-      : '';
+    queryParams && 'userId' in queryParams ? queryParams['userId'] : '';
   const userEmails =
-    queryParams && 'emails' in queryParams
-      ? event['queryStringParameters']['emails']
-          .split(',')
-          .filter((e: string) => e)
+    queryParams && 'emails' in queryParams && queryParams['emails']
+      ? queryParams['emails'].split(',').filter((e: string) => e)
       : [];
   const copyFromDocId =
     queryParams && 'copyFromDocId' in queryParams
-      ? event['queryStringParameters']['copyFromDocId']
+      ? queryParams['copyFromDocId']
       : '';
   const newDocTitle =
     queryParams && 'newDocTitle' in queryParams
-      ? event['queryStringParameters']['newDocTitle']
+      ? queryParams['newDocTitle']
       : '';
   const isAdminDoc =
-    queryParams && 'isAdminDoc' in queryParams
-      ? event['queryStringParameters']['isAdminDoc']
-      : '';
+    queryParams && 'isAdminDoc' in queryParams ? queryParams['isAdminDoc'] : '';
   if (!userId) {
     return createResponseJson(400, { error: 'userId is required' });
   }
@@ -48,16 +42,11 @@ export const handler = async (event: any) => {
     copyFromDocId,
     newDocTitle
   );
-  const storedDoc = await storeGoogleDoc(
-    docId,
-    userId,
-    isAdminDoc === 'true',
-    newDocTitle
-  );
+  await storeGoogleDoc(docId, userId, isAdminDoc === 'true', newDocTitle);
   return createResponseJson(200, {
     docId: docId,
     userId: userId,
     docUrl: webViewLink,
     createdTime: createdTime,
   });
-};
+});

@@ -7,15 +7,16 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import requireEnv, { createResponseJson } from '../../helpers.js';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
-import { extractOpenAiRequestData } from './open_ai.js';
 import { OpenAiAsyncJobStatus } from '../../types.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
+import { wrapHandler } from '../../sentry-helpers.js';
+import { extractOpenAiRequestData } from './helpers.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
 // modern module syntax
-export const handler = async (event: APIGatewayEvent) => {
+export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const {
     docsId,
     userId,
@@ -64,4 +65,4 @@ export const handler = async (event: APIGatewayEvent) => {
       response: { error: 'Failed to add job to dynamo db' },
     });
   }
-};
+});

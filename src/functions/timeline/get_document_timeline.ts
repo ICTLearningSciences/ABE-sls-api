@@ -8,9 +8,10 @@ import { APIGatewayEvent } from 'aws-lambda';
 import { useWithGetDocumentTimeline } from './use-with-get-document-timeline.js';
 import { createResponseJson } from '../../helpers.js';
 import { useWithGoogleApi } from '../../hooks/google_api.js';
+import { wrapHandler } from '../../sentry-helpers.js';
 
 // modern module syntax
-export const handler = async (event: APIGatewayEvent) => {
+export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const documentId = event.queryStringParameters?.['docId'];
   const userId = event.queryStringParameters?.['userId'];
   if (!documentId || !userId) {
@@ -32,4 +33,4 @@ export const handler = async (event: APIGatewayEvent) => {
     accessToken || ''
   );
   return createResponseJson(200, documentTimeline);
-};
+});
