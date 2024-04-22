@@ -57,7 +57,6 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         externalGoogleDocRevisions,
         accessToken
       );
-      console.log(JSON.stringify(documentTimelineRes, null, 2));
       // Update the job in dynamo db
       const tableRequest: UpdateItemCommandInput = {
         TableName: jobsTableName,
@@ -104,6 +103,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         console.error(err);
         throw err;
       });
+      throw err;
     }
   }
 });

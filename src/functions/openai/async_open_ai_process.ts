@@ -81,8 +81,6 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
           console.log('Updated dynamo db record');
         });
     } catch (err) {
-      console.error(err);
-
       const failedRequest: UpdateItemCommandInput = {
         TableName: jobsTableName,
         Key: {
@@ -101,6 +99,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         console.error(err);
         throw err;
       });
+      throw err;
     }
   }
 });

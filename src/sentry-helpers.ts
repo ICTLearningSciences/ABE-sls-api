@@ -15,3 +15,5 @@ export function wrapHandler(handler: any) {
     return await handler(event);
   });
 }
+
+export default Sentry;

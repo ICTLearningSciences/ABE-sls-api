@@ -6,7 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 import jwt from 'jsonwebtoken';
 import requireEnv from '../helpers.js';
-import { wrapHandler } from '../sentry-helpers.js';
+import Sentry, { wrapHandler } from '../sentry-helpers.js';
 
 const JWT_SECRET = requireEnv('JWT_SECRET');
 
@@ -51,6 +51,7 @@ export const handler = wrapHandler(async (event: any) => {
       },
     };
   } catch (err) {
+    Sentry.captureException(err);
     return {
       principalId: '*',
       policyDocument: {

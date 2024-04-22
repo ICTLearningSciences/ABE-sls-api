@@ -20,7 +20,6 @@ import {
 } from './types.js';
 import { DEFAULT_GPT_MODEL } from '../../constants.js';
 import { executeOpenAi } from '../../hooks/use-with-open-ai.js';
-import { GoogleDocVersion } from '../../hooks/google_api.js';
 import { collectGoogleDocSlicesOutsideOfSessions } from './google-doc-version-handlers.js';
 import { drive_v3 } from 'googleapis';
 

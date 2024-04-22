@@ -6,8 +6,12 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { APIGatewayEvent } from 'aws-lambda';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import Sentry from './sentry-helpers.js';
 
 export function createResponseJson(statusCode: number, body: any) {
+  if (statusCode >= 400) {
+    Sentry.captureException(`Error response: ${JSON.stringify(body)}`);
+  }
   return {
     statusCode: statusCode,
     headers: {
