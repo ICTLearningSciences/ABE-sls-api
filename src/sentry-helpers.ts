@@ -13,7 +13,7 @@ Sentry.AWSLambda.init({
 });
 
 export function wrapHandler(handler: any) {
-  if(stage === 'dev') return handler;
+  if (stage === 'dev') return handler;
   return Sentry.AWSLambda.wrapHandler(async (event) => {
     return await handler(event);
   });

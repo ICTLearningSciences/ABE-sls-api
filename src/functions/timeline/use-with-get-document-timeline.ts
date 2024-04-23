@@ -19,7 +19,7 @@ import {
   TimelineSlice,
 } from './types.js';
 import { DEFAULT_GPT_MODEL } from '../../constants.js';
-import { executeOpenAi } from '../../hooks/use-with-open-ai.js';
+import { executeOpenAiUntilProperResponse } from '../../hooks/use-with-open-ai.js';
 import { collectGoogleDocSlicesOutsideOfSessions } from './google-doc-version-handlers.js';
 import { drive_v3 } from 'googleapis';
 
@@ -139,10 +139,11 @@ async function changeSummaryPromptRequest(
       model: DEFAULT_GPT_MODEL,
     };
 
-  const res = await executeOpenAi(
+  const [res] = await executeOpenAiUntilProperResponse(
     isCurrentVersionFirstVersion
       ? summarizeVersionParams
-      : compareVersionsParams
+      : compareVersionsParams,
+    false
   );
   return res.choices[0].message.content || '';
 }
@@ -179,7 +180,7 @@ async function reverseOutlinePromptRequest(currentVersion: GQLIGDocVersion) {
     ],
     model: DEFAULT_GPT_MODEL,
   };
-  const res = await executeOpenAi(params);
+  const [res] = await executeOpenAiUntilProperResponse(params, true);
   return res.choices[0].message.content || '';
 }
 

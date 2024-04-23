@@ -172,6 +172,42 @@ async function executeOpenAiPromptStepStream(
     answer,
   };
 }
+
+export async function executeOpenAiUntilProperResponse(
+  params: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming,
+  mustBeJson: boolean
+): Promise<[OpenAI.Chat.Completions.ChatCompletion, string]> {
+  let result = await executeOpenAi(params);
+  let answer = result.choices[0].message.content;
+  if (mustBeJson) {
+    let isJsonResponse = isJsonString(answer);
+    if (!isJsonResponse) {
+      for (let j = 0; j < RETRY_ATTEMPTS; j++) {
+        console.log(`Attempt ${j}`);
+        if (isJsonResponse) {
+          break;
+        }
+        const newParams: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
+          ...params,
+          temperature: temparature + j * 0.1,
+        };
+        result = await executeOpenAi(newParams);
+        answer = result.choices[0].message.content;
+        if (!answer) {
+          throw new Error('OpenAI API Error: No response message content.');
+        }
+        isJsonResponse = isJsonString(answer);
+      }
+    }
+    if (!isJsonResponse) {
+      throw new Error(
+        `OpenAI API Error: No valid JSON response after ${RETRY_ATTEMPTS} attempts.`
+      );
+    }
+  }
+  return [result, answer || ''];
+}
+
 async function executeOpenAiPromptStepSync(
   curOpenAiStep: OpenAiPromptStep,
   docsPlainText: string,
@@ -203,35 +239,11 @@ async function executeOpenAiPromptStepSync(
     model: openAiModel || curOpenAiStep.targetGptModel || DEFAULT_GPT_MODEL,
   };
 
-  let result = await executeOpenAi(params);
-  let answer = result.choices[0].message.content;
-  if (curOpenAiStep.outputDataType == PromptOutputTypes.JSON) {
-    console.log('validating output is json');
-    let isJsonResponse = isJsonString(answer);
-    if (!isJsonResponse) {
-      for (let j = 0; j < RETRY_ATTEMPTS; j++) {
-        console.log(`Attempt ${j}`);
-        if (isJsonResponse) {
-          break;
-        }
-        const newParams: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
-          ...params,
-          temperature: temparature + j * 0.1,
-        };
-        result = await executeOpenAi(newParams);
-        answer = result.choices[0].message.content;
-        if (!answer) {
-          throw new Error('OpenAI API Error: No response message content.');
-        }
-        isJsonResponse = isJsonString(answer);
-      }
-    }
-    if (!isJsonResponse) {
-      throw new Error(
-        `OpenAI API Error: No valid JSON response after ${RETRY_ATTEMPTS} attempts.`
-      );
-    }
-  }
+  const mustBeJson = curOpenAiStep.outputDataType == PromptOutputTypes.JSON;
+  const [result, answer] = await executeOpenAiUntilProperResponse(
+    params,
+    mustBeJson
+  );
 
   if (!answer) {
     throw new Error('OpenAI API Error: No response message content.');
@@ -318,7 +330,10 @@ export function useWithOpenAI() {
       const isLastStep = i == openAiSteps.length - 1;
 
       const curOpenAiStep = openAiSteps[i];
-      if (!isLastStep) {
+      if (
+        !isLastStep ||
+        curOpenAiStep.outputDataType == PromptOutputTypes.JSON
+      ) {
         const { reqRes, answer } = await executeOpenAiPromptStepSync(
           curOpenAiStep,
           docsPlainText,
