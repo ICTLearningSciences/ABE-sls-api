@@ -41,7 +41,6 @@
     "@types/lodash": "4.14.91",
     "@types/mocha": "^10.0.6",
     "@types/node": "^11.13.0",
-    "@types/sinon": "^17.0.3",
     "@types/supertest": "^6.0.2",
     "@types/uuid": "^9.0.8",
     "chai": "^5.1.0",
@@ -50,10 +49,8 @@
     "nock": "^13.5.4",
     "prettier": "^3.2.5",
     "serverless-plugin-typescript": "^2.1.5",
-    "sinon": "^17.0.1",
     "supertest": "^6.3.4",
     "ts-mocha": "^10.0.0",
-    "tsconfig-paths": "^4.2.0",
     "tsx": "^4.7.2",
     "typescript": "^5.1.6"
   },
