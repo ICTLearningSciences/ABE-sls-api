@@ -94,6 +94,7 @@ export const exponentialBackoff = (
           resolve(response);
         })
         .catch((error) => {
+          console.log(`Error making request: ${error}`)
           if (retryCount >= maxRetries) {
             reject(error);
             return;

@@ -21,7 +21,7 @@ import { drive_v3 } from 'googleapis';
 import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import { changeSummaryPromptRequest } from './change-summary.js';
 
-function isNextTimelinePoint(
+export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,
   nextVersion: IGDocVersion
 ): TimelinePointType {
@@ -41,7 +41,15 @@ function isNextTimelinePoint(
   return TimelinePointType.NONE;
 }
 
-async function createSlices(
+function sortTimelineSlices(slices: TimelineSlice[]): TimelineSlice[] {
+  return slices.sort((a, b) => {
+    const aTime = new Date(a.versions[0].createdAt).getTime();
+    const bTime = new Date(b.versions[0].createdAt).getTime();
+    return aTime - bTime;
+  });
+}
+
+export async function createSlices(
   versions: IGDocVersion[],
   externalGoogleDocRevisions: drive_v3.Schema$Revision[],
   googleAccessToken: string
@@ -89,7 +97,7 @@ async function createSlices(
       externalGoogleDocRevisions,
       googleAccessToken
     );
-  return [...slices, ...googleDocSlicesOutsideOfSessions];
+  return sortTimelineSlices([...slices, ...googleDocSlicesOutsideOfSessions]);
 }
 
 interface DocTextWithOutline {

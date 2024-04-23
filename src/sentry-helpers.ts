@@ -1,7 +1,6 @@
 import * as Sentry from '@sentry/serverless';
-import requireEnv from './helpers.js';
 
-const sentryDsn = requireEnv('SENTRY_DSN');
+const sentryDsn = process.env.SENTRY_DSN
 const stage = process.env.STAGE;
 
 Sentry.AWSLambda.init({

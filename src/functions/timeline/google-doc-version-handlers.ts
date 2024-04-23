@@ -56,7 +56,7 @@ export async function collectGoogleDocSlicesOutsideOfSessions(
   }
   const newSlices: TimelineSlice[] = [];
 
-  // get edits made in google doc after the last slice (modified outside of ABE and didn't come back)
+  // First, get edits made in google doc after the last slice (modified outside of ABE and didn't come back)
   const lastSlice = currentSlices[currentSlices.length - 1];
   const lastSliceEndVersion = lastSlice.versions[lastSlice.versions.length - 1];
   const externalGoogleDocRevisionsAfterLastSlice =
@@ -104,7 +104,7 @@ export async function collectGoogleDocSlicesOutsideOfSessions(
     }
   }
   // collect google doc versions between the timestamps, and create slices out of them
-  versionBoundaries.forEach(async (versionBoundary) => {
+    for(const versionBoundary of versionBoundaries) {
     const externalRevisionsWithintimestamp = externalGoogleDocRevisions.filter(
       (externalRevision) => {
         if (!externalRevision.modifiedTime) {
@@ -140,7 +140,6 @@ export async function collectGoogleDocSlicesOutsideOfSessions(
         }),
       });
     }
-  });
-
+  };
   return newSlices;
 }
