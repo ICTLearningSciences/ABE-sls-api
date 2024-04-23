@@ -104,7 +104,7 @@ export async function collectGoogleDocSlicesOutsideOfSessions(
     }
   }
   // collect google doc versions between the timestamps, and create slices out of them
-    for(const versionBoundary of versionBoundaries) {
+  for (const versionBoundary of versionBoundaries) {
     const externalRevisionsWithintimestamp = externalGoogleDocRevisions.filter(
       (externalRevision) => {
         if (!externalRevision.modifiedTime) {
@@ -140,6 +140,6 @@ export async function collectGoogleDocSlicesOutsideOfSessions(
         }),
       });
     }
-  };
+  }
   return newSlices;
 }
