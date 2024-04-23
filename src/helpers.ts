@@ -7,6 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 import { APIGatewayEvent } from 'aws-lambda';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import Sentry from './sentry-helpers.js';
+import Validator from 'jsonschema';
 
 export function createResponseJson(statusCode: number, body: any) {
   if (statusCode >= 400) {
@@ -106,3 +107,20 @@ export const exponentialBackoff = (
     doRequest(0); // Start with retryCount = 0
   });
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function validateJsonResponse(response: string, schema: any): boolean {
+  try {
+    const v = new Validator.Validator();
+    const responseJson = JSON.parse(response);
+    const result = v.validate(responseJson, schema);
+    if (result.errors.length > 0) {
+      console.error(result.errors);
+      throw new Error('invalid json response shape');
+    }
+    return true;
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+}

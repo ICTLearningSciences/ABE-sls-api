@@ -30,10 +30,11 @@ import {
   OpenAiAsyncJobStatus,
 } from '../types.js';
 import { storePromptRun } from './graphql_api.js';
-import requireEnv, { isJsonString } from '../helpers.js';
+import requireEnv, { isJsonString, validateJsonResponse } from '../helpers.js';
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import { v4 as uuid } from 'uuid';
 import { AuthHeaders } from '../functions/openai/helpers.js';
+import { Schema } from 'jsonschema';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -175,12 +176,20 @@ async function executeOpenAiPromptStepStream(
 
 export async function executeOpenAiUntilProperResponse(
   params: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming,
-  mustBeJson: boolean
+  mustBeJson: boolean,
+  jsonSchema?: Schema
 ): Promise<[OpenAI.Chat.Completions.ChatCompletion, string]> {
   let result = await executeOpenAi(params);
-  let answer = result.choices[0].message.content;
+  let answer = result.choices[0].message.content || '';
   if (mustBeJson) {
-    let isJsonResponse = isJsonString(answer);
+    const checkJson = (answer: string) => {
+      if (jsonSchema) {
+        return validateJsonResponse(answer, jsonSchema);
+      } else {
+        return isJsonString(answer);
+      }
+    };
+    let isJsonResponse = checkJson(answer);
     if (!isJsonResponse) {
       for (let j = 0; j < RETRY_ATTEMPTS; j++) {
         console.log(`Attempt ${j}`);
@@ -192,11 +201,11 @@ export async function executeOpenAiUntilProperResponse(
           temperature: temparature + j * 0.1,
         };
         result = await executeOpenAi(newParams);
-        answer = result.choices[0].message.content;
+        answer = result.choices[0].message.content || '';
         if (!answer) {
           throw new Error('OpenAI API Error: No response message content.');
         }
-        isJsonResponse = isJsonString(answer);
+        isJsonResponse = checkJson(answer);
       }
     }
     if (!isJsonResponse) {
