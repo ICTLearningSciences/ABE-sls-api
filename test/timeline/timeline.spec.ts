@@ -1,22 +1,21 @@
 // tests/calculator.spec.tx
 import { assert } from "chai";
-import { createResponseJson } from "../../src/helpers.js";
 import { createSlices } from "../../src/functions/timeline/use-with-get-document-timeline.js";
-import nock from "nock";
-import {
-  externalGoogleDocRevisions as twoSessionsInbetweenOutsideABERevisions
-}from "../fixtures/documents/2-sessions-inbetween-outside-ABE/external-google-doc-revisions.js";
-
-import {
-  docVersions as twoSessionsInbetweenOutsideABEDocVersions
-} from "../fixtures/documents/2-sessions-inbetween-outside-ABE/gql-doc-versions.js";
 import { IGDocVersion, TimelinePointType } from "../../src/functions/timeline/types.js";
-import { mockExternalDocRevisionText } from "../helpers.js";
+import { mockDefault, mockGraphqlQuery } from "../helpers.js";
 import { externalGoogleDocRevisionGenerator, gqlDocVersionGenerator, isoStringMinsFromNow } from "../fixtures/documents/helpers/document-generator.js";
+import nock from "nock";
+import { fetchDocTimeline } from "../../src/hooks/graphql_api.js";
+import requireEnv from "../../src/helpers.js";
 
 describe("Document Timeline Unit Tests", () => {
   beforeEach(() => {
-    mockExternalDocRevisionText("fake-text")
+    mockDefault()
+  })
+
+  afterEach(() => {
+    // ensure nocks don't persist between tests
+    nock.cleanAll();
   })
 
   describe("createSlices", () => {
@@ -61,10 +60,15 @@ describe("Document Timeline Unit Tests", () => {
   })
 
   describe("getDocumentTimeline", () => {
-  
-    it("merges in existing document timeline", async () => {
-      // Test: should not make ANY calls to OpenAI since all the document timeline data already exists
 
+    it("merges in existing document timeline", async () => {
+      mockGraphqlQuery("FetchDocTimeline", {
+        "fetchDocTimeline": {
+          "2": "2"
+        }
+      });
+      const res = await fetchDocTimeline("fake-user-id", "fake-doc-id");
+      console.log(res)
     });
 
     it("generates change summary for documents when text changes (or is first version)", async () => {
@@ -73,6 +77,10 @@ describe("Document Timeline Unit Tests", () => {
 
     it("generates reverse outline for documents when text changes (or is first version)", ()=>{
 
+    })
+
+    it("stores document timeline in gql", ()=>{
+      // Test: ensure a request is made to gql to store the document timeline
     })
   
   })

@@ -68,3 +68,18 @@ export function mockExternalDocRevisionText(text: string){
       data: text
   });
 }
+
+export function mockDefault(){
+  mockExternalDocRevisionText("fake-text")
+}
+
+export function mockGraphqlQuery(queryName: string, data: any){
+  const GRAPHQL_ENDPOINT = requireEnv("GRAPHQL_ENDPOINT");
+  nock(GRAPHQL_ENDPOINT)
+    .post("", req =>{
+      return req.query.includes(queryName)
+    })
+    .reply(200, {
+        data: data
+    });
+}
