@@ -10,6 +10,17 @@ import { executeOpenAiUntilProperResponse } from '../../hooks/use-with-open-ai.j
 import { GQLIGDocVersion } from './types.js';
 import { Schema } from 'jsonschema';
 
+export interface ReverseOutline {
+  'Thesis Statement': string;
+  'Supporting Claims': string[];
+  'Evidence Given for Each Claim': {
+    'Claim A': string;
+    'Claim A Evidence': string[];
+    'Claim B': string;
+    'Claim B Evidence': string[];
+  }[];
+}
+
 const reverseOutlineSchema: Schema = {
   type: 'object',
   properties: {
