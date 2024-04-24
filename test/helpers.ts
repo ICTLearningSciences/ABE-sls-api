@@ -11,6 +11,8 @@ import path from "path";
 import request from "supertest";
 import requireEnv from "../src/helpers.js";
 import nock from "nock";
+import { textOpenAiResponse } from "./fixtures/documents/open-ai-responses.js";
+import { ReverseOutline } from "../src/functions/timeline/reverse-outline.js";
 
 export function fixturePath(p: string): string {
   return path.join(__dirname, "fixtures", p);
@@ -75,11 +77,94 @@ export function mockDefault(){
 
 export function mockGraphqlQuery(queryName: string, data: any){
   const GRAPHQL_ENDPOINT = requireEnv("GRAPHQL_ENDPOINT");
-  nock(GRAPHQL_ENDPOINT)
+  return nock(GRAPHQL_ENDPOINT)
     .post("", req =>{
       return req.query.includes(queryName)
     })
     .reply(200, {
         data: data
     });
+}
+
+interface MockOpenAiCallOptions{
+    interceptAllCalls?: boolean,
+    delay?: number,
+    statusCode?: number,
+    /**
+     * must be an object for js to pass by reference
+     */
+    numCallsAccumulator?: {
+      calls: number
+    }
+}
+
+/**
+ * 
+ * @param response data that will be returned in choices[0].message.content of the openAi response
+ * @param interceptAllCalls nock usually only intercepts the first call, this will intercept all calls if true
+ * @returns the scope of the nock call (can be used to check if called, etc.)
+ */
+export function mockOpenAiCall(response: string, options?: MockOpenAiCallOptions, requestBodyMatcher?: (body: any) =>boolean ): nock.Scope{
+  const {interceptAllCalls, delay, statusCode} = options || {};
+  const nockScope = nock("https://api.openai.com")
+  const nockInterceptor = nockScope.post(/.*/ , requestBodyMatcher || (() => true))
+  if(interceptAllCalls){
+    nockScope.persist()
+  }
+
+  if(delay){
+    nockInterceptor.delay(delay)
+  }
+
+  if(Array.isArray(response)){
+    response.forEach((r) => {
+      nockInterceptor.reply(statusCode || 200, ()=>{
+        options?.numCallsAccumulator && options.numCallsAccumulator.calls++;
+        return textOpenAiResponse(r)
+      });
+    })
+  }else{
+      nockInterceptor.reply(statusCode || 200, ()=>{
+        options?.numCallsAccumulator && options.numCallsAccumulator.calls++;
+        return textOpenAiResponse(response)
+      });
+  }
+  return nockScope
+}
+
+
+export const defaultChangeSummaryRes = "mock change summary text"
+export function mockOpenAiChangeSummaryResponse(response: string, options?: MockOpenAiCallOptions){
+  return mockOpenAiCall(response, options,
+  (body) => {
+    return body.messages.find((m)=>{
+      return m.content.includes("Please summarize")
+    })
+  })
+}
+
+export const defaultReverseOutlineRes:ReverseOutline = {
+  'Thesis Statement': 'fake thesis',
+  'Supporting Claims': ['fake claims'],
+  'Evidence Given for Each Claim': [
+    {
+    'Claim A': 'fake claim A',
+    'Claim A Evidence': [
+      'fake evidence A'
+    ],
+    'Claim B': 'fake claim B',
+    'Claim B Evidence': [
+      'fake evidence B'
+    ]
+  }
+]
+}
+
+export function mockOpenAiReverseOutlineResponse(response: ReverseOutline, options?: MockOpenAiCallOptions){
+  return mockOpenAiCall(JSON.stringify(response), options,
+  (body) => {
+    return body.messages.find((m)=>{
+      return m.content.includes("Your task is to generate an outline for this writing.")
+    })
+  })
 }

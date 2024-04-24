@@ -20,6 +20,7 @@ import { collectGoogleDocSlicesOutsideOfSessions } from './google-doc-version-ha
 import { drive_v3 } from 'googleapis';
 import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import { changeSummaryPromptRequest } from './change-summary.js';
+import Sentry from '../../sentry-helpers.js';
 
 export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,
@@ -171,6 +172,7 @@ function generateChangeSummaryRequests(
     }
     const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
     if (!previousTimelinePoint) {
+      console.log('Change Summary: first version');
       timelinePoint.changeSummary = await changeSummaryPromptRequest(
         '',
         timelinePoint.version.plainText
@@ -264,10 +266,14 @@ export function useWithGetDocumentTimeline() {
       timelinePoints: sortDocumentTimelinePoints(timelinePoints),
     };
     // store timeline in gql
-
-    const res = await storeDocTimeline(documentTimeline);
-    // TODO LATER: relatedFeedback
-    return res;
+    await storeDocTimeline(documentTimeline).catch((e) => {
+      Sentry.captureException(e, {
+        extra: {
+          message: 'Failed to store document timeline',
+        },
+      });
+    });
+    return documentTimeline;
   }
 
   return {

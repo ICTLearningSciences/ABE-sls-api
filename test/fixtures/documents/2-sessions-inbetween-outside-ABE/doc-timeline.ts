@@ -102,9 +102,9 @@ export const docTimeline: GQLDocumentTimeline = {
           "intent": "",
           "title": "2 sessions, 1 inbetween outside of ABE",
           "lastModifyingUser": "ashiel408@gmail.com",
-          createdAt: "2024-04-05T00:38:53.943Z",
-            modifiedTime: "2024-04-05T00:38:53.943Z",
-            updatedAt: "2024-04-05T00:38:53.943Z"
+          createdAt: "2024-04-05T00:42:36.983Z",
+            modifiedTime: "2024-04-05T00:42:36.983Z",
+            updatedAt: "2024-04-05T00:42:36.983Z"
         },
         "intent": "",
         "changeSummary": "The current version includes some minor changes such as rephrasing certain sentences for clarity and flow, but overall, the structure and content remain unchanged. There are no major additions, deletions, or revisions in this version.",
@@ -136,9 +136,9 @@ export const docTimeline: GQLDocumentTimeline = {
           "intent": "",
           "title": "2 sessions, 1 inbetween outside of ABE",
           "lastModifyingUser": "ashiel408@gmail.com",
-          createdAt: "2024-04-05T00:38:53.943Z",
-            modifiedTime: "2024-04-05T00:38:53.943Z",
-            updatedAt: "2024-04-05T00:38:53.943Z"
+          createdAt: "2024-04-19T18:01:56.789Z",
+            modifiedTime: "2024-04-19T18:01:56.789Z",
+            updatedAt: "2024-04-19T18:01:56.789Z"
         },
         "intent": "",
         "changeSummary": "The biggest change between the previous and current versions of the document is a revised sentence that now emphasizes the role of ponies as beloved friends and companions. Additionally, there were minor changes made to the wording and structure throughout the document, but no major additions or deletions were made.",
