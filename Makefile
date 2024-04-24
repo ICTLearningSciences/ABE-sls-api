@@ -22,6 +22,10 @@ test-lint: node_modules/eslint
 test-types: node_modules/typescript
 	npm run test:types
 
+.PHONY: test
+test:
+	npm run test
+
 LICENSE:
 	@echo "you must have a LICENSE file" 1>&2
 	exit 1

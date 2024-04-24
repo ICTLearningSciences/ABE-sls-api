@@ -4,25 +4,15 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import * as Sentry from '@sentry/serverless';
-import requireEnv from './helpers.js';
+import dotenv from "dotenv";
+import { fixturePath } from "./helpers.js";
+import { before, after } from "mocha";
 
-const sentryDsn = requireEnv('SENTRY_DSN');
-const stage = requireEnv('STAGE');
-
-Sentry.AWSLambda.init({
-  dsn: sentryDsn,
-  environment: stage,
-  integrations: [],
-  // Performance Monitoring
-  tracesSampleRate: 0.2, //  Capture 20% of transactions
+before(() => {
+  dotenv.config({ path: fixturePath(".env") });
+  process.env.DOTENV_PATH = fixturePath(".env");
 });
 
-export function wrapHandler(handler: any) {
-  if (stage === 'dev') return handler;
-  return Sentry.AWSLambda.wrapHandler(async (event) => {
-    return await handler(event);
-  });
-}
-
-export default Sentry;
+after(async () => {
+  // After tests are done
+});
