@@ -105,7 +105,9 @@ interface DocTextWithOutline {
   reverseOutline: string;
 }
 
-function fillInReverseOutlines(timelinePoints: GQLTimelinePoint[]) {
+function fillInExistingReverseOutlines(
+  timelinePoints: GQLTimelinePoint[]
+): GQLTimelinePoint[] {
   const docTextOutlines: DocTextWithOutline[] = timelinePoints.map(
     (timelinePoint) => {
       return {
@@ -125,6 +127,7 @@ function fillInReverseOutlines(timelinePoints: GQLTimelinePoint[]) {
       }
     }
   });
+  return timelinePoints;
 }
 
 function sortDocumentTimelinePoints(timelinePoints: GQLTimelinePoint[]) {
@@ -132,6 +135,87 @@ function sortDocumentTimelinePoints(timelinePoints: GQLTimelinePoint[]) {
     const aTime = new Date(a.versionTime).getTime();
     const bTime = new Date(b.versionTime).getTime();
     return aTime - bTime;
+  });
+}
+
+function mergeExistingTimelinePoints(
+  timelinePoints: GQLTimelinePoint[],
+  existingTimelinePoints?: GQLTimelinePoint[]
+) {
+  // TODO: instead of getting the existing document timeline, implement key outline storage.
+  if (!existingTimelinePoints || existingTimelinePoints.length === 0) {
+    return timelinePoints;
+  }
+  return timelinePoints.map((timelinePoint, i) => {
+    const existingTimelinePoint = existingTimelinePoints[i];
+    if (
+      existingTimelinePoint.version.docId === timelinePoint.version.docId &&
+      existingTimelinePoint.versionTime === timelinePoint.versionTime
+    ) {
+      return existingTimelinePoint;
+    }
+    return timelinePoint;
+  });
+}
+
+/**
+ * Generates a lsit of change summary OpenAI requests for each timeline point that needs a summary
+ * The requests will modify the timeline points in place once the requests are resolved
+ */
+function generateChangeSummaryRequests(
+  timelinePoints: GQLTimelinePoint[]
+): Promise<void>[] {
+  return timelinePoints.map(async (timelinePoint, i) => {
+    if (timelinePoint.changeSummary) {
+      return;
+    }
+    const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
+    if (!previousTimelinePoint) {
+      timelinePoint.changeSummary = await changeSummaryPromptRequest(
+        '',
+        timelinePoint.version.plainText
+      );
+    } else {
+      if (
+        previousTimelinePoint?.version.plainText ===
+        timelinePoint.version.plainText
+      ) {
+        console.log('Change Summary: no changes from previous version');
+        timelinePoint.changeSummary = 'No changes from previous version';
+      } else {
+        console.log('Change Summary: making request to openai');
+        timelinePoint.changeSummary = await changeSummaryPromptRequest(
+          previousTimelinePoint.version.plainText,
+          timelinePoint.version.plainText
+        );
+      }
+    }
+  });
+}
+
+/**
+ * Generates a list of reverse outline OpenAI requests for each timeline point that needs once
+ * The requests will modify the timeline points in place once the requests are resolved
+ */
+function generateReverseOutlineRequests(
+  timelinePoints: GQLTimelinePoint[]
+): Promise<void>[] {
+  return timelinePoints.map(async (timelinePoint, i) => {
+    const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
+    if (!timelinePoint.reverseOutline) {
+      if (
+        previousTimelinePoint?.version.plainText ===
+        timelinePoint.version.plainText
+      ) {
+        console.log('Reverse Outline: no changes from previous version');
+        // Will get filled in later from previous timeline point
+      } else {
+        console.log('Reverse Outline: making request to openai');
+        timelinePoint.reverseOutline = await reverseOutlinePromptRequest(
+          timelinePoint.version
+        );
+      }
+    }
   });
 }
 
@@ -162,71 +246,17 @@ export function useWithGetDocumentTimeline() {
         relatedFeedback: '',
       };
     });
-    // TODO: instead of getting the existing document timeline, check key outline storage.
     const existingDocumentTimeline = await fetchDocTimeline(userId, docId);
-    if (existingDocumentTimeline) {
-      existingDocumentTimeline.timelinePoints.forEach(
-        (existingTimelinePoint) => {
-          let matchingTimelinePointIndex = timelinePoints.findIndex(
-            (timelinePoint) =>
-              timelinePoint.version.docId ===
-                existingTimelinePoint.version.docId &&
-              timelinePoint.versionTime === existingTimelinePoint.versionTime
-          );
-          if (matchingTimelinePointIndex !== -1) {
-            timelinePoints[matchingTimelinePointIndex] = existingTimelinePoint;
-          }
-        }
-      );
-    }
+    timelinePoints = mergeExistingTimelinePoints(
+      timelinePoints,
+      existingDocumentTimeline?.timelinePoints
+    );
     // Generate summary and reverse outline in parallel for timeline points without these values
-    const changeSummaryRequests = timelinePoints.map(
-      async (timelinePoint, i) => {
-        const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
-        if (!timelinePoint.changeSummary && !previousTimelinePoint) {
-          timelinePoint.changeSummary = await changeSummaryPromptRequest(
-            '',
-            timelinePoint.version.plainText
-          );
-        }
-        if (!timelinePoint.changeSummary && previousTimelinePoint) {
-          if (
-            previousTimelinePoint?.version.plainText ===
-            timelinePoint.version.plainText
-          ) {
-            console.log('Change Summary: no changes from previous version');
-            timelinePoint.changeSummary = 'No changes from previous version';
-          } else {
-            console.log('Change Summary: making request to openai');
-            timelinePoint.changeSummary = await changeSummaryPromptRequest(
-              previousTimelinePoint.version.plainText,
-              timelinePoint.version.plainText
-            );
-          }
-        }
-      }
-    );
-    const reverseOutlineRequests = timelinePoints.map(
-      async (timelinePoint, i) => {
-        const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
-        if (!timelinePoint.reverseOutline) {
-          if (
-            previousTimelinePoint?.version.plainText ===
-            timelinePoint.version.plainText
-          ) {
-            console.log('Reverse Outline: no changes from previous version');
-            // Will get filled in later from previous timeline point
-          } else {
-            console.log('Reverse Outline: making request to openai');
-            timelinePoint.reverseOutline = await reverseOutlinePromptRequest(
-              timelinePoint.version
-            );
-          }
-        }
-      }
-    );
+    const changeSummaryRequests = generateChangeSummaryRequests(timelinePoints);
+    const reverseOutlineRequests =
+      generateReverseOutlineRequests(timelinePoints);
     await Promise.all([...changeSummaryRequests, ...reverseOutlineRequests]);
-    fillInReverseOutlines(timelinePoints);
+    timelinePoints = fillInExistingReverseOutlines(timelinePoints);
 
     const documentTimeline: GQLDocumentTimeline = {
       docId,
