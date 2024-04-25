@@ -73,7 +73,7 @@ describe("Document Timeline Unit Tests", () => {
       )
       const {getDocumentTimeline} = useWithGetDocumentTimeline();
 
-      const res = await getDocumentTimeline("fake-user", "fake-doc", [], "fake-key")
+      const res = await getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
 
       assert.equal(openAiNocScope.isDone(), false); // no openAi calls should have occured since we utilize existing timeline
       assert.equal(res.timelinePoints.length, docTimeline.timelinePoints.length);
@@ -122,7 +122,7 @@ describe("Document Timeline Unit Tests", () => {
         }
       )
       const {getDocumentTimeline} = useWithGetDocumentTimeline();
-      const res = await getDocumentTimeline("fake-user", "fake-doc", [], "fake-key")
+      const res = await getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
       assert.equal(openAiChangeSummaryNock.isDone(), true);
       assert.equal(reverseOutlineNock.isDone(), true);
       assert.equal(res.timelinePoints[0].changeSummary, defaultChangeSummaryRes);
@@ -193,7 +193,7 @@ describe("Document Timeline Unit Tests", () => {
       )
       const {getDocumentTimeline} = useWithGetDocumentTimeline();
 
-      const res = await getDocumentTimeline("fake-user", "fake-doc", [], "fake-key")
+      const res = await getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
       assert.equal(openAiChangeSummaryNock.isDone(), true);
       assert.equal(reverseOutlineNock.isDone(), true);
       assert.equal(storeDocTimelineNoc.isDone(), true);

@@ -10,10 +10,7 @@ import { OpenAiAsyncJobStatus } from '../../types.js';
 import { useWithGetDocumentTimeline } from './use-with-get-document-timeline.js';
 import { useWithGoogleApi } from '../../hooks/google_api.js';
 import { wrapHandler } from '../../sentry-helpers.js';
-import {
-  storeDoctimelineDynamoDB,
-  updateDynamoJobStatus,
-} from '../../dynamo-helpers.js';
+import { updateDynamoJobStatus } from '../../dynamo-helpers.js';
 
 interface ExtractedDocumentTimelineRequestData {
   docId: string;
@@ -50,6 +47,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
       );
       const { getDocumentTimeline } = useWithGetDocumentTimeline();
       await getDocumentTimeline(
+        jobId,
         userId,
         docId,
         externalGoogleDocRevisions,

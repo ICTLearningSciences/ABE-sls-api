@@ -170,7 +170,10 @@ function generateChangeSummaryRequests(
   timelinePoints: GQLTimelinePoint[]
 ): Promise<void>[] {
   return timelinePoints.map(async (timelinePoint, i) => {
-    if (timelinePoint.changeSummary) {
+    if (
+      timelinePoint.changeSummary &&
+      timelinePoint.reverseOutlineStatus === OpenAiGenerationStatus.COMPLETED
+    ) {
       return;
     }
     const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
@@ -208,7 +211,10 @@ function generateReverseOutlineRequests(
 ): Promise<void>[] {
   return timelinePoints.map(async (timelinePoint, i) => {
     const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
-    if (!timelinePoint.reverseOutline) {
+    if (
+      !timelinePoint.reverseOutline ||
+      timelinePoint.reverseOutlineStatus !== OpenAiGenerationStatus.COMPLETED
+    ) {
       if (
         previousTimelinePoint?.version.plainText ===
         timelinePoint.version.plainText
@@ -275,6 +281,7 @@ export const NUM_GENERATED_PER_REQUEST = 5;
 
 export function useWithGetDocumentTimeline() {
   async function getDocumentTimeline(
+    jobId: string,
     userId: string,
     docId: string,
     externalGoogleDocRevisions: drive_v3.Schema$Revision[],
@@ -319,6 +326,7 @@ export function useWithGetDocumentTimeline() {
           'Something went wrong generating timeline points. Too many loops.'
         );
       }
+      numLoops++;
       // modifies timeline points in place by reference
       await fillSummariesInPlace(timelinePointsToGenerate);
       timelinePointsToGenerate = getTimelinePointsToGenerate(timelinePoints);
@@ -329,7 +337,7 @@ export function useWithGetDocumentTimeline() {
           timelinePoints: sortDocumentTimelinePoints(timelinePoints),
         };
         await storeDoctimelineDynamoDB(
-          docId,
+          jobId,
           documentTimeline,
           OpenAiAsyncJobStatus.IN_PROGRESS
         );
@@ -341,7 +349,7 @@ export function useWithGetDocumentTimeline() {
       timelinePoints: sortDocumentTimelinePoints(timelinePoints),
     };
     await storeDoctimelineDynamoDB(
-      docId,
+      jobId,
       documentTimeline,
       OpenAiAsyncJobStatus.COMPLETE
     );
