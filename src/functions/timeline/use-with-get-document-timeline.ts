@@ -22,8 +22,8 @@ import { drive_v3 } from 'googleapis';
 import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import { changeSummaryPromptRequest } from './change-summary.js';
 import Sentry from '../../sentry-helpers.js';
-import { storeDoctimelineDynamoDB } from 'dynamo-helpers.js';
-import { OpenAiAsyncJobStatus } from 'types.js';
+import { storeDoctimelineDynamoDB } from '../../dynamo-helpers.js';
+import { OpenAiAsyncJobStatus } from '../../types.js';
 
 export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,
