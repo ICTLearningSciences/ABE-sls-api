@@ -7,13 +7,13 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import { DynamoDBStreamEvent } from 'aws-lambda';
 import { OpenAiAsyncJobStatus } from '../../types.js';
-import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
-import requireEnv from '../../helpers.js';
 import { useWithGetDocumentTimeline } from './use-with-get-document-timeline.js';
 import { useWithGoogleApi } from '../../hooks/google_api.js';
 import { wrapHandler } from '../../sentry-helpers.js';
-
-const jobsTableName = requireEnv('JOBS_TABLE_NAME');
+import {
+  storeDoctimelineDynamoDB,
+  updateDynamoJobStatus,
+} from '../../dynamo-helpers.js';
 
 interface ExtractedDocumentTimelineRequestData {
   docId: string;
@@ -38,11 +38,10 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
       );
       continue;
     }
-    const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
     try {
       const { docId, userId } = docTimelineRequestData;
       const { getGoogleAPIs, getGoogleDocVersions } = useWithGoogleApi();
-      const { drive, docs, accessToken: _accessToken } = await getGoogleAPIs();
+      const { drive, accessToken: _accessToken } = await getGoogleAPIs();
       const accessToken = _accessToken || '';
       const externalGoogleDocRevisions = await getGoogleDocVersions(
         drive,
@@ -50,59 +49,14 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         accessToken
       );
       const { getDocumentTimeline } = useWithGetDocumentTimeline();
-      // Don't need to return anything, just need to process the async request.
-      const documentTimelineRes = await getDocumentTimeline(
+      await getDocumentTimeline(
         userId,
         docId,
         externalGoogleDocRevisions,
         accessToken
       );
-      // Update the job in dynamo db
-      const tableRequest: UpdateItemCommandInput = {
-        TableName: jobsTableName,
-        Key: {
-          id: {
-            S: jobId,
-          },
-        },
-        UpdateExpression:
-          'set documentTimeline = :documentTimeline, job_status = :job_status',
-        ExpressionAttributeValues: {
-          ':documentTimeline': {
-            S: JSON.stringify(documentTimelineRes),
-          },
-          ':job_status': {
-            S: OpenAiAsyncJobStatus.COMPLETE,
-          },
-        },
-      };
-      await dynamoDbClient
-        .updateItem(tableRequest)
-        .catch((err) => {
-          console.error(err);
-        })
-        .then(() => {
-          console.log('Updated dynamo db record');
-        });
     } catch (err) {
-      const failedRequest: UpdateItemCommandInput = {
-        TableName: jobsTableName,
-        Key: {
-          id: {
-            S: jobId,
-          },
-        },
-        UpdateExpression: 'set job_status = :job_status',
-        ExpressionAttributeValues: {
-          ':job_status': {
-            S: OpenAiAsyncJobStatus.FAILED,
-          },
-        },
-      };
-      await dynamoDbClient.updateItem(failedRequest).catch((err) => {
-        console.error(err);
-        throw err;
-      });
+      await updateDynamoJobStatus(jobId, OpenAiAsyncJobStatus.FAILED);
       throw err;
     }
   }

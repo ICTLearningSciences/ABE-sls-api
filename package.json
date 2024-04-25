@@ -43,6 +43,7 @@
     "@types/node": "^11.13.0",
     "@types/supertest": "^6.0.2",
     "@types/uuid": "^9.0.8",
+    "aws-sdk-client-mock": "^4.0.0",
     "chai": "^5.1.0",
     "license-check-and-add": "^4.0.5",
     "mocha": "^10.4.0",

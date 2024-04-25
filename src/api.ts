@@ -64,17 +64,22 @@ async function execHttp<T>(
   if (optsEffective.axiosMiddleware) {
     optsEffective.axiosMiddleware(axiosInst);
   }
-  const result = await axiosInst.request({
-    url: query,
-    method: method,
-    ...axiosConfig,
-    headers: {
-      ...(axiosConfig.headers || {}), // if any headers passed in opts, include them
-      ...(optsEffective && optsEffective.accessToken // if accessToken passed in opts, add auth to headers
-        ? { Authorization: `bearer ${optsEffective.accessToken}` }
-        : {}),
-    },
-  });
+  const result = await axiosInst
+    .request({
+      url: query,
+      method: method,
+      ...axiosConfig,
+      headers: {
+        ...(axiosConfig.headers || {}), // if any headers passed in opts, include them
+        ...(optsEffective && optsEffective.accessToken // if accessToken passed in opts, add auth to headers
+          ? { Authorization: `bearer ${optsEffective.accessToken}` }
+          : {}),
+      },
+    })
+    .catch((err) => {
+      console.error(err);
+      throw err;
+    });
   return getDataFromAxiosResponse(result, optsEffective.dataPath || []);
 }
 

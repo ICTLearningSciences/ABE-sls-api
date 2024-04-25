@@ -19,14 +19,23 @@ export interface TimelineSlice {
   versions: IGDocVersion[];
 }
 
+export enum OpenAiGenerationStatus {
+  NONE = 'NONE',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+}
+
 export interface GQLTimelinePoint {
   type: TimelinePointType;
   versionTime: string;
   version: IGDocVersion;
   intent: string;
   changeSummary: string;
+  changeSummaryStatus: OpenAiGenerationStatus;
   userInputSummary: string;
   reverseOutline: string;
+  reverseOutlineStatus: OpenAiGenerationStatus;
   relatedFeedback: string;
 }
 

@@ -1,5 +1,5 @@
 import { drive_v3 } from "googleapis";
-import { GQLDocumentTimeline, IGDocVersion, TimelinePointType } from "../../../../src/functions/timeline/types";
+import { GQLDocumentTimeline, IGDocVersion, OpenAiGenerationStatus, TimelinePointType } from "../../../../src/functions/timeline/types";
 import {v4 as uuidv4} from "uuid";
 
 export function isoStringMinsFromNow(mins: number): string {
@@ -86,6 +86,8 @@ export const emptyDocTimeline: GQLDocumentTimeline = {
         "intent": "",
         "changeSummary": "The essay describes ponies as magical creatures that embody freedom and adventure. They are described as graceful and elegant animals that offer companionship and loyalty to those who earn their trust. The essay also emphasizes the diverse stories and personalities of ponies, which add whimsy and wonder to human lives.",
         "userInputSummary": "",
+        changeSummaryStatus: OpenAiGenerationStatus.COMPLETED,
+        reverseOutlineStatus: OpenAiGenerationStatus.COMPLETED,
         "reverseOutline": "{\n  \"Thesis Statement\": \"Ponies are not just animals but beloved friends, offering companionship and loyalty to those fortunate enough to earn their trust.\",\n  \"Supporting Claims\": [\n    \"Ponies embody a spirit of freedom and adventure that captivates the imagination.\",\n    \"Ponies have a grace and elegance that is captivating.\",\n    \"Ponies offer companionship and loyalty to their human counterparts.\"\n  ],\n  \"Evidence Given for Each Claim\": [\n    {\n      \"Claim A\": \"Ponies galloping across open fields and grazing in serene pastures embody a spirit of freedom and adventure.\",\n      \"Claim A Evidence\": [\n        \"Gallop across open fields\",\n        \"Grazing in serene pastures\"\n      ]\n    },\n    {\n      \"Claim B\": \"Ponies exude an aura of grace and elegance with their sturdy frames and spirited personalities.\",\n      \"Claim B Evidence\": [\n        \"Sturdy frames\",\n        \"Spirited personalities\"\n      ]\n    },\n    {\n      \"Claim C\": \"Ponies offer companionship and loyalty to those who earn their trust.\",\n      \"Claim C Evidence\": [\n        \"Playful antics of foals\",\n        \"Wisdom of seasoned veterans\"\n      ]\n    }\n  ]\n}",
         "relatedFeedback": ""
       },
@@ -112,6 +114,8 @@ export const emptyDocTimeline: GQLDocumentTimeline = {
         "intent": "",
         "changeSummary": "The biggest change between the previous version and the current version is a major revision in the overall tone and description of ponies. In the current version, there is a more detailed and poetic description of their characteristics and their role in human lives. Additionally, there are minor changes throughout the document, such as rephrasing and sentence structure improvements.",
         "userInputSummary": "",
+        changeSummaryStatus: OpenAiGenerationStatus.COMPLETED,
+        reverseOutlineStatus: OpenAiGenerationStatus.COMPLETED,
         "reverseOutline": "{\n    \"Thesis Statement\": \"Ponies are beloved companions that bring joy and adventure to people's lives.\",\n    \"Supporting Claims\": [\n        \"Ponies embody a spirit of freedom and adventure.\",\n        \"Ponies offer companionship and loyalty to those who earn their trust.\",\n        \"Ponies have a unique story that adds whimsy and wonder to human lives.\"\n    ],\n    \"Evidence Given for Each Claim\": [\n        {\n            \"Claim A\": \"Ponies embody a spirit of freedom and adventure.\",\n            \"Claim A Evidence\": [\n                \"Galloping across open fields\",\n                \"Delicately grazing in serene pastures\"\n            ]\n        },\n        {\n            \"Claim B\": \"Ponies offer companionship and loyalty to those who earn their trust.\",\n            \"Claim B Evidence\": [\n                \"Sturdy frames and spirited personalities\",\n                \"Playful antics of foals\",\n                \"Wisdom of seasoned veterans\"\n            ]\n        },\n        {\n            \"Claim C\": \"Ponies have a unique story that adds whimsy and wonder to human lives.\",\n            \"Claim C Evidence\": [\n                \"Each pony carries a unique story\",\n                \"Weaving into the tapestry of human lives\"\n            ]\n        }\n    ]\n}",
         "relatedFeedback": ""
       },
@@ -138,6 +142,8 @@ export const emptyDocTimeline: GQLDocumentTimeline = {
         "intent": "",
         "changeSummary": "The current version includes some minor changes such as rephrasing certain sentences for clarity and flow, but overall, the structure and content remain unchanged. There are no major additions, deletions, or revisions in this version.",
         "userInputSummary": "",
+        changeSummaryStatus: OpenAiGenerationStatus.COMPLETED,
+        reverseOutlineStatus: OpenAiGenerationStatus.COMPLETED,
         "reverseOutline": "{\n    \"Thesis Statement\": \"Ponies are beloved animals that capture the imagination and provide companionship to humans.\",\n    \"Supporting Claims\": [\n        \"Ponies embody a spirit of freedom and adventure.\",\n        \"Ponies offer companionship and loyalty to those who earn their trust.\"\n    ],\n    \"Evidence Given for Each Claim\": [\n        {\n            \"Claim A\": \"Ponies embody a spirit of freedom and adventure.\",\n            \"Claim A Evidence\": [\"Galloping across open fields\", \"Delicately grazing in serene pastures\"]\n        },\n        {\n            \"Claim B\": \"Ponies offer companionship and loyalty to those who earn their trust.\",\n            \"Claim B Evidence\": [\"Playful antics of foals\", \"Wisdom of seasoned veterans\"]\n        }\n    ]\n}",
         "relatedFeedback": ""
       },
@@ -166,6 +172,8 @@ export const emptyDocTimeline: GQLDocumentTimeline = {
         },
         "intent": "",
         "changeSummary": "",
+        changeSummaryStatus: OpenAiGenerationStatus.NONE,
+        reverseOutlineStatus: OpenAiGenerationStatus.NONE,
         "userInputSummary": "",
         "reverseOutline": "",
         "relatedFeedback": ""
