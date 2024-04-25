@@ -7,12 +7,23 @@ The full terms of this copyright and license should always be found in the root 
 import dotenv from "dotenv";
 import { fixturePath } from "./helpers.js";
 import { before, after } from "mocha";
+import {dynamoDbClient} from "../src/dynamo-helpers.js";
+import { mockClient } from "aws-sdk-client-mock";
+import nock from "nock";
+
+export const ddbMock = mockClient(dynamoDbClient)
 
 before(() => {
   dotenv.config({ path: fixturePath(".env") });
   process.env.DOTENV_PATH = fixturePath(".env");
+  ddbMock.reset();
 });
 
 after(async () => {
-  // After tests are done
+  // After ALL tests are done
 });
+
+afterEach(() => {
+    nock.cleanAll();
+    ddbMock.reset();
+})

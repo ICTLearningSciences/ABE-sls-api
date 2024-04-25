@@ -13,6 +13,7 @@ import {
   GQLDocumentTimeline,
   GQLTimelinePoint,
   IGDocVersion,
+  OpenAiGenerationStatus,
   TimelinePointType,
   TimelineSlice,
 } from './types.js';
@@ -21,6 +22,8 @@ import { drive_v3 } from 'googleapis';
 import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import { changeSummaryPromptRequest } from './change-summary.js';
 import Sentry from '../../sentry-helpers.js';
+import { storeDoctimelineDynamoDB } from '../../dynamo-helpers.js';
+import { OpenAiAsyncJobStatus } from '../../types.js';
 
 export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,
@@ -167,7 +170,10 @@ function generateChangeSummaryRequests(
   timelinePoints: GQLTimelinePoint[]
 ): Promise<void>[] {
   return timelinePoints.map(async (timelinePoint, i) => {
-    if (timelinePoint.changeSummary) {
+    if (
+      timelinePoint.changeSummary &&
+      timelinePoint.reverseOutlineStatus === OpenAiGenerationStatus.COMPLETED
+    ) {
       return;
     }
     const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
@@ -192,6 +198,7 @@ function generateChangeSummaryRequests(
         );
       }
     }
+    timelinePoint.changeSummaryStatus = OpenAiGenerationStatus.COMPLETED;
   });
 }
 
@@ -204,7 +211,10 @@ function generateReverseOutlineRequests(
 ): Promise<void>[] {
   return timelinePoints.map(async (timelinePoint, i) => {
     const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
-    if (!timelinePoint.reverseOutline) {
+    if (
+      !timelinePoint.reverseOutline ||
+      timelinePoint.reverseOutlineStatus !== OpenAiGenerationStatus.COMPLETED
+    ) {
       if (
         previousTimelinePoint?.version.plainText ===
         timelinePoint.version.plainText
@@ -217,12 +227,61 @@ function generateReverseOutlineRequests(
           timelinePoint.version
         );
       }
+      timelinePoint.reverseOutlineStatus = OpenAiGenerationStatus.COMPLETED;
     }
   });
 }
 
+export async function fillSummariesInPlace(
+  timelinePoints: GQLTimelinePoint[]
+): Promise<GQLTimelinePoint[]> {
+  // Generate summary and reverse outline in parallel for timeline points without these values
+  const changeSummaryRequests = generateChangeSummaryRequests(timelinePoints);
+  const reverseOutlineRequests = generateReverseOutlineRequests(timelinePoints);
+  await Promise.all([...changeSummaryRequests, ...reverseOutlineRequests]);
+  timelinePoints = fillInExistingReverseOutlines(timelinePoints);
+  return timelinePoints;
+}
+
+export function timelinePointGenerationComplete(
+  timelinePoint: GQLTimelinePoint
+): boolean {
+  return (
+    timelinePoint.changeSummaryStatus === OpenAiGenerationStatus.COMPLETED &&
+    timelinePoint.reverseOutlineStatus === OpenAiGenerationStatus.COMPLETED
+  );
+}
+
+/**
+ * Checks if the timelinepoint needs its changeSummary or reverseOutline generated
+ * @param timelinePoints to check if need generation
+ * @returns  a list of timeline points that need generation
+ */
+export function getTimelinePointsToGenerate(
+  timelinePoints: GQLTimelinePoint[]
+): GQLTimelinePoint[] {
+  const timelinePointsNeedingGenerations = timelinePoints.filter(
+    (timelinePoint) => !timelinePointGenerationComplete(timelinePoint)
+  );
+  if (
+    timelinePointsNeedingGenerations.length <=
+    NUM_GENERATED_PER_REQUEST * 2
+  ) {
+    return timelinePointsNeedingGenerations;
+  }
+  // only generate requests for the first 5 and last 5 timeline points
+  return timelinePointsNeedingGenerations
+    .slice(0, NUM_GENERATED_PER_REQUEST)
+    .concat(
+      timelinePointsNeedingGenerations.slice(NUM_GENERATED_PER_REQUEST * -1)
+    );
+}
+
+export const NUM_GENERATED_PER_REQUEST = 5;
+
 export function useWithGetDocumentTimeline() {
   async function getDocumentTimeline(
+    jobId: string,
     userId: string,
     docId: string,
     externalGoogleDocRevisions: drive_v3.Schema$Revision[],
@@ -241,11 +300,15 @@ export function useWithGetDocumentTimeline() {
         type,
         version,
         versionTime: version.createdAt,
-        intent: '',
+
+        reverseOutlineStatus: OpenAiGenerationStatus.IN_PROGRESS,
+        changeSummaryStatus: OpenAiGenerationStatus.IN_PROGRESS,
         changeSummary: '',
-        userInputSummary: '',
         reverseOutline: '',
+
+        userInputSummary: '',
         relatedFeedback: '',
+        intent: '',
       };
     });
     const existingDocumentTimeline = await fetchDocTimeline(userId, docId);
@@ -253,18 +316,44 @@ export function useWithGetDocumentTimeline() {
       timelinePoints,
       existingDocumentTimeline?.timelinePoints
     );
-    // Generate summary and reverse outline in parallel for timeline points without these values
-    const changeSummaryRequests = generateChangeSummaryRequests(timelinePoints);
-    const reverseOutlineRequests =
-      generateReverseOutlineRequests(timelinePoints);
-    await Promise.all([...changeSummaryRequests, ...reverseOutlineRequests]);
-    timelinePoints = fillInExistingReverseOutlines(timelinePoints);
-
+    let timelinePointsToGenerate = getTimelinePointsToGenerate(timelinePoints);
+    let numLoops = 0;
+    const maxLoopsNeeded =
+      timelinePoints.length / NUM_GENERATED_PER_REQUEST + 1;
+    while (timelinePointsToGenerate.length > 0) {
+      if (numLoops > maxLoopsNeeded) {
+        throw new Error(
+          'Something went wrong generating timeline points. Too many loops.'
+        );
+      }
+      numLoops++;
+      // modifies timeline points in place by reference
+      await fillSummariesInPlace(timelinePointsToGenerate);
+      timelinePointsToGenerate = getTimelinePointsToGenerate(timelinePoints);
+      if (timelinePointsToGenerate.length > 0) {
+        const documentTimeline: GQLDocumentTimeline = {
+          docId,
+          user: userId,
+          timelinePoints: sortDocumentTimelinePoints(timelinePoints),
+        };
+        await storeDoctimelineDynamoDB(
+          jobId,
+          documentTimeline,
+          OpenAiAsyncJobStatus.IN_PROGRESS
+        );
+      }
+    }
     const documentTimeline: GQLDocumentTimeline = {
       docId,
       user: userId,
       timelinePoints: sortDocumentTimelinePoints(timelinePoints),
     };
+    await storeDoctimelineDynamoDB(
+      jobId,
+      documentTimeline,
+      OpenAiAsyncJobStatus.COMPLETE
+    );
+
     // store timeline in gql
     await storeDocTimeline(documentTimeline).catch((e) => {
       Sentry.captureException(e, {

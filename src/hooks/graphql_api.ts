@@ -210,8 +210,10 @@ export async function fetchDocTimeline(
               }
               intent
               changeSummary
+              changeSummaryStatus
               userInputSummary
               reverseOutline
+              reverseOutlineStatus
               relatedFeedback
           }
           }
@@ -294,8 +296,10 @@ export async function storeDocTimeline(
               }
               intent
               changeSummary
+              changeSummaryStatus
               userInputSummary
               reverseOutline
+              reverseOutlineStatus
               relatedFeedback
           }
           }
