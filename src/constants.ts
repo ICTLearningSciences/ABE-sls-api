@@ -27,8 +27,9 @@ export const IMPROVEMENT_TEMPLATE = {
       'string // The explanation of the improvement you want to make to the text',
   },
 };
+
 export const RETRY_ATTEMPTS = 3;
-export const OPENAI_DEFAULT_TEMP = 0.1;
+export const AI_DEFAULT_TEMP = 0.1;
 
 export const MAX_OPEN_AI_CHAIN_REQUESTS = 10;
 export const MAX_OPEN_AI_MESSAGES = 10;

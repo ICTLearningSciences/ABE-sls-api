@@ -4,9 +4,10 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import OpenAI from 'openai';
-import { DEFAULT_GPT_MODEL } from '../../constants.js';
-import { executeOpenAiUntilProperResponse } from '../../hooks/use-with-open-ai.js';
+import { OpenAiService } from '../../ai_services/openai/open-ai-service.js';
+import { GptModels, OpenAiPromptStep, PromptOutputTypes, PromptRoles } from 'types.js';
+
+const openAiService = OpenAiService.getInstance();
 
 export async function changeSummaryPromptRequest(
   lastVersionText: string,
@@ -14,50 +15,52 @@ export async function changeSummaryPromptRequest(
 ) {
   const isCurrentVersionFirstVersion = !lastVersionText;
 
-  const compareVersionsParams: OpenAI.Chat.Completions.ChatCompletionCreateParams =
-    {
-      messages: [
+    const compareVersionAiPromptStep: OpenAiPromptStep = {
+      targetGptModel: GptModels.GPT_3_5,
+      outputDataType: PromptOutputTypes.TEXT,
+      prompts: [
         {
-          role: 'assistant',
-          content: `Previous Version: ${lastVersionText}`,
+          promptText: `Previous Version: ${lastVersionText}`,
+          promptRole: PromptRoles.ASSISSANT,
+          includeEssay: false
         },
         {
-          role: 'assistant',
-          content: `Current Version: ${currentVersionText}`,
+          promptText: `Current Version: ${currentVersionText}`,
+          promptRole: PromptRoles.ASSISSANT,
+          includeEssay: false
         },
         {
-          role: 'system',
-          content: `Provided are two versions of a text document, a previous version and a current version.
-              Please summarize the differences between the two versions in 1 to 3 sentences.
-              The first sentence should give a clear statement on biggest changes and the scope of the changes such as major additions / deletions, major revisions, minor changes. The second and third sentences should clearly refer to what specific areas of the document changed substantially, with more specifics about what changed.
-              The second and third sentences are optional and are not needed if only minor changes were made.
-              `,
-        },
-      ],
-      model: DEFAULT_GPT_MODEL,
-    };
+          promptText: `Provided are two versions of a text document, a previous version and a current version.
+          Please summarize the differences between the two versions in 1 to 3 sentences.
+          The first sentence should give a clear statement on biggest changes and the scope of the changes such as major additions / deletions, major revisions, minor changes. The second and third sentences should clearly refer to what specific areas of the document changed substantially, with more specifics about what changed.
+          The second and third sentences are optional and are not needed if only minor changes were made.`,
+          promptRole: PromptRoles.SYSTEM,
+          includeEssay: false
+        }
+      ]
+    }
 
-  const summarizeVersionParams: OpenAI.Chat.Completions.ChatCompletionCreateParams =
-    {
-      messages: [
-        {
-          role: 'assistant',
-          content: `Here is the essay: ${currentVersionText}`,
-        },
-        {
-          role: 'system',
-          content: `Please summarize the essay in 3 sentences.
-              `,
-        },
-      ],
-      model: DEFAULT_GPT_MODEL,
-    };
+  const summarizeVersionPromptStep: OpenAiPromptStep = {
+    targetGptModel: GptModels.GPT_3_5,
+    outputDataType: PromptOutputTypes.TEXT,
+    prompts: [
+      {
+        promptText: `Here is the essay: ${currentVersionText}`,
+        promptRole: PromptRoles.ASSISSANT,
+        includeEssay: false
+      },
+      {
+        promptText: `Please summarize the essay in 3 sentences.`,
+        promptRole: PromptRoles.SYSTEM,
+        includeEssay: false
+      }
+    ],
+  }
 
-  const [res] = await executeOpenAiUntilProperResponse(
+  const [res] = await openAiService.completeChat(
     isCurrentVersionFirstVersion
-      ? summarizeVersionParams
-      : compareVersionsParams,
-    false
+      ? summarizeVersionPromptStep
+      : compareVersionAiPromptStep
   );
   return res.choices[0].message.content || '';
 }

@@ -5,9 +5,9 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 // Note: had to add .js to find this file in serverless
-import { useWithOpenAI } from '../../hooks/use-with-open-ai.js';
+import { useWithAiService } from '../../hooks/use-with-ai-service.js';
 import { DynamoDBStreamEvent } from 'aws-lambda';
-import { OpenAiAsyncJobStatus } from '../../types.js';
+import { AvailableAiServices, OpenAiAsyncJobStatus } from '../../types.js';
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import requireEnv from '../../helpers.js';
 import { wrapHandler } from '../../sentry-helpers.js';
@@ -38,17 +38,18 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
       openAiPromptSteps,
       authHeaders,
     } = openAiRequestData;
-    const { asyncAskAboutGDoc } = useWithOpenAI();
+    const { executeAiSteps } = useWithAiService();
     const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
     try {
-      const openAiResponse = await asyncAskAboutGDoc(
+      const service = AvailableAiServices.OPEN_AI
+      const openAiResponse = await executeAiSteps(
+        openAiPromptSteps,
         docsId,
         userId,
-        openAiPromptSteps,
-        systemPrompt,
         authHeaders,
+        systemPrompt,
         openAiModel,
-        jobId
+        service
       );
       // Update the job in dynamo db
       const tableRequest: UpdateItemCommandInput = {

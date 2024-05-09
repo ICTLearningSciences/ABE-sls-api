@@ -4,6 +4,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
+import { Schema } from 'jsonschema';
 import OpenAI from 'openai';
 
 export interface DocData {
@@ -48,17 +49,46 @@ export interface PromptConfiguration {
   promptRole?: PromptRoles;
 }
 
+export enum OpenAiGptModels {
+  GPT_3_5 = 'gpt-3.5-turbo-16k',
+  GPT_4 = 'gpt-4',
+  GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
+}
+
+export enum AzureGptModels{
+  GPT_3_5 = 'ABE-GPT-3_5_turbo_16k',
+  GPT_4_TURBO_PREVIEW = 'ABE-gpt-4-turbo-preview',
+  GPT_4 = 'ABE-gpt-4-base',
+}
+
 export enum GptModels {
   GPT_3_5 = 'gpt-3.5-turbo-16k',
   GPT_4 = 'gpt-4',
   GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
 }
 
+export enum AvailableAiServices{
+    OPEN_AI = "OPEN_AI",
+    AZURE_OPEN_AI = "AZURE_OPEN_AI"
+}
+
+
 export interface OpenAiPromptStep {
   prompts: PromptConfiguration[];
   targetGptModel: GptModels;
   customSystemRole?: string;
   outputDataType: PromptOutputTypes;
+  responseSchema?: Schema;
+}
+
+export type AiRequestContextPrompt = Omit<PromptConfiguration, 'includeEssay'>;
+
+export interface AiRequestContext{
+  prompts: AiRequestContextPrompt[];
+  targetGptModel: GptModels;
+  outputDataType: PromptOutputTypes;
+  systemRole: string;
+  responseSchema?: Schema;
 }
 
 export enum PromptOutputTypes {

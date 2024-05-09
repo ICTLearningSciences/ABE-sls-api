@@ -6,9 +6,11 @@ The full terms of this copyright and license should always be found in the root 
 */
 import OpenAI from 'openai';
 import { DEFAULT_GPT_MODEL } from '../../constants.js';
-import { executeOpenAiUntilProperResponse } from '../../hooks/use-with-open-ai.js';
 import { GQLIGDocVersion } from './types.js';
 import { Schema } from 'jsonschema';
+import { OpenAiService } from '../../ai_services/openai/open-ai-service.js';
+import { GptModels, OpenAiGptModels, OpenAiPromptStep, PromptOutputTypes, PromptRoles } from 'types.js';
+const openAiService = OpenAiService.getInstance()
 
 export interface ReverseOutline {
   'Thesis Statement': string;
@@ -70,12 +72,16 @@ const reverseOutlineSchema: Schema = {
 export async function reverseOutlinePromptRequest(
   currentVersion: GQLIGDocVersion
 ) {
-  const params: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
-    messages: [
-      { role: 'assistant', content: currentVersion.plainText },
+  const openAiStep: OpenAiPromptStep = {
+    prompts: [
       {
-        role: 'system',
-        content: `You are a literary and scholarly expert and have been evaluating university-level essays and thesis statements. You have been invited as an evaluation judge of writing, where a detailed and specific evaluation is expected.
+        promptText: currentVersion.plainText,
+        includeEssay: true,
+        promptRole: PromptRoles.ASSISSANT,
+      },
+      {
+        promptRole: PromptRoles.SYSTEM,
+        promptText: `You are a literary and scholarly expert and have been evaluating university-level essays and thesis statements. You have been invited as an evaluation judge of writing, where a detailed and specific evaluation is expected.
   
               Your task is to generate an outline for this writing. This outline should have a logical inverted pyramid structure. First, identify the most likely thesis statement for that essay. For the thesis statement, I want you to evaluate the claims that made to support the thesis statement. Based on this goal and the format below, list each main point.
               
@@ -98,14 +104,15 @@ export async function reverseOutlinePromptRequest(
               The essay you are rating is given below:
               ----------------------------------------------
               `,
+              includeEssay: true
       },
     ],
-    model: DEFAULT_GPT_MODEL,
-  };
-  const [res, answer] = await executeOpenAiUntilProperResponse(
-    params,
-    true,
-    reverseOutlineSchema
+    targetGptModel: GptModels.GPT_3_5,
+    responseSchema: reverseOutlineSchema,
+    outputDataType: PromptOutputTypes.JSON
+  }
+  const [res, answer] = await openAiService.completeChat(
+    openAiStep
   );
   return answer;
 }

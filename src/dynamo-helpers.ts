@@ -74,3 +74,23 @@ export async function storeDoctimelineDynamoDB(
       console.log('Updated dynamo db record');
     });
 }
+
+export async function updateDynamoAnswer(answer: string, dynamoJobId: string) {
+  const tableRequest: UpdateItemCommandInput = {
+    TableName: jobsTableName,
+    Key: {
+      id: {
+        S: dynamoJobId,
+      },
+    },
+    UpdateExpression: 'set answer = :answer',
+    ExpressionAttributeValues: {
+      ':answer': {
+        S: answer,
+      },
+    },
+  };
+  await dynamoDbClient.updateItem(tableRequest).catch((err) => {
+    console.error(err);
+  });
+}

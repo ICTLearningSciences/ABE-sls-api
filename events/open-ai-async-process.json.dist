@@ -15,7 +15,7 @@
                 },
                 "NewImage": {
                     "openAiRequestData": {
-                        "S": "{\"docsId\":\"1ZJDajRda33L8iKE7mM7tiD1AzrDJipUtEtIq7BFATzI\",\"userId\":\"653ad42b6e601e65dbf756d0\",\"systemPrompt\":\"\",\"openAiModel\":\"gpt-4\",\"openAiPromptSteps\":[{\"prompts\":[{\"promptRole\":\"user\",\"promptText\":\"What is 1 improvement I can do with this essay?\",\"includeEssay\":true}],\"outputDataType\":\"TEXT\"},{\"prompts\":[{\"promptRole\":\"user\",\"promptText\":\"Do you agree that my essay would benefit with this improvement? Please ONLY respond in valid JSON\",\"includeEssay\":true}],\"outputDataType\":\"JSON\"}],\"authHeaders\":{\"Authorization\":\"bearer xxxx\"}}"
+                        "S": "{\"docsId\":\"1ZJDajRda33L8iKE7mM7tiD1AzrDJipUtEtIq7BFATzI\",\"userId\":\"653ad42b6e601e65dbf756d0\",\"systemPrompt\":\"\",\"openAiModel\":\"gpt-4\",\"openAiPromptSteps\":[{\"prompts\":[{\"promptRole\":\"user\",\"promptText\":\"What is 1 improvement I can do with this essay?\",\"includeEssay\":true}],\"outputDataType\":\"TEXT\"},{\"prompts\":[{\"promptRole\":\"user\",\"promptText\":\"Do you agree that my essay would benefit with this improvement? Please ONLY respond in valid JSON\",\"includeEssay\":true}],\"outputDataType\":\"JSON\"}],\"authHeaders\":{\"Authorization\":\"bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1Mzk3MjcwNmU2MDFlNjVkYmMzYWNlYSIsInJvbGUiOiJBRE1JTiIsImV4cGlyYXRpb25EYXRlIjoiMjAyNC0wNS0xMFQwMTo1NDoyMi42MjJaIiwiaWF0IjoxNzE1MjE5NjYyLCJleHAiOjE3MTUzMDYwNjJ9.nuCuLKvlqjMGdy9GzA3_RcgF_9ER5LeF0aBM6fI0m_c\"}}"
                     },
                     "answer": {
                         "S": ""
