@@ -14,27 +14,6 @@ export interface DocData {
   modifiedTime: string;
 }
 
-export interface AIReqRes {
-  aiServiceRequestParams: string; // OpenAI.Chat.Completions.ChatCompletionCreateParams for OpenAi
-  aiServiceResponse: string; // OpenAI.Chat.Completions.ChatCompletion.Choice[] for OpenAi
-}
-
-export interface InputQuestionResponse extends AIReqRes {
-  answer: string;
-}
-
-export interface SinglePromptResponse extends AIReqRes {
-  originalPromptConfigs: PromptConfiguration[];
-}
-
-/**
- * Multistep Prompt Types
- */
-export interface AiPromptResponse {
-  aiReqResData: AIReqRes[];
-  answer: string;
-}
-
 export enum PromptRoles {
   SYSTEM = 'system',
   USER = 'user',
@@ -89,9 +68,6 @@ export interface AiStep {
 
 export interface GQLPromptRunResponse {
   googleDocId: string;
-  user: string;
-  promptConfiguration: PromptConfiguration[];
-  aiSteps: AiStep[];
 }
 
 export enum AiAsyncJobStatus {

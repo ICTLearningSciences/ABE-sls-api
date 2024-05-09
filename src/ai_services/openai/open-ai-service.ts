@@ -11,15 +11,16 @@ import {
   PromptOutputTypes,
   PromptRoles,
 } from '../../types.js';
-import {
-  AiService,
-  CompleteChatResponse,
-} from '../abstract-classes/abstract-ai-service.js';
+import { AiService } from '../abstract-classes/abstract-ai-service.js';
 import { ChatCompletionCreateParamsNonStreaming } from 'openai/resources/index.js';
 import { v4 as uuid } from 'uuid';
 import { Schema } from 'jsonschema';
 import { isJsonString, validateJsonResponse } from '../../helpers.js';
 import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
+import {
+  AiServiceResponse,
+  AiStepData,
+} from '../../ai_services/ai-service-types.js';
 
 export const DefaultOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:
@@ -27,7 +28,16 @@ export const DefaultOpenAiConfig = {
   DEFAULT_GPT_MODEL: GptModels.OPEN_AI_GPT_3_5,
 };
 
-export class OpenAiService extends AiService {
+export type OpenAiReqType = ChatCompletionCreateParamsNonStreaming;
+export type OpenAiResType = OpenAI.Chat.Completions.ChatCompletion;
+
+export type OpenAiStepDataType = AiStepData<OpenAiReqType, OpenAiResType>;
+export type OpenAiPromptResponse = AiServiceResponse<
+  OpenAiReqType,
+  OpenAiResType
+>;
+
+export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   private static instance: OpenAiService;
   openAiClient: OpenAI;
 
@@ -149,7 +159,7 @@ export class OpenAiService extends AiService {
   async completeChat(
     context: AiRequestContext,
     overrideModel?: GptModels
-  ): Promise<CompleteChatResponse> {
+  ): Promise<OpenAiPromptResponse> {
     const params = this.convertContextDataToServiceParams(
       context,
       overrideModel
@@ -161,8 +171,10 @@ export class OpenAiService extends AiService {
     );
 
     return {
-      reqParamsString: JSON.stringify(params),
-      responseString: JSON.stringify(chatCompleteResponse),
+      aiReqResData: {
+        aiServiceRequestParams: params,
+        aiServiceResponse: chatCompleteResponse,
+      },
       answer: answer,
     };
   }

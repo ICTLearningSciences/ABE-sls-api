@@ -4,32 +4,28 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { AiServicesPromptResponseTypes } from '../../ai_services/ai-service-types.js';
-import { AiRequestContext } from '../../types.js';
+import {
+  OpenAiPromptResponse,
+  OpenAiStepDataType,
+} from './openai/open-ai-service.js';
+
+export interface AiStepData<ReqType, ResType> {
+  aiServiceRequestParams: ReqType; // OpenAI.Chat.Completions.ChatCompletionCreateParams for OpenAi
+  aiServiceResponse: ResType; // OpenAI.Chat.Completions.ChatCompletion.Choice[] for OpenAi
+}
+
+export interface AiServiceResponse<ReqType, ResType> {
+  aiReqResData: AiStepData<ReqType, ResType>;
+  answer: string;
+}
+
+export interface AiServiceFinalResponseType {
+  aiAllStepsData: AiServiceStepDataTypes[];
+  answer: string;
+}
 
 /**
- * Response from OpenAI API
+ * Merge all types here for use in abstract locations
  */
-export interface CompleteChatResponse<Req, Res> {
-  reqParams: Req; // request parameters sent to AI service, stringified
-  response: Res; // response from AI service, stringified
-  answer: string; // primary answer from AI service
-}
-
-export abstract class AiService<Req, Res> {
-  serviceName: string;
-
-  constructor(serviceName: string) {
-    this.serviceName = serviceName;
-  }
-
-  abstract convertContextDataToServiceParams(
-    requestContext: AiRequestContext,
-    overrideModel?: string
-  ): any;
-
-  abstract completeChat(
-    context: AiRequestContext,
-    overrideModel?: string
-  ): Promise<AiServicesPromptResponseTypes>;
-}
+export type AiServiceStepDataTypes = OpenAiStepDataType;
+export type AiServicesPromptResponseTypes = OpenAiPromptResponse;

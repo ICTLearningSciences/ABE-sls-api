@@ -55,7 +55,6 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         openAiModel as GptModels,
         service
       );
-      console.log(aiServiceResponse);
       // Update the job in dynamo db
       const tableRequest: UpdateItemCommandInput = {
         TableName: jobsTableName,

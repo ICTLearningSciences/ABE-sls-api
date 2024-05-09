@@ -6,16 +6,14 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { MAX_OPEN_AI_CHAIN_REQUESTS } from '../constants.js';
 import { getDocData } from '../api.js';
-import {
-  AiPromptStep,
-  AvailableAiServices,
-  GptModels,
-  AiPromptResponse,
-} from '../types.js';
+import { AiPromptStep, AvailableAiServices, GptModels } from '../types.js';
 import { storePromptRun } from './graphql_api.js';
 import { AuthHeaders } from '../functions/openai/helpers.js';
 import { OpenAiService } from '../ai_services/openai/open-ai-service.js';
-
+import {
+  AiServiceFinalResponseType,
+  AiServiceStepDataTypes,
+} from '../ai_services/ai-service-types.js';
 const openAiService = OpenAiService.getInstance();
 
 export function useWithAiService() {
@@ -31,45 +29,46 @@ export function useWithAiService() {
     systemRole: string,
     overrideGptModels: GptModels,
     aiService: AvailableAiServices
-  ): Promise<AiPromptResponse> {
+  ): Promise<AiServiceFinalResponseType> {
     if (aiSteps.length >= MAX_OPEN_AI_CHAIN_REQUESTS) {
       throw new Error(
         `Please limit the number of prompts to ${MAX_OPEN_AI_CHAIN_REQUESTS} or less`
       );
     }
-    const aiResponses: AiPromptResponse = {
-      aiReqResData: [],
-      answer: '',
-    };
+    let finalAnswer = '';
+    const allStepsData: AiServiceStepDataTypes[] = [];
     const docsContent = await getDocData(docsId, authHeaders);
     const docsPlainText = docsContent.plainText;
     let previousOutput = '';
     for (let i = 0; i < aiSteps.length; i++) {
-      const curOpenAiStep = aiSteps[i];
+      const curAiStep = aiSteps[i];
       const res = await openAiService.completeChat(
         {
-          aiStep: curOpenAiStep,
+          aiStep: curAiStep,
           docsPlainText,
           previousOutput,
           systemRole,
         },
         overrideGptModels
       );
-      const { reqParamsString, responseString, answer } = res;
-      aiResponses.aiReqResData.push({
-        aiServiceRequestParams: reqParamsString,
-        aiServiceResponse: responseString,
+      const { aiReqResData, answer } = res;
+      allStepsData.push({
+        aiServiceRequestParams: aiReqResData.aiServiceRequestParams,
+        aiServiceResponse: aiReqResData.aiServiceResponse,
       });
       previousOutput = answer;
-      aiResponses.answer = answer;
+      finalAnswer = answer;
     }
     try {
-      await storePromptRun(docsId, userId, aiSteps, aiResponses.aiReqResData);
+      await storePromptRun(docsId, userId, aiSteps, allStepsData);
     } catch (err) {
       console.error('Failed to store prompt run in gql');
       console.log(err);
     } finally {
-      return aiResponses;
+      return {
+        aiAllStepsData: allStepsData,
+        answer: finalAnswer,
+      };
     }
   }
 
