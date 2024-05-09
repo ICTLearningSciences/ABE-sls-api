@@ -28,7 +28,6 @@ export const IMPROVEMENT_TEMPLATE = {
   },
 };
 
-
 export const RETRY_ATTEMPTS = 3;
 export const AI_DEFAULT_TEMP = 0.1;
 

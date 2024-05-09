@@ -7,7 +7,11 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import { useWithAiService } from '../../hooks/use-with-ai-service.js';
 import { DynamoDBStreamEvent } from 'aws-lambda';
-import { AvailableAiServices, GptModels, OpenAiAsyncJobStatus } from '../../types.js';
+import {
+  AvailableAiServices,
+  GptModels,
+  AiAsyncJobStatus,
+} from '../../types.js';
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import requireEnv from '../../helpers.js';
 import { wrapHandler } from '../../sentry-helpers.js';
@@ -35,15 +39,15 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
       userId,
       systemPrompt,
       openAiModel,
-      openAiPromptSteps,
+      aiPromptSteps,
       authHeaders,
     } = openAiRequestData;
     const { executeAiSteps } = useWithAiService();
     const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
     try {
-      const service = AvailableAiServices.OPEN_AI
+      const service = AvailableAiServices.OPEN_AI;
       const aiServiceResponse = await executeAiSteps(
-        openAiPromptSteps,
+        aiPromptSteps,
         docsId,
         userId,
         authHeaders,
@@ -51,7 +55,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         openAiModel as GptModels,
         service
       );
-      console.log(aiServiceResponse)
+      console.log(aiServiceResponse);
       // Update the job in dynamo db
       const tableRequest: UpdateItemCommandInput = {
         TableName: jobsTableName,
@@ -67,7 +71,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
             S: JSON.stringify(aiServiceResponse),
           },
           ':job_status': {
-            S: OpenAiAsyncJobStatus.COMPLETE,
+            S: AiAsyncJobStatus.COMPLETE,
           },
           ':answer': {
             S: aiServiceResponse.answer,
@@ -93,7 +97,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         UpdateExpression: 'set job_status = :job_status',
         ExpressionAttributeValues: {
           ':job_status': {
-            S: OpenAiAsyncJobStatus.FAILED,
+            S: AiAsyncJobStatus.FAILED,
           },
         },
       };

@@ -5,7 +5,6 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { Schema } from 'jsonschema';
-import OpenAI from 'openai';
 
 export interface DocData {
   plainText: string;
@@ -48,7 +47,6 @@ export interface PromptConfiguration {
   promptRole?: PromptRoles;
 }
 
-
 export enum GptModels {
   OPEN_AI_GPT_3_5 = 'gpt-3.5-turbo-16k',
   OPEN_AI_GPT_4 = 'gpt-4',
@@ -57,11 +55,10 @@ export enum GptModels {
   AZURE_GPT_4_TURBO_PREVIEW = 'ABE-gpt-4-turbo-preview',
 }
 
-export enum AvailableAiServices{
-    OPEN_AI = "OPEN_AI",
-    AZURE_OPEN_AI = "AZURE_OPEN_AI"
+export enum AvailableAiServices {
+  OPEN_AI = 'OPEN_AI',
+  AZURE_OPEN_AI = 'AZURE_OPEN_AI',
 }
-
 
 export interface AiPromptStep {
   prompts: PromptConfiguration[];
@@ -73,11 +70,11 @@ export interface AiPromptStep {
 
 export type AiRequestContextPrompt = Omit<PromptConfiguration, 'includeEssay'>;
 
-export interface AiRequestContext{
-  openAiStep: AiPromptStep,
-  docsPlainText: string,
-  previousOutput: string,
-  systemRole: string
+export interface AiRequestContext {
+  aiStep: AiPromptStep;
+  docsPlainText: string;
+  previousOutput: string;
+  systemRole: string;
 }
 
 export enum PromptOutputTypes {
@@ -85,19 +82,19 @@ export enum PromptOutputTypes {
   JSON = 'JSON',
 }
 
-export interface OpenAiStep {
-  openAiPromptStringify: string;
-  openAiResponseStringify: string;
+export interface AiStep {
+  aiServiceRequestParams: string;
+  aiServiceResponse: string;
 }
 
 export interface GQLPromptRunResponse {
   googleDocId: string;
   user: string;
   promptConfiguration: PromptConfiguration[];
-  openAiSteps: OpenAiStep[];
+  aiSteps: AiStep[];
 }
 
-export enum OpenAiAsyncJobStatus {
+export enum AiAsyncJobStatus {
   QUEUED = 'QUEUED',
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETE = 'COMPLETE',

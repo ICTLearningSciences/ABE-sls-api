@@ -7,7 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import requireEnv, { createResponseJson } from '../../helpers.js';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
-import { OpenAiAsyncJobStatus } from '../../types.js';
+import { AiAsyncJobStatus } from '../../types.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
 import { wrapHandler } from '../../sentry-helpers.js';
@@ -22,7 +22,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
     userId,
     systemPrompt,
     openAiModel,
-    openAiPromptSteps,
+    aiPromptSteps,
     authHeaders,
   } = extractOpenAiRequestData(event);
   // Queue the job
@@ -36,7 +36,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
         S: newUuid,
       },
       job_status: {
-        S: OpenAiAsyncJobStatus.IN_PROGRESS,
+        S: AiAsyncJobStatus.IN_PROGRESS,
       },
       answer: {
         S: '',
@@ -50,7 +50,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
           userId,
           systemPrompt,
           openAiModel,
-          openAiPromptSteps,
+          aiPromptSteps,
           authHeaders,
         }),
       },

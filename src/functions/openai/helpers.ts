@@ -46,7 +46,7 @@ export interface ExtractedOpenAiRequestData {
   userId: string;
   systemPrompt: string;
   openAiModel: string;
-  openAiPromptSteps: AiPromptStep[];
+  aiPromptSteps: AiPromptStep[];
   authHeaders: AuthHeaders;
 }
 
@@ -57,9 +57,10 @@ export function extractOpenAiRequestData(
   const userId = event.queryStringParameters?.['userId'];
   const systemPrompt = event.queryStringParameters?.['systemPrompt'] || '';
   const openAiModel = event.queryStringParameters?.['openAiModel'] || '';
-  const openAiPromptSteps: AiPromptStep[] = getFieldFromEventBody<
-    AiPromptStep[]
-  >(event, 'openAiPromptSteps');
+  const aiPromptSteps: AiPromptStep[] = getFieldFromEventBody<AiPromptStep[]>(
+    event,
+    'aiPromptSteps'
+  );
   const authHeaders = getAuthHeaders(event);
   if (!docsId) {
     throw new Error('Google Doc ID is empty');
@@ -67,7 +68,7 @@ export function extractOpenAiRequestData(
   if (!userId) {
     throw new Error('User ID is empty');
   }
-  if (!openAiPromptSteps) {
+  if (!aiPromptSteps) {
     throw new Error('OpenAI Prompt Steps are empty');
   }
   if (openAiModel && !ValidOpenAiModels.includes(openAiModel)) {
@@ -78,7 +79,7 @@ export function extractOpenAiRequestData(
     userId,
     systemPrompt,
     openAiModel,
-    openAiPromptSteps,
+    aiPromptSteps,
     authHeaders,
   };
 }

@@ -6,7 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 // Note: had to add .js to find this file in serverless
 import { DynamoDBStreamEvent } from 'aws-lambda';
-import { OpenAiAsyncJobStatus } from '../../types.js';
+import { AiAsyncJobStatus } from '../../types.js';
 import { useWithGetDocumentTimeline } from './use-with-get-document-timeline.js';
 import { useWithGoogleApi } from '../../hooks/google_api.js';
 import { wrapHandler } from '../../sentry-helpers.js';
@@ -54,7 +54,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         accessToken
       );
     } catch (err) {
-      await updateDynamoJobStatus(jobId, OpenAiAsyncJobStatus.FAILED);
+      await updateDynamoJobStatus(jobId, AiAsyncJobStatus.FAILED);
       throw err;
     }
   }

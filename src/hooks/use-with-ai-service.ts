@@ -4,9 +4,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import {
-  MAX_OPEN_AI_CHAIN_REQUESTS,
-} from '../constants.js';
+import { MAX_OPEN_AI_CHAIN_REQUESTS } from '../constants.js';
 import { getDocData } from '../api.js';
 import {
   AiPromptStep,
@@ -21,13 +19,12 @@ import { OpenAiService } from '../ai_services/openai/open-ai-service.js';
 const openAiService = OpenAiService.getInstance();
 
 export function useWithAiService() {
-
   /**
    * Handles multistep prompts which use the output of the previous prompt as the input for the next prompt.
    * Each individual prompt does not know what the previous prompt was.
    */
   async function executeAiSteps(
-    openAiSteps: AiPromptStep[],
+    aiSteps: AiPromptStep[],
     docsId: string,
     userId: string,
     authHeaders: AuthHeaders,
@@ -35,7 +32,7 @@ export function useWithAiService() {
     overrideGptModels: GptModels,
     aiService: AvailableAiServices
   ): Promise<AiPromptResponse> {
-    if (openAiSteps.length >= MAX_OPEN_AI_CHAIN_REQUESTS) {
+    if (aiSteps.length >= MAX_OPEN_AI_CHAIN_REQUESTS) {
       throw new Error(
         `Please limit the number of prompts to ${MAX_OPEN_AI_CHAIN_REQUESTS} or less`
       );
@@ -47,32 +44,27 @@ export function useWithAiService() {
     const docsContent = await getDocData(docsId, authHeaders);
     const docsPlainText = docsContent.plainText;
     let previousOutput = '';
-    for (let i = 0; i < openAiSteps.length; i++) {
-      const curOpenAiStep = openAiSteps[i];
-        const res = await openAiService.completeChat(
-          {
-            openAiStep: curOpenAiStep,
-            docsPlainText,
-            previousOutput,
-            systemRole,
-          },
-          overrideGptModels
-        );
-        const { reqParamsString, responseString, answer } = res;
-        aiResponses.aiReqResData.push({
-          aiServiceRequestParams: reqParamsString,
-          aiServiceResponse: responseString,
-        });
-        previousOutput = answer;
-        aiResponses.answer = answer;
+    for (let i = 0; i < aiSteps.length; i++) {
+      const curOpenAiStep = aiSteps[i];
+      const res = await openAiService.completeChat(
+        {
+          aiStep: curOpenAiStep,
+          docsPlainText,
+          previousOutput,
+          systemRole,
+        },
+        overrideGptModels
+      );
+      const { reqParamsString, responseString, answer } = res;
+      aiResponses.aiReqResData.push({
+        aiServiceRequestParams: reqParamsString,
+        aiServiceResponse: responseString,
+      });
+      previousOutput = answer;
+      aiResponses.answer = answer;
     }
     try {
-      await storePromptRun(
-        docsId,
-        userId,
-        openAiSteps,
-        aiResponses.aiReqResData
-      );
+      await storePromptRun(docsId, userId, aiSteps, aiResponses.aiReqResData);
     } catch (err) {
       console.error('Failed to store prompt run in gql');
       console.log(err);

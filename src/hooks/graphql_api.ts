@@ -9,7 +9,7 @@ import {
   AIReqRes,
   GQLPromptRunResponse,
   AiPromptStep,
-  OpenAiStep,
+  AiStep,
 } from '../types.js';
 import {
   GQLDocumentTimeline,
@@ -63,18 +63,18 @@ export async function storeGoogleDoc(
 export async function storePromptRun(
   docId: string,
   userId: string,
-  openAiPromptSteps: AiPromptStep[],
+  aiPromptSteps: AiPromptStep[],
   aiSteps: AIReqRes[]
 ): Promise<GQLPromptRunResponse> {
   const res = await axios
     .post(
       GRAPHQL_ENDPOINT,
       {
-        query: `mutation StorePromptRun($googleDocId: String!, $user: ID!, $openAiPromptSteps: [OpenAiPromptStepInputType]!, $aiSteps: [aiStepsInputType]!) {
-            storePromptRun(googleDocId: $googleDocId, user: $user, openAiPromptSteps: $openAiPromptSteps, aiSteps: $aiSteps) {
+        query: `mutation StorePromptRun($googleDocId: String!, $user: ID!, $aiPromptSteps: [AiPromptStepInputType]!, $aiSteps: [aiStepsInputType]!) {
+            storePromptRun(googleDocId: $googleDocId, user: $user, aiPromptSteps: $aiPromptSteps, aiSteps: $aiSteps) {
                 googleDocId
                 user
-                openAiPromptSteps {
+                aiPromptSteps {
                     prompts{
                       promptText
                       includeEssay
@@ -83,15 +83,15 @@ export async function storePromptRun(
                     outputDataType
                 }
                 aiSteps {
-                    openAiPromptStringify
-                    openAiResponseStringify
+                    aiServiceRequestParams
+                    aiServiceResponse
                 }
               }
          }`,
         variables: {
           googleDocId: docId,
           user: userId,
-          openAiPromptSteps: openAiPromptSteps,
+          aiPromptSteps: aiPromptSteps,
           aiSteps: aiSteps,
         },
       },

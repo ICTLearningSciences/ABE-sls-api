@@ -7,8 +7,14 @@ The full terms of this copyright and license should always be found in the root 
 import { GQLIGDocVersion } from './types.js';
 import { Schema } from 'jsonschema';
 import { OpenAiService } from '../../ai_services/openai/open-ai-service.js';
-import { AiRequestContext, GptModels, AiPromptStep, PromptOutputTypes, PromptRoles } from '../../types.js';
-const openAiService = OpenAiService.getInstance()
+import {
+  AiRequestContext,
+  GptModels,
+  AiPromptStep,
+  PromptOutputTypes,
+  PromptRoles,
+} from '../../types.js';
+const openAiService = OpenAiService.getInstance();
 
 export interface ReverseOutline {
   'Thesis Statement': string;
@@ -70,7 +76,7 @@ const reverseOutlineSchema: Schema = {
 export async function reverseOutlinePromptRequest(
   currentVersion: GQLIGDocVersion
 ) {
-  const openAiStep: AiPromptStep = {
+  const aiStep: AiPromptStep = {
     prompts: [
       {
         promptText: currentVersion.plainText,
@@ -102,23 +108,21 @@ export async function reverseOutlinePromptRequest(
               The essay you are rating is given below:
               ----------------------------------------------
               `,
-              includeEssay: true
+        includeEssay: true,
       },
     ],
     targetGptModel: GptModels.OPEN_AI_GPT_3_5,
     responseSchema: reverseOutlineSchema,
-    outputDataType: PromptOutputTypes.JSON
-  }
+    outputDataType: PromptOutputTypes.JSON,
+  };
 
   const aiReqContext: AiRequestContext = {
-    openAiStep: openAiStep,
+    aiStep: aiStep,
     docsPlainText: currentVersion.plainText,
-    previousOutput: "",
-    systemRole: ""
-  }
+    previousOutput: '',
+    systemRole: '',
+  };
 
-  const res = await openAiService.completeChat(
-    aiReqContext
-  );
+  const res = await openAiService.completeChat(aiReqContext);
   return res.answer;
 }

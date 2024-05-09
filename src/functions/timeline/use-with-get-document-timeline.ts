@@ -13,7 +13,7 @@ import {
   GQLDocumentTimeline,
   GQLTimelinePoint,
   IGDocVersion,
-  OpenAiGenerationStatus,
+  AiGenerationStatus,
   TimelinePointType,
   TimelineSlice,
 } from './types.js';
@@ -23,7 +23,7 @@ import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import { changeSummaryPromptRequest } from './change-summary.js';
 import Sentry from '../../sentry-helpers.js';
 import { storeDoctimelineDynamoDB } from '../../dynamo-helpers.js';
-import { OpenAiAsyncJobStatus } from '../../types.js';
+import { AiAsyncJobStatus } from '../../types.js';
 
 export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,
@@ -172,7 +172,7 @@ function generateChangeSummaryRequests(
   return timelinePoints.map(async (timelinePoint, i) => {
     if (
       timelinePoint.changeSummary &&
-      timelinePoint.reverseOutlineStatus === OpenAiGenerationStatus.COMPLETED
+      timelinePoint.reverseOutlineStatus === AiGenerationStatus.COMPLETED
     ) {
       return;
     }
@@ -198,7 +198,7 @@ function generateChangeSummaryRequests(
         );
       }
     }
-    timelinePoint.changeSummaryStatus = OpenAiGenerationStatus.COMPLETED;
+    timelinePoint.changeSummaryStatus = AiGenerationStatus.COMPLETED;
   });
 }
 
@@ -213,7 +213,7 @@ function generateReverseOutlineRequests(
     const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
     if (
       !timelinePoint.reverseOutline ||
-      timelinePoint.reverseOutlineStatus !== OpenAiGenerationStatus.COMPLETED
+      timelinePoint.reverseOutlineStatus !== AiGenerationStatus.COMPLETED
     ) {
       if (
         previousTimelinePoint?.version.plainText ===
@@ -227,7 +227,7 @@ function generateReverseOutlineRequests(
           timelinePoint.version
         );
       }
-      timelinePoint.reverseOutlineStatus = OpenAiGenerationStatus.COMPLETED;
+      timelinePoint.reverseOutlineStatus = AiGenerationStatus.COMPLETED;
     }
   });
 }
@@ -247,8 +247,8 @@ export function timelinePointGenerationComplete(
   timelinePoint: GQLTimelinePoint
 ): boolean {
   return (
-    timelinePoint.changeSummaryStatus === OpenAiGenerationStatus.COMPLETED &&
-    timelinePoint.reverseOutlineStatus === OpenAiGenerationStatus.COMPLETED
+    timelinePoint.changeSummaryStatus === AiGenerationStatus.COMPLETED &&
+    timelinePoint.reverseOutlineStatus === AiGenerationStatus.COMPLETED
   );
 }
 
@@ -301,8 +301,8 @@ export function useWithGetDocumentTimeline() {
         version,
         versionTime: version.createdAt,
 
-        reverseOutlineStatus: OpenAiGenerationStatus.IN_PROGRESS,
-        changeSummaryStatus: OpenAiGenerationStatus.IN_PROGRESS,
+        reverseOutlineStatus: AiGenerationStatus.IN_PROGRESS,
+        changeSummaryStatus: AiGenerationStatus.IN_PROGRESS,
         changeSummary: '',
         reverseOutline: '',
 
@@ -339,7 +339,7 @@ export function useWithGetDocumentTimeline() {
         await storeDoctimelineDynamoDB(
           jobId,
           documentTimeline,
-          OpenAiAsyncJobStatus.IN_PROGRESS
+          AiAsyncJobStatus.IN_PROGRESS
         );
       }
     }
@@ -351,7 +351,7 @@ export function useWithGetDocumentTimeline() {
     await storeDoctimelineDynamoDB(
       jobId,
       documentTimeline,
-      OpenAiAsyncJobStatus.COMPLETE
+      AiAsyncJobStatus.COMPLETE
     );
 
     // store timeline in gql

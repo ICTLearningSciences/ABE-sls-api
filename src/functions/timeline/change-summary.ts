@@ -5,7 +5,13 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { OpenAiService } from '../../ai_services/openai/open-ai-service.js';
-import { AiRequestContext, GptModels, AiPromptStep, PromptOutputTypes, PromptRoles } from '../../types.js';
+import {
+  AiRequestContext,
+  GptModels,
+  AiPromptStep,
+  PromptOutputTypes,
+  PromptRoles,
+} from '../../types.js';
 
 const openAiService = OpenAiService.getInstance();
 
@@ -22,12 +28,12 @@ export async function changeSummaryPromptRequest(
       {
         promptText: `Previous Version: ${lastVersionText}`,
         promptRole: PromptRoles.ASSISSANT,
-        includeEssay: false
+        includeEssay: false,
       },
       {
         promptText: `Current Version: ${currentVersionText}`,
         promptRole: PromptRoles.ASSISSANT,
-        includeEssay: false
+        includeEssay: false,
       },
       {
         promptText: `Provided are two versions of a text document, a previous version and a current version.
@@ -35,10 +41,10 @@ export async function changeSummaryPromptRequest(
         The first sentence should give a clear statement on biggest changes and the scope of the changes such as major additions / deletions, major revisions, minor changes. The second and third sentences should clearly refer to what specific areas of the document changed substantially, with more specifics about what changed.
         The second and third sentences are optional and are not needed if only minor changes were made.`,
         promptRole: PromptRoles.SYSTEM,
-        includeEssay: false
-      }
-    ]
-  }
+        includeEssay: false,
+      },
+    ],
+  };
 
   const summarizeVersionPromptStep: AiPromptStep = {
     targetGptModel: GptModels.OPEN_AI_GPT_3_5,
@@ -47,25 +53,25 @@ export async function changeSummaryPromptRequest(
       {
         promptText: `Here is the essay: ${currentVersionText}`,
         promptRole: PromptRoles.ASSISSANT,
-        includeEssay: false
+        includeEssay: false,
       },
       {
         promptText: `Please summarize the essay in 3 sentences.`,
         promptRole: PromptRoles.SYSTEM,
-        includeEssay: false
-      }
+        includeEssay: false,
+      },
     ],
-  }
+  };
 
   const aiReqContext: AiRequestContext = {
-    openAiStep: isCurrentVersionFirstVersion ? summarizeVersionPromptStep : compareVersionAiPromptStep,
+    aiStep: isCurrentVersionFirstVersion
+      ? summarizeVersionPromptStep
+      : compareVersionAiPromptStep,
     docsPlainText: currentVersionText,
-    previousOutput: "",
-    systemRole: ""
-  }
+    previousOutput: '',
+    systemRole: '',
+  };
 
-  const res = await openAiService.completeChat(
-    aiReqContext
-  );
+  const res = await openAiService.completeChat(aiReqContext);
   return res.answer;
 }

@@ -1,14 +1,14 @@
 // tests/calculator.spec.tx
 import { assert } from "chai";
 import { createSlices, useWithGetDocumentTimeline } from "../../src/functions/timeline/use-with-get-document-timeline.js";
-import { GQLDocumentTimeline, IGDocVersion, OpenAiGenerationStatus, TimelinePointType } from "../../src/functions/timeline/types.js";
+import { GQLDocumentTimeline, IGDocVersion, AiGenerationStatus, TimelinePointType } from "../../src/functions/timeline/types.js";
 import { defaultChangeSummaryRes, defaultReverseOutlineRes, mockDefault, mockGraphqlQuery, mockOpenAiCall, mockOpenAiChangeSummaryResponse, mockOpenAiReverseOutlineResponse } from "../helpers.js";
 import { externalGoogleDocRevisionGenerator, gqlDocVersionGenerator, isoStringMinsFromNow } from "../fixtures/documents/helpers/document-generator.js";
 import nock from "nock";
 import { docTimeline } from "../fixtures/documents/2-sessions-inbetween-outside-ABE/doc-timeline.js";
 import {ddbMock} from "../init.spec.js";
 import { UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { OpenAiAsyncJobStatus } from "../../src/types.js";
+import { AiAsyncJobStatus } from "../../src/types.js";
 
 describe("Document Timeline Unit Tests", () => {
   beforeEach(() => {
@@ -79,9 +79,9 @@ describe("Document Timeline Unit Tests", () => {
       assert.equal(res.timelinePoints.length, docTimeline.timelinePoints.length);
       for(let i = 0; i < res.timelinePoints.length; i++){
         assert.equal(res.timelinePoints[i].changeSummary, docTimeline.timelinePoints[i].changeSummary);
-        assert.equal(res.timelinePoints[i].changeSummaryStatus, OpenAiGenerationStatus.COMPLETED);
+        assert.equal(res.timelinePoints[i].changeSummaryStatus, AiGenerationStatus.COMPLETED);
         assert.equal(res.timelinePoints[i].reverseOutline, docTimeline.timelinePoints[i].reverseOutline);
-        assert.equal(res.timelinePoints[i].reverseOutlineStatus, OpenAiGenerationStatus.COMPLETED);
+        assert.equal(res.timelinePoints[i].reverseOutlineStatus, AiGenerationStatus.COMPLETED);
         assert.equal(res.timelinePoints[i].versionTime, docTimeline.timelinePoints[i].versionTime);
       }
     });
@@ -126,17 +126,17 @@ describe("Document Timeline Unit Tests", () => {
       assert.equal(openAiChangeSummaryNock.isDone(), true);
       assert.equal(reverseOutlineNock.isDone(), true);
       assert.equal(res.timelinePoints[0].changeSummary, defaultChangeSummaryRes);
-      assert.equal(res.timelinePoints[0].changeSummaryStatus, OpenAiGenerationStatus.COMPLETED);
+      assert.equal(res.timelinePoints[0].changeSummaryStatus, AiGenerationStatus.COMPLETED);
       assert.equal(res.timelinePoints[0].reverseOutline, JSON.stringify(defaultReverseOutlineRes));
-      assert.equal(res.timelinePoints[0].reverseOutlineStatus, OpenAiGenerationStatus.COMPLETED);
+      assert.equal(res.timelinePoints[0].reverseOutlineStatus, AiGenerationStatus.COMPLETED);
       assert.equal(res.timelinePoints[1].changeSummary, defaultChangeSummaryRes);
-      assert.equal(res.timelinePoints[1].changeSummaryStatus, OpenAiGenerationStatus.COMPLETED);
+      assert.equal(res.timelinePoints[1].changeSummaryStatus, AiGenerationStatus.COMPLETED);
       assert.equal(res.timelinePoints[1].reverseOutline, JSON.stringify(defaultReverseOutlineRes));
-      assert.equal(res.timelinePoints[1].reverseOutlineStatus, OpenAiGenerationStatus.COMPLETED);
+      assert.equal(res.timelinePoints[1].reverseOutlineStatus, AiGenerationStatus.COMPLETED);
       assert.equal(res.timelinePoints[2].changeSummary, 'No changes from previous version');
-      assert.equal(res.timelinePoints[2].changeSummaryStatus, OpenAiGenerationStatus.COMPLETED);
+      assert.equal(res.timelinePoints[2].changeSummaryStatus, AiGenerationStatus.COMPLETED);
       assert.equal(res.timelinePoints[2].reverseOutline, JSON.stringify(defaultReverseOutlineRes)); // uses previous reverse outline
-      assert.equal(res.timelinePoints[2].reverseOutlineStatus, OpenAiGenerationStatus.COMPLETED);
+      assert.equal(res.timelinePoints[2].reverseOutlineStatus, AiGenerationStatus.COMPLETED);
       assert.equal(numChangeSummaryCalls.calls, 2);
       assert.equal(numReverseOutlineCalls.calls, 2);
       assert.equal(storeDocTimelineNoc.isDone(), true);
@@ -210,29 +210,29 @@ describe("Document Timeline Unit Tests", () => {
       const secondStoredDocumentTimeline: GQLDocumentTimeline = JSON.parse(secondUpdate.args[0].input.ExpressionAttributeValues?.[":documentTimeline"]["S"] || "{}");
       const secondStoredJobStatus = secondUpdate.args[0].input.ExpressionAttributeValues?.[":job_status"]["S"]
       assert.equal(firstStoredDocumentTimeline.timelinePoints.length, 16);
-      assert.equal(firstStoredJobStatus, OpenAiAsyncJobStatus.IN_PROGRESS);
+      assert.equal(firstStoredJobStatus, AiAsyncJobStatus.IN_PROGRESS);
       assert.equal(secondStoredDocumentTimeline.timelinePoints.length, 16);
-      assert.equal(secondStoredJobStatus, OpenAiAsyncJobStatus.COMPLETE);
+      assert.equal(secondStoredJobStatus, AiAsyncJobStatus.COMPLETE);
       // first 5 and last 5 should be completed, but no others
       for(let i = 0; i < firstStoredDocumentTimeline.timelinePoints.length; i++){
         if(i < 5 || i > 10){
-          assert.equal(firstStoredDocumentTimeline.timelinePoints[i].changeSummaryStatus, OpenAiGenerationStatus.COMPLETED);
+          assert.equal(firstStoredDocumentTimeline.timelinePoints[i].changeSummaryStatus, AiGenerationStatus.COMPLETED);
           assert.equal(firstStoredDocumentTimeline.timelinePoints[i].changeSummary, defaultChangeSummaryRes);
-          assert.equal(firstStoredDocumentTimeline.timelinePoints[i].reverseOutlineStatus, OpenAiGenerationStatus.COMPLETED);
+          assert.equal(firstStoredDocumentTimeline.timelinePoints[i].reverseOutlineStatus, AiGenerationStatus.COMPLETED);
           assert.equal(firstStoredDocumentTimeline.timelinePoints[i].reverseOutline, JSON.stringify(defaultReverseOutlineRes));
         }
         else{
-          assert.equal(firstStoredDocumentTimeline.timelinePoints[i].changeSummaryStatus, OpenAiGenerationStatus.IN_PROGRESS);
+          assert.equal(firstStoredDocumentTimeline.timelinePoints[i].changeSummaryStatus, AiGenerationStatus.IN_PROGRESS);
           assert.equal(firstStoredDocumentTimeline.timelinePoints[i].changeSummary, "");
-          assert.equal(firstStoredDocumentTimeline.timelinePoints[i].reverseOutlineStatus, OpenAiGenerationStatus.IN_PROGRESS);
+          assert.equal(firstStoredDocumentTimeline.timelinePoints[i].reverseOutlineStatus, AiGenerationStatus.IN_PROGRESS);
           assert.equal(firstStoredDocumentTimeline.timelinePoints[i].reverseOutline, "");
         }
       }
       // now all complete
       for(let i = 0; i < secondStoredDocumentTimeline.timelinePoints.length; i++){
-          assert.equal(secondStoredDocumentTimeline.timelinePoints[i].changeSummaryStatus, OpenAiGenerationStatus.COMPLETED);
+          assert.equal(secondStoredDocumentTimeline.timelinePoints[i].changeSummaryStatus, AiGenerationStatus.COMPLETED);
           assert.equal(secondStoredDocumentTimeline.timelinePoints[i].changeSummary, defaultChangeSummaryRes);
-          assert.equal(secondStoredDocumentTimeline.timelinePoints[i].reverseOutlineStatus, OpenAiGenerationStatus.COMPLETED);
+          assert.equal(secondStoredDocumentTimeline.timelinePoints[i].reverseOutlineStatus, AiGenerationStatus.COMPLETED);
           assert.equal(secondStoredDocumentTimeline.timelinePoints[i].reverseOutline, JSON.stringify(defaultReverseOutlineRes));
       }
     })

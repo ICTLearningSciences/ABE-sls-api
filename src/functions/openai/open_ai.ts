@@ -22,13 +22,13 @@ export const handler = async (event: APIGatewayEvent) => {
     userId,
     systemPrompt,
     openAiModel,
-    openAiPromptSteps,
+    aiPromptSteps,
     authHeaders,
   } = extractOpenAiRequestData(event);
   const { executeAiSteps } = useWithAiService();
   try {
     const aiServiceResponse = await executeAiSteps(
-      openAiPromptSteps,
+      aiPromptSteps,
       docsId,
       userId,
       authHeaders,
