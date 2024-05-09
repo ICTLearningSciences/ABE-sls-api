@@ -15,25 +15,24 @@ export interface DocData {
   modifiedTime: string;
 }
 
-export interface OpenAIReqRes {
-  openAiPrompt: OpenAI.Chat.Completions.ChatCompletionCreateParams;
-  openAiResponse: OpenAI.Chat.Completions.ChatCompletion.Choice[];
-  originalRequestPrompts?: OpenAiPromptStep;
+export interface AIReqRes {
+  aiServiceRequestParams: string; // OpenAI.Chat.Completions.ChatCompletionCreateParams for OpenAi
+  aiServiceResponse: string; // OpenAI.Chat.Completions.ChatCompletion.Choice[] for OpenAi
 }
 
-export interface InputQuestionResponse extends OpenAIReqRes {
+export interface InputQuestionResponse extends AIReqRes {
   answer: string;
 }
 
-export interface SinglePromptResponse extends OpenAIReqRes {
+export interface SinglePromptResponse extends AIReqRes {
   originalPromptConfigs: PromptConfiguration[];
 }
 
 /**
  * Multistep Prompt Types
  */
-export interface OpenAiPromptResponse {
-  openAiData: OpenAIReqRes[];
+export interface AiPromptResponse {
+  aiReqResData: AIReqRes[];
   answer: string;
 }
 
@@ -49,22 +48,13 @@ export interface PromptConfiguration {
   promptRole?: PromptRoles;
 }
 
-export enum OpenAiGptModels {
-  GPT_3_5 = 'gpt-3.5-turbo-16k',
-  GPT_4 = 'gpt-4',
-  GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
-}
-
-export enum AzureGptModels{
-  GPT_3_5 = 'ABE-GPT-3_5_turbo_16k',
-  GPT_4_TURBO_PREVIEW = 'ABE-gpt-4-turbo-preview',
-  GPT_4 = 'ABE-gpt-4-base',
-}
 
 export enum GptModels {
-  GPT_3_5 = 'gpt-3.5-turbo-16k',
-  GPT_4 = 'gpt-4',
-  GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
+  OPEN_AI_GPT_3_5 = 'gpt-3.5-turbo-16k',
+  OPEN_AI_GPT_4 = 'gpt-4',
+  OPEN_AI_GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
+  AZURE_GPT_3_5 = 'ABE-GPT-3_5_turbo_16k',
+  AZURE_GPT_4_TURBO_PREVIEW = 'ABE-gpt-4-turbo-preview',
 }
 
 export enum AvailableAiServices{
@@ -73,7 +63,7 @@ export enum AvailableAiServices{
 }
 
 
-export interface OpenAiPromptStep {
+export interface AiPromptStep {
   prompts: PromptConfiguration[];
   targetGptModel: GptModels;
   customSystemRole?: string;
@@ -84,11 +74,10 @@ export interface OpenAiPromptStep {
 export type AiRequestContextPrompt = Omit<PromptConfiguration, 'includeEssay'>;
 
 export interface AiRequestContext{
-  prompts: AiRequestContextPrompt[];
-  targetGptModel: GptModels;
-  outputDataType: PromptOutputTypes;
-  systemRole: string;
-  responseSchema?: Schema;
+  openAiStep: AiPromptStep,
+  docsPlainText: string,
+  previousOutput: string,
+  systemRole: string
 }
 
 export enum PromptOutputTypes {

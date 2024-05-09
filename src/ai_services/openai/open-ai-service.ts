@@ -1,13 +1,18 @@
 import OpenAI from "openai";
-import { AiRequestContext, OpenAiGptModels, PromptOutputTypes, PromptRoles } from "../../types.js";
-import { AiService } from "../abstract-classes/abstract-ai-service.js";
+import { AiRequestContext, GptModels, PromptOutputTypes, PromptRoles } from "../../types.js";
+import { AiService, CompleteChatResponse } from "../abstract-classes/abstract-ai-service.js";
 import {
     ChatCompletionCreateParamsNonStreaming,
   } from 'openai/resources/index.js';
   import { v4 as uuid } from 'uuid';
 import { Schema } from "jsonschema";
 import { isJsonString, validateJsonResponse } from "../../helpers.js";
-import { AI_DEFAULT_TEMP, DEFAULT_GPT_MODEL, RETRY_ATTEMPTS } from "../../constants.js";
+import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from "../../constants.js";
+
+export const DefaultOpenAiConfig = {
+    DEFAULT_SYSTEM_ROLE: "You are ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture. Knowledge cutoff: 2021-09.",
+    DEFAULT_GPT_MODEL: GptModels.OPEN_AI_GPT_3_5,
+}
 
 export class OpenAiService extends AiService {
     private static instance: OpenAiService;
@@ -92,21 +97,49 @@ export class OpenAiService extends AiService {
         return result;
     }
 
-    convertPromptSteptoOpenAiParam(step: AiRequestContext, overrideModel?: OpenAiGptModels): ChatCompletionCreateParamsNonStreaming {
-        return {
-            messages: step.prompts.map((prompt) => {
-                return {
-                    role: prompt.promptRole || PromptRoles.USER,
-                    content: prompt.promptText,
-                };
-            }),
-            model: overrideModel || step.targetGptModel || DEFAULT_GPT_MODEL,
-        };
+    convertContextDataToServiceParams(
+      requestContext: AiRequestContext,
+      overrideModel?: GptModels
+    ): ChatCompletionCreateParamsNonStreaming{
+      const {openAiStep, docsPlainText, systemRole, previousOutput} = requestContext;
+      const request: ChatCompletionCreateParamsNonStreaming = {
+        messages: [],
+        model: overrideModel || openAiStep.targetGptModel || DefaultOpenAiConfig.DEFAULT_GPT_MODEL,
+      };
+      request.messages.push({
+        role: PromptRoles.SYSTEM,
+        content: systemRole || DefaultOpenAiConfig.DEFAULT_SYSTEM_ROLE,
+      })
+      if(previousOutput){
+        request.messages.push({
+          role: PromptRoles.ASSISSANT,
+          content: `Here is the previous output: ---------- \n\n ${previousOutput}`,
+        });
+      }
+      openAiStep.prompts.forEach((prompt) => {
+        let text = prompt.promptText;
+        if(prompt.includeEssay){
+          text += `\n\nHere is the users essay: -----------\n\n${docsPlainText}`
+        }
+        request.messages.push({
+          role: prompt.promptRole || PromptRoles.USER,
+          content: text,
+        });
+      })
+  
+      return request;
     }
 
-    async completeChat(context: AiRequestContext, overrideModel?: OpenAiGptModels) {
-        const params = this.convertPromptSteptoOpenAiParam(context, overrideModel);
-        return await this.executeAiUntilProperData(params, context.outputDataType == PromptOutputTypes.JSON, context.responseSchema);
+
+    async completeChat(context: AiRequestContext, overrideModel?: GptModels): Promise<CompleteChatResponse> {
+        const params = this.convertContextDataToServiceParams(context, overrideModel);
+        const [chatCompleteResponse, answer] = await this.executeAiUntilProperData(params, context.openAiStep.outputDataType == PromptOutputTypes.JSON, context.openAiStep.responseSchema);
+
+        return {
+            reqParamsString: JSON.stringify(params),
+            responseString: JSON.stringify(chatCompleteResponse),
+            answer: answer,
+        };
     }
 
 }

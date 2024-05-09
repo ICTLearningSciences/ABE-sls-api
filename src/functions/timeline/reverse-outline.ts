@@ -4,12 +4,10 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import OpenAI from 'openai';
-import { DEFAULT_GPT_MODEL } from '../../constants.js';
 import { GQLIGDocVersion } from './types.js';
 import { Schema } from 'jsonschema';
 import { OpenAiService } from '../../ai_services/openai/open-ai-service.js';
-import { GptModels, OpenAiGptModels, OpenAiPromptStep, PromptOutputTypes, PromptRoles } from 'types.js';
+import { AiRequestContext, GptModels, AiPromptStep, PromptOutputTypes, PromptRoles } from '../../types.js';
 const openAiService = OpenAiService.getInstance()
 
 export interface ReverseOutline {
@@ -72,7 +70,7 @@ const reverseOutlineSchema: Schema = {
 export async function reverseOutlinePromptRequest(
   currentVersion: GQLIGDocVersion
 ) {
-  const openAiStep: OpenAiPromptStep = {
+  const openAiStep: AiPromptStep = {
     prompts: [
       {
         promptText: currentVersion.plainText,
@@ -107,12 +105,20 @@ export async function reverseOutlinePromptRequest(
               includeEssay: true
       },
     ],
-    targetGptModel: GptModels.GPT_3_5,
+    targetGptModel: GptModels.OPEN_AI_GPT_3_5,
     responseSchema: reverseOutlineSchema,
     outputDataType: PromptOutputTypes.JSON
   }
-  const [res, answer] = await openAiService.completeChat(
-    openAiStep
+
+  const aiReqContext: AiRequestContext = {
+    openAiStep: openAiStep,
+    docsPlainText: currentVersion.plainText,
+    previousOutput: "",
+    systemRole: ""
+  }
+
+  const res = await openAiService.completeChat(
+    aiReqContext
   );
-  return answer;
+  return res.answer;
 }

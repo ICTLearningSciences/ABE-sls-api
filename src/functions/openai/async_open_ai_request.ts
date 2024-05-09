@@ -41,7 +41,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
       answer: {
         S: '',
       },
-      openAiResponse: {
+      aiServiceResponse: {
         S: '',
       },
       openAiRequestData: {

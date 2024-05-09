@@ -13,7 +13,7 @@ import {
 } from '../../helpers.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { extractOpenAiRequestData } from './helpers.js';
-import { AvailableAiServices } from '../../types.js';
+import { AvailableAiServices, GptModels } from '../../types.js';
 
 // modern module syntax
 export const handler = async (event: APIGatewayEvent) => {
@@ -27,16 +27,16 @@ export const handler = async (event: APIGatewayEvent) => {
   } = extractOpenAiRequestData(event);
   const { executeAiSteps } = useWithAiService();
   try {
-    const openAiResponse = await executeAiSteps(
+    const aiServiceResponse = await executeAiSteps(
       openAiPromptSteps,
       docsId,
       userId,
       authHeaders,
       systemPrompt,
-      openAiModel,
+      openAiModel as GptModels,
       AvailableAiServices.OPEN_AI
     );
-    return createResponseJson(200, { response: openAiResponse });
+    return createResponseJson(200, { response: aiServiceResponse });
   } catch (err) {
     if (err instanceof OpenAI.APIError) {
       return createResponseJson(500, {

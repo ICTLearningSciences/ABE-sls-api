@@ -9,13 +9,10 @@ import {
 } from '../constants.js';
 import { getDocData } from '../api.js';
 import {
-  OpenAiPromptResponse,
-  OpenAiPromptStep,
+  AiPromptStep,
   AvailableAiServices,
-  PromptRoles,
-  AiRequestContextPrompt,
-  AiRequestContext,
   GptModels,
+  AiPromptResponse,
 } from '../types.js';
 import { storePromptRun } from './graphql_api.js';
 import { AuthHeaders } from '../functions/openai/helpers.js';
@@ -25,61 +22,26 @@ const openAiService = OpenAiService.getInstance();
 
 export function useWithAiService() {
 
-  function convertDataToAiContext(
-    openAiStep: OpenAiPromptStep,
-    docsPlainText: string,
-    previousOutput: string,
-    systemRole: string
-  ): AiRequestContext{
-    const stepMessageContext: AiRequestContextPrompt[] = []
-    if(previousOutput){
-      stepMessageContext.push({
-        promptText: previousOutput,
-        promptRole: PromptRoles.ASSISSANT,
-      });
-    }
-
-    openAiStep.prompts.forEach((prompt) => {
-      let text = prompt.promptText;
-      if(prompt.includeEssay){
-        text += `\n\nHere is the users essay: -----------\n\n${docsPlainText}`
-      }
-      stepMessageContext.push({
-        promptText: text,
-        promptRole: prompt.promptRole || PromptRoles.USER,
-      });
-    })
-
-    return{
-      prompts: stepMessageContext,
-      targetGptModel: openAiStep.targetGptModel,
-      responseSchema: openAiStep.responseSchema,
-      systemRole: openAiStep.customSystemRole || systemRole,
-      outputDataType: openAiStep.outputDataType
-    }
-
-  }
-
   /**
    * Handles multistep prompts which use the output of the previous prompt as the input for the next prompt.
    * Each individual prompt does not know what the previous prompt was.
    */
   async function executeAiSteps(
-    openAiSteps: OpenAiPromptStep[],
+    openAiSteps: AiPromptStep[],
     docsId: string,
     userId: string,
     authHeaders: AuthHeaders,
     systemRole: string,
-    targetGptModel: GptModels,
+    overrideGptModels: GptModels,
     aiService: AvailableAiServices
-  ): Promise<OpenAiPromptResponse> {
+  ): Promise<AiPromptResponse> {
     if (openAiSteps.length >= MAX_OPEN_AI_CHAIN_REQUESTS) {
       throw new Error(
         `Please limit the number of prompts to ${MAX_OPEN_AI_CHAIN_REQUESTS} or less`
       );
     }
-    const openAiResponses: OpenAiPromptResponse = {
-      openAiData: [],
+    const aiResponses: AiPromptResponse = {
+      aiReqResData: [],
       answer: '',
     };
     const docsContent = await getDocData(docsId, authHeaders);
@@ -87,42 +49,35 @@ export function useWithAiService() {
     let previousOutput = '';
     for (let i = 0; i < openAiSteps.length; i++) {
       const curOpenAiStep = openAiSteps[i];
-      // TODO: context should already be setup here
-      const aiRequestData = convertDataToAiContext(
-        curOpenAiStep,
-        docsPlainText,
-        previousOutput,
-        systemRole
-      );
-
-      // interface ExecutePromptSyncRes {
-      //   reqRes: OpenAIReqRes;
-      //   answer: string;
-      // }
-
-        const { reqRes, answer } = await openAiService.executeOpenAiPromptStep(
-          curOpenAiStep,
-          docsPlainText,
-          systemRole,
-          targetGptModel,
-          previousOutput
+        const res = await openAiService.completeChat(
+          {
+            openAiStep: curOpenAiStep,
+            docsPlainText,
+            previousOutput,
+            systemRole,
+          },
+          overrideGptModels
         );
-        openAiResponses.openAiData.push(reqRes);
+        const { reqParamsString, responseString, answer } = res;
+        aiResponses.aiReqResData.push({
+          aiServiceRequestParams: reqParamsString,
+          aiServiceResponse: responseString,
+        });
         previousOutput = answer;
-        openAiResponses.answer = answer;
+        aiResponses.answer = answer;
     }
     try {
       await storePromptRun(
         docsId,
         userId,
         openAiSteps,
-        openAiResponses.openAiData
+        aiResponses.aiReqResData
       );
     } catch (err) {
       console.error('Failed to store prompt run in gql');
       console.log(err);
     } finally {
-      return openAiResponses;
+      return aiResponses;
     }
   }
 

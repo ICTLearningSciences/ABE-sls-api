@@ -28,13 +28,12 @@ export const IMPROVEMENT_TEMPLATE = {
   },
 };
 
+
 export const RETRY_ATTEMPTS = 3;
 export const AI_DEFAULT_TEMP = 0.1;
 
 export const MAX_OPEN_AI_CHAIN_REQUESTS = 10;
 export const MAX_OPEN_AI_MESSAGES = 10;
-
-export const DEFAULT_GPT_MODEL = GptModels.GPT_3_5;
 
 export const UPDATE_DYNAMO_ANSWER_THRESHOLD = 100;
 

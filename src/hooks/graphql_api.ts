@@ -6,17 +6,13 @@ The full terms of this copyright and license should always be found in the root 
 */
 import axios from 'axios';
 import {
+  AIReqRes,
   GQLPromptRunResponse,
-  OpenAIReqRes,
-  OpenAiPromptStep,
+  AiPromptStep,
   OpenAiStep,
-  PromptConfiguration,
 } from '../types.js';
-import OpenAI from 'openai';
 import {
   GQLDocumentTimeline,
-  GQLIGDocVersion,
-  GQLTimelinePoint,
   IGDocVersion,
 } from '../functions/timeline/types.js';
 import { execGql } from '../api.js';
@@ -67,21 +63,15 @@ export async function storeGoogleDoc(
 export async function storePromptRun(
   docId: string,
   userId: string,
-  openAiPromptSteps: OpenAiPromptStep[],
-  openAiReqres: OpenAIReqRes[]
+  openAiPromptSteps: AiPromptStep[],
+  aiSteps: AIReqRes[]
 ): Promise<GQLPromptRunResponse> {
-  const openAiSteps: OpenAiStep[] = openAiReqres.map((openAiReqres) => {
-    return {
-      openAiPromptStringify: JSON.stringify(openAiReqres.openAiPrompt),
-      openAiResponseStringify: JSON.stringify(openAiReqres.openAiResponse),
-    };
-  });
   const res = await axios
     .post(
       GRAPHQL_ENDPOINT,
       {
-        query: `mutation StorePromptRun($googleDocId: String!, $user: ID!, $openAiPromptSteps: [OpenAiPromptStepInputType]!, $openAiSteps: [OpenAiStepsInputType]!) {
-            storePromptRun(googleDocId: $googleDocId, user: $user, openAiPromptSteps: $openAiPromptSteps, openAiSteps: $openAiSteps) {
+        query: `mutation StorePromptRun($googleDocId: String!, $user: ID!, $openAiPromptSteps: [OpenAiPromptStepInputType]!, $aiSteps: [aiStepsInputType]!) {
+            storePromptRun(googleDocId: $googleDocId, user: $user, openAiPromptSteps: $openAiPromptSteps, aiSteps: $aiSteps) {
                 googleDocId
                 user
                 openAiPromptSteps {
@@ -92,7 +82,7 @@ export async function storePromptRun(
                     }
                     outputDataType
                 }
-                openAiSteps {
+                aiSteps {
                     openAiPromptStringify
                     openAiResponseStringify
                 }
@@ -102,7 +92,7 @@ export async function storePromptRun(
           googleDocId: docId,
           user: userId,
           openAiPromptSteps: openAiPromptSteps,
-          openAiSteps: openAiSteps,
+          aiSteps: aiSteps,
         },
       },
       {

@@ -1,4 +1,13 @@
-import { AiRequestContext, OpenAiPromptStep } from "../../types.js";
+import { AiRequestContext } from "../../types.js";
+
+/**
+ * Response from OpenAI API
+ */
+export interface CompleteChatResponse{
+    reqParamsString: string, // request parameters sent to AI service, stringified
+    responseString: string, // response from AI service, stringified
+    answer: string // primary answer from AI service
+}
 
 export abstract class AiService {
     serviceName: string;
@@ -9,6 +18,11 @@ export abstract class AiService {
         this.serviceName = serviceName;
     }
 
-    abstract completeChat(context: AiRequestContext, overrideModel?: string): Promise<any>;
+    abstract convertContextDataToServiceParams(
+        requestContext: AiRequestContext,
+        overrideModel?: string
+    ): any
+
+    abstract completeChat(context: AiRequestContext, overrideModel?: string): Promise<CompleteChatResponse>;
 
 }

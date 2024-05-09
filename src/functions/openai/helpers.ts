@@ -6,7 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { APIGatewayEvent } from 'aws-lambda';
 import { getFieldFromEventBody } from '../../helpers.js';
-import { OpenAiPromptStep } from '../../types.js';
+import { AiPromptStep } from '../../types.js';
 
 export type AuthHeaders = Record<string, string>;
 
@@ -46,7 +46,7 @@ export interface ExtractedOpenAiRequestData {
   userId: string;
   systemPrompt: string;
   openAiModel: string;
-  openAiPromptSteps: OpenAiPromptStep[];
+  openAiPromptSteps: AiPromptStep[];
   authHeaders: AuthHeaders;
 }
 
@@ -57,8 +57,8 @@ export function extractOpenAiRequestData(
   const userId = event.queryStringParameters?.['userId'];
   const systemPrompt = event.queryStringParameters?.['systemPrompt'] || '';
   const openAiModel = event.queryStringParameters?.['openAiModel'] || '';
-  const openAiPromptSteps: OpenAiPromptStep[] = getFieldFromEventBody<
-    OpenAiPromptStep[]
+  const openAiPromptSteps: AiPromptStep[] = getFieldFromEventBody<
+    AiPromptStep[]
   >(event, 'openAiPromptSteps');
   const authHeaders = getAuthHeaders(event);
   if (!docsId) {

@@ -7,7 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import { useWithAiService } from '../../hooks/use-with-ai-service.js';
 import { DynamoDBStreamEvent } from 'aws-lambda';
-import { AvailableAiServices, OpenAiAsyncJobStatus } from '../../types.js';
+import { AvailableAiServices, GptModels, OpenAiAsyncJobStatus } from '../../types.js';
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import requireEnv from '../../helpers.js';
 import { wrapHandler } from '../../sentry-helpers.js';
@@ -42,15 +42,16 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
     const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
     try {
       const service = AvailableAiServices.OPEN_AI
-      const openAiResponse = await executeAiSteps(
+      const aiServiceResponse = await executeAiSteps(
         openAiPromptSteps,
         docsId,
         userId,
         authHeaders,
         systemPrompt,
-        openAiModel,
+        openAiModel as GptModels,
         service
       );
+      console.log(aiServiceResponse)
       // Update the job in dynamo db
       const tableRequest: UpdateItemCommandInput = {
         TableName: jobsTableName,
@@ -60,16 +61,16 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
           },
         },
         UpdateExpression:
-          'set openAiResponse = :openAiResponse, job_status = :job_status, answer = :answer',
+          'set aiServiceResponse = :aiServiceResponse, job_status = :job_status, answer = :answer',
         ExpressionAttributeValues: {
-          ':openAiResponse': {
-            S: JSON.stringify(openAiResponse),
+          ':aiServiceResponse': {
+            S: JSON.stringify(aiServiceResponse),
           },
           ':job_status': {
             S: OpenAiAsyncJobStatus.COMPLETE,
           },
           ':answer': {
-            S: openAiResponse.answer,
+            S: aiServiceResponse.answer,
           },
         },
       };
