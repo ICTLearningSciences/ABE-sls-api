@@ -51,10 +51,10 @@ export function useWithAiService() {
         },
         overrideGptModels
       );
-      const { aiReqResData, answer } = res;
+      const { aiStepData, answer } = res;
       allStepsData.push({
-        aiServiceRequestParams: aiReqResData.aiServiceRequestParams,
-        aiServiceResponse: aiReqResData.aiServiceResponse,
+        aiServiceRequestParams: aiStepData.aiServiceRequestParams,
+        aiServiceResponse: aiStepData.aiServiceResponse,
       });
       previousOutput = answer;
       finalAnswer = answer;

@@ -29,7 +29,7 @@ export const DefaultOpenAiConfig = {
 };
 
 export type OpenAiReqType = ChatCompletionCreateParamsNonStreaming;
-export type OpenAiResType = OpenAI.Chat.Completions.ChatCompletion;
+export type OpenAiResType = OpenAI.Chat.Completions.ChatCompletion.Choice[];
 
 export type OpenAiStepDataType = AiStepData<OpenAiReqType, OpenAiResType>;
 export type OpenAiPromptResponse = AiServiceResponse<
@@ -171,9 +171,9 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     );
 
     return {
-      aiReqResData: {
+      aiStepData: {
         aiServiceRequestParams: params,
-        aiServiceResponse: chatCompleteResponse,
+        aiServiceResponse: chatCompleteResponse.choices,
       },
       answer: answer,
     };

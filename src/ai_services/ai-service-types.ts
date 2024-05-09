@@ -15,7 +15,7 @@ export interface AiStepData<ReqType, ResType> {
 }
 
 export interface AiServiceResponse<ReqType, ResType> {
-  aiReqResData: AiStepData<ReqType, ResType>;
+  aiStepData: AiStepData<ReqType, ResType>;
   answer: string;
 }
 
