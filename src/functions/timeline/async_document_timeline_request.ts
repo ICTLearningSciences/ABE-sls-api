@@ -11,6 +11,7 @@ import { AiAsyncJobStatus } from '../../types.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
 import { wrapHandler } from '../../sentry-helpers.js';
+import { AvailableAiServiceNames } from '../../ai_services/ai-service-factory.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
@@ -18,8 +19,15 @@ const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const documentId = event.queryStringParameters?.['docId'];
   const userId = event.queryStringParameters?.['userId'];
-  if (!documentId || !userId) {
-    throw new Error('Missing required query parameters [docId, userId]');
+  const targetAiService: AvailableAiServiceNames = event
+    .queryStringParameters?.['targetAiService'] as AvailableAiServiceNames;
+  if (!documentId || !userId || !targetAiService) {
+    throw new Error(
+      'Missing required query parameters [docId, userId, targetAiService]'
+    );
+  }
+  if (!Object.keys(targetAiService).includes(targetAiService)) {
+    throw new Error('Invalid targetAiService');
   }
   // Queue the job
   const newUuid = uuid();
@@ -41,6 +49,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
         S: JSON.stringify({
           docId: documentId,
           userId,
+          targetAiService,
         }),
       },
     },

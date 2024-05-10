@@ -10,7 +10,7 @@ import requireEnv, { createResponseJson } from '../../helpers.js';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { APIGatewayEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { AiServiceFinalResponseType } from '../../ai_services/ai-service-types.js';
+import { AiServiceFinalResponseType } from '../../ai_services/ai-service-factory.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 

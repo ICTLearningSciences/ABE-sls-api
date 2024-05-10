@@ -7,6 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 import { APIGatewayEvent } from 'aws-lambda';
 import { getFieldFromEventBody } from '../../helpers.js';
 import { AiPromptStep } from '../../types.js';
+import { AvailableAiServiceNames } from '../../ai_services/ai-service-factory.js';
 
 export type AuthHeaders = Record<string, string>;
 
@@ -45,8 +46,9 @@ export interface ExtractedOpenAiRequestData {
   docsId: string;
   userId: string;
   systemPrompt: string;
-  openAiModel: string;
+  overrideAiModel: string;
   aiPromptSteps: AiPromptStep[];
+  targetAiService: AvailableAiServiceNames;
   authHeaders: AuthHeaders;
 }
 
@@ -56,7 +58,12 @@ export function extractOpenAiRequestData(
   const docsId = event.queryStringParameters?.['docId'];
   const userId = event.queryStringParameters?.['userId'];
   const systemPrompt = event.queryStringParameters?.['systemPrompt'] || '';
-  const openAiModel = event.queryStringParameters?.['openAiModel'] || '';
+  const overrideAiModel =
+    event.queryStringParameters?.['overrideAiModel'] || '';
+  const targetAiService: AvailableAiServiceNames =
+    (event.queryStringParameters?.[
+      'targetAiService'
+    ] as AvailableAiServiceNames) || AvailableAiServiceNames.OPEN_AI;
   const aiPromptSteps: AiPromptStep[] = getFieldFromEventBody<AiPromptStep[]>(
     event,
     'aiPromptSteps'
@@ -71,15 +78,22 @@ export function extractOpenAiRequestData(
   if (!aiPromptSteps) {
     throw new Error('OpenAI Prompt Steps are empty');
   }
-  if (openAiModel && !ValidOpenAiModels.includes(openAiModel)) {
+  if (overrideAiModel && !ValidOpenAiModels.includes(overrideAiModel)) {
     throw new Error('invalid OpenAI model');
+  }
+  if (
+    !targetAiService ||
+    !Object.keys(AvailableAiServiceNames).includes(targetAiService)
+  ) {
+    throw new Error('invalid target AI service');
   }
   return {
     docsId,
     userId,
     systemPrompt,
-    openAiModel,
+    overrideAiModel,
     aiPromptSteps,
     authHeaders,
+    targetAiService,
   };
 }

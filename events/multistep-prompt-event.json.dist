@@ -5,7 +5,7 @@
         "docId": "1ZJDajRda33L8iKE7mM7tiD1AzrDJipUtEtIq7BFATzI",
         "userAction": "MULTISTEP_PROMPTS",
         "userId": "653ad42b6e601e65dbf756d0",
-        "openAiModel": "gpt-4"
+        "overrideAiModel": "gpt-4"
     },
     "headers":{
         "Authorization": "bearer xxxx"

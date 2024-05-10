@@ -6,7 +6,6 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { GQLIGDocVersion } from './types.js';
 import { Schema } from 'jsonschema';
-import { OpenAiService } from '../../ai_services/openai/open-ai-service.js';
 import {
   AiRequestContext,
   GptModels,
@@ -14,7 +13,7 @@ import {
   PromptOutputTypes,
   PromptRoles,
 } from '../../types.js';
-const openAiService = OpenAiService.getInstance();
+import { AvailableAiServices } from '../../ai_services/ai-service-factory.js';
 
 export interface ReverseOutline {
   'Thesis Statement': string;
@@ -74,7 +73,8 @@ const reverseOutlineSchema: Schema = {
 };
 
 export async function reverseOutlinePromptRequest(
-  currentVersion: GQLIGDocVersion
+  currentVersion: GQLIGDocVersion,
+  aiService: AvailableAiServices
 ) {
   const aiStep: AiPromptStep = {
     prompts: [
@@ -123,6 +123,6 @@ export async function reverseOutlinePromptRequest(
     systemRole: '',
   };
 
-  const res = await openAiService.completeChat(aiReqContext);
+  const res = await aiService.completeChat(aiReqContext);
   return res.answer;
 }

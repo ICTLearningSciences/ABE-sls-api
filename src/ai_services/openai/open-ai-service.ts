@@ -18,9 +18,9 @@ import { Schema } from 'jsonschema';
 import { isJsonString, validateJsonResponse } from '../../helpers.js';
 import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
 import {
-  AiServiceResponse,
   AiStepData,
-} from '../../ai_services/ai-service-types.js';
+  AiServiceResponse,
+} from '../../ai_services/ai-service-factory.js';
 
 export const DefaultOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:
@@ -134,7 +134,10 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     };
     request.messages.push({
       role: PromptRoles.SYSTEM,
-      content: aiStep.customSystemRole || systemRole || DefaultOpenAiConfig.DEFAULT_SYSTEM_ROLE,
+      content:
+        aiStep.customSystemRole ||
+        systemRole ||
+        DefaultOpenAiConfig.DEFAULT_SYSTEM_ROLE,
     });
     if (previousOutput) {
       request.messages.push({

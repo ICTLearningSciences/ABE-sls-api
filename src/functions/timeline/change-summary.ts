@@ -4,7 +4,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { OpenAiService } from '../../ai_services/openai/open-ai-service.js';
+import { AvailableAiServices } from '../../ai_services/ai-service-factory.js';
 import {
   AiRequestContext,
   GptModels,
@@ -13,11 +13,10 @@ import {
   PromptRoles,
 } from '../../types.js';
 
-const openAiService = OpenAiService.getInstance();
-
 export async function changeSummaryPromptRequest(
   lastVersionText: string,
-  currentVersionText: string
+  currentVersionText: string,
+  aiService: AvailableAiServices
 ) {
   const isCurrentVersionFirstVersion = !lastVersionText;
 
@@ -72,6 +71,6 @@ export async function changeSummaryPromptRequest(
     systemRole: '',
   };
 
-  const res = await openAiService.completeChat(aiReqContext);
+  const res = await aiService.completeChat(aiReqContext);
   return res.answer;
 }

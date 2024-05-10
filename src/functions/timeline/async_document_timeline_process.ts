@@ -7,14 +7,16 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import { DynamoDBStreamEvent } from 'aws-lambda';
 import { AiAsyncJobStatus } from '../../types.js';
-import { useWithGetDocumentTimeline } from './use-with-get-document-timeline.js';
 import { useWithGoogleApi } from '../../hooks/google_api.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { updateDynamoJobStatus } from '../../dynamo-helpers.js';
+import { DocumentTimelineGenerator } from './document-timeline-generator.js';
+import { AvailableAiServiceNames } from '../../ai_services/ai-service-factory.js';
 
 interface ExtractedDocumentTimelineRequestData {
   docId: string;
   userId: string;
+  targetAiService: AvailableAiServiceNames;
 }
 
 // modern module syntax
@@ -36,7 +38,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
       continue;
     }
     try {
-      const { docId, userId } = docTimelineRequestData;
+      const { docId, userId, targetAiService } = docTimelineRequestData;
       const { getGoogleAPIs, getGoogleDocVersions } = useWithGoogleApi();
       const { drive, accessToken: _accessToken } = await getGoogleAPIs();
       const accessToken = _accessToken || '';
@@ -45,8 +47,10 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         docId,
         accessToken
       );
-      const { getDocumentTimeline } = useWithGetDocumentTimeline();
-      await getDocumentTimeline(
+      const docTimelineGenerator = new DocumentTimelineGenerator(
+        targetAiService
+      );
+      await docTimelineGenerator.getDocumentTimeline(
         jobId,
         userId,
         docId,

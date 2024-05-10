@@ -6,14 +6,14 @@ The full terms of this copyright and license should always be found in the root 
 */
 // Note: had to add .js to find this file in serverless
 import OpenAI from 'openai';
-import { useWithAiService } from '../../hooks/use-with-ai-service.js';
 import {
   createResponseJson,
   extractErrorMessageFromError,
 } from '../../helpers.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { extractOpenAiRequestData } from './helpers.js';
-import { AvailableAiServices, GptModels } from '../../types.js';
+import { GptModels } from '../../types.js';
+import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
 
 // modern module syntax
 export const handler = async (event: APIGatewayEvent) => {
@@ -21,20 +21,20 @@ export const handler = async (event: APIGatewayEvent) => {
     docsId,
     userId,
     systemPrompt,
-    openAiModel,
+    overrideAiModel,
+    targetAiService,
     aiPromptSteps,
     authHeaders,
   } = extractOpenAiRequestData(event);
-  const { executeAiSteps } = useWithAiService();
+  const aiServiceHandler = new AiServiceHandler(targetAiService);
   try {
-    const aiServiceResponse = await executeAiSteps(
+    const aiServiceResponse = await aiServiceHandler.executeAiSteps(
       aiPromptSteps,
       docsId,
       userId,
       authHeaders,
       systemPrompt,
-      openAiModel as GptModels,
-      AvailableAiServices.OPEN_AI
+      overrideAiModel as GptModels
     );
     return createResponseJson(200, { response: aiServiceResponse });
   } catch (err) {

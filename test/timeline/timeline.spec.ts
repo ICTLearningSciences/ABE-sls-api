@@ -1,14 +1,14 @@
 // tests/calculator.spec.tx
 import { assert } from "chai";
-import { createSlices, useWithGetDocumentTimeline } from "../../src/functions/timeline/use-with-get-document-timeline.js";
+import { DocumentTimelineGenerator, createSlices } from "../../src/functions/timeline/document-timeline-generator.js";
 import { GQLDocumentTimeline, IGDocVersion, AiGenerationStatus, TimelinePointType } from "../../src/functions/timeline/types.js";
 import { defaultChangeSummaryRes, defaultReverseOutlineRes, mockDefault, mockGraphqlQuery, mockOpenAiCall, mockOpenAiChangeSummaryResponse, mockOpenAiReverseOutlineResponse } from "../helpers.js";
 import { externalGoogleDocRevisionGenerator, gqlDocVersionGenerator, isoStringMinsFromNow } from "../fixtures/documents/helpers/document-generator.js";
-import nock from "nock";
 import { docTimeline } from "../fixtures/documents/2-sessions-inbetween-outside-ABE/doc-timeline.js";
 import {ddbMock} from "../init.spec.js";
 import { UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { AiAsyncJobStatus } from "../../src/types.js";
+import {AvailableAiServiceNames} from '../../src/ai_services/ai-service-factory.js'
 
 describe("Document Timeline Unit Tests", () => {
   beforeEach(() => {
@@ -71,9 +71,9 @@ describe("Document Timeline Unit Tests", () => {
       const openAiNocScope = mockOpenAiCall(
         "fake-summary"
       )
-      const {getDocumentTimeline} = useWithGetDocumentTimeline();
+      const docTimelineGenerator = new DocumentTimelineGenerator(AvailableAiServiceNames.OPEN_AI)
 
-      const res = await getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
+      const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
 
       assert.equal(openAiNocScope.isDone(), false); // no openAi calls should have occured since we utilize existing timeline
       assert.equal(res.timelinePoints.length, docTimeline.timelinePoints.length);
@@ -121,8 +121,8 @@ describe("Document Timeline Unit Tests", () => {
           numCallsAccumulator: numReverseOutlineCalls
         }
       )
-      const {getDocumentTimeline} = useWithGetDocumentTimeline();
-      const res = await getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
+      const docTimelineGenerator = new DocumentTimelineGenerator(AvailableAiServiceNames.OPEN_AI)
+      const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
       assert.equal(openAiChangeSummaryNock.isDone(), true);
       assert.equal(reverseOutlineNock.isDone(), true);
       assert.equal(res.timelinePoints[0].changeSummary, defaultChangeSummaryRes);
@@ -191,9 +191,9 @@ describe("Document Timeline Unit Tests", () => {
           numCallsAccumulator: numReverseOutlineCalls
         }
       )
-      const {getDocumentTimeline} = useWithGetDocumentTimeline();
+      const docTimelineGenerator = new DocumentTimelineGenerator(AvailableAiServiceNames.OPEN_AI)
 
-      const res = await getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
+      await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
       assert.equal(openAiChangeSummaryNock.isDone(), true);
       assert.equal(reverseOutlineNock.isDone(), true);
       assert.equal(storeDocTimelineNoc.isDone(), true);

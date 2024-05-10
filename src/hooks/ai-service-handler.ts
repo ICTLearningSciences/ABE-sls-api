@@ -6,29 +6,35 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { MAX_OPEN_AI_CHAIN_REQUESTS } from '../constants.js';
 import { getDocData } from '../api.js';
-import { AiPromptStep, AvailableAiServices, GptModels } from '../types.js';
+import { AiPromptStep, GptModels } from '../types.js';
 import { storePromptRun } from './graphql_api.js';
 import { AuthHeaders } from '../functions/openai/helpers.js';
-import { OpenAiService } from '../ai_services/openai/open-ai-service.js';
 import {
+  AiServiceFactory,
   AiServiceFinalResponseType,
   AiServiceStepDataTypes,
-} from '../ai_services/ai-service-types.js';
-const openAiService = OpenAiService.getInstance();
+  AvailableAiServiceNames,
+  AvailableAiServices,
+} from '../ai_services/ai-service-factory.js';
 
-export function useWithAiService() {
+export class AiServiceHandler {
+  aiService: AvailableAiServices;
+
+  constructor(targetAiService: AvailableAiServiceNames) {
+    this.aiService = AiServiceFactory.getAiService(targetAiService);
+  }
+
   /**
    * Handles multistep prompts which use the output of the previous prompt as the input for the next prompt.
    * Each individual prompt does not know what the previous prompt was.
    */
-  async function executeAiSteps(
+  async executeAiSteps(
     aiSteps: AiPromptStep[],
     docsId: string,
     userId: string,
     authHeaders: AuthHeaders,
     systemRole: string,
-    overrideGptModels: GptModels,
-    aiService: AvailableAiServices
+    overrideGptModels: GptModels
   ): Promise<AiServiceFinalResponseType> {
     if (aiSteps.length >= MAX_OPEN_AI_CHAIN_REQUESTS) {
       throw new Error(
@@ -42,7 +48,7 @@ export function useWithAiService() {
     let previousOutput = '';
     for (let i = 0; i < aiSteps.length; i++) {
       const curAiStep = aiSteps[i];
-      const res = await openAiService.completeChat(
+      const res = await this.aiService.completeChat(
         {
           aiStep: curAiStep,
           docsPlainText,
@@ -71,8 +77,4 @@ export function useWithAiService() {
       };
     }
   }
-
-  return {
-    executeAiSteps,
-  };
 }

@@ -5,28 +5,34 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { APIGatewayEvent } from 'aws-lambda';
-import { useWithGetDocumentTimeline } from './use-with-get-document-timeline.js';
 import { createResponseJson } from '../../helpers.js';
 import { useWithGoogleApi } from '../../hooks/google_api.js';
 import { wrapHandler } from '../../sentry-helpers.js';
+import { AvailableAiServiceNames } from '../../ai_services/ai-service-factory.js';
+import { DocumentTimelineGenerator } from './document-timeline-generator.js';
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const documentId = event.queryStringParameters?.['docId'];
   const userId = event.queryStringParameters?.['userId'];
+  const targetAiService: AvailableAiServiceNames = event
+    .queryStringParameters?.['targetAiService'] as AvailableAiServiceNames;
   if (!documentId || !userId) {
     throw new Error('Missing required query parameters [docId, userId]');
   }
 
   const { getGoogleAPIs, getGoogleDocVersions } = useWithGoogleApi();
-  const { drive, docs, accessToken } = await getGoogleAPIs();
+  const { drive, accessToken } = await getGoogleAPIs();
   const revisions = await getGoogleDocVersions(
     drive,
     documentId,
     accessToken || ''
   );
-  const { getDocumentTimeline } = useWithGetDocumentTimeline();
-  const documentTimeline = await getDocumentTimeline(
+  const documentTimelineGenerator = new DocumentTimelineGenerator(
+    targetAiService
+  );
+  const documentTimeline = await documentTimelineGenerator.getDocumentTimeline(
+    '',
     userId,
     documentId,
     revisions,

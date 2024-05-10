@@ -6,6 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 import {
   OpenAiPromptResponse,
+  OpenAiService,
   OpenAiStepDataType,
 } from './openai/open-ai-service.js';
 
@@ -29,3 +30,20 @@ export interface AiServiceFinalResponseType {
  */
 export type AiServiceStepDataTypes = OpenAiStepDataType;
 export type AiServicesPromptResponseTypes = OpenAiPromptResponse;
+export type AvailableAiServices = OpenAiService;
+
+export enum AvailableAiServiceNames {
+  OPEN_AI = 'OPEN_AI',
+  AZURE_OPEN_AI = 'AZURE_OPEN_AI',
+}
+
+export class AiServiceFactory {
+  static getAiService(targetAiService: AvailableAiServiceNames) {
+    switch (targetAiService) {
+      case AvailableAiServiceNames.OPEN_AI:
+        return OpenAiService.getInstance();
+      default:
+        throw new Error('Invalid AI service');
+    }
+  }
+}

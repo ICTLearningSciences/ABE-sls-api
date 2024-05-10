@@ -12,8 +12,8 @@ import {
 } from '../functions/timeline/types.js';
 import { execGql } from '../api.js';
 import pkg from 'lodash';
-import { AiServiceStepDataTypes } from 'ai_services/ai-service-types.js';
 import { GQLAiStep } from '../gql_types.js';
+import { AiServiceStepDataTypes } from '../ai_services/ai-service-factory.js';
 const { omit } = pkg;
 const GRAPHQL_ENDPOINT = process.env.GRAPHQL_ENDPOINT || '';
 const SECRET_HEADER_NAME = process.env.SECRET_HEADER_NAME || '';

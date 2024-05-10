@@ -34,11 +34,6 @@ export enum GptModels {
   AZURE_GPT_4_TURBO_PREVIEW = 'ABE-gpt-4-turbo-preview',
 }
 
-export enum AvailableAiServices {
-  OPEN_AI = 'OPEN_AI',
-  AZURE_OPEN_AI = 'AZURE_OPEN_AI',
-}
-
 export interface AiPromptStep {
   prompts: PromptConfiguration[];
   targetGptModel: GptModels;
