@@ -134,7 +134,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     };
     request.messages.push({
       role: PromptRoles.SYSTEM,
-      content: systemRole || DefaultOpenAiConfig.DEFAULT_SYSTEM_ROLE,
+      content: aiStep.customSystemRole || systemRole || DefaultOpenAiConfig.DEFAULT_SYSTEM_ROLE,
     });
     if (previousOutput) {
       request.messages.push({
