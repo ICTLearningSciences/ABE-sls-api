@@ -20,6 +20,7 @@ import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
 import {
   AiStepData,
   AiServiceResponse,
+  AvailableAiServiceNames,
 } from '../../ai_services/ai-service-factory.js';
 
 export const DefaultOpenAiConfig = {
@@ -39,11 +40,16 @@ export type OpenAiPromptResponse = AiServiceResponse<
 
 export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   private static instance: OpenAiService;
-  openAiClient: OpenAI;
+  aiServiceClient: OpenAI;
 
   constructor() {
-    super('OpenAI');
-    this.openAiClient = new OpenAI({
+    const approvedGptModels = [
+      GptModels.OPEN_AI_GPT_3_5,
+      GptModels.OPEN_AI_GPT_4,
+      GptModels.OPEN_AI_GPT_4_TURBO_PREVIEW,
+    ];
+    super(AvailableAiServiceNames.OPEN_AI, approvedGptModels);
+    this.aiServiceClient = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
       timeout: 30 * 1000, // 30 seconds (default is 10 minutes)
     });
@@ -105,7 +111,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     console.log(
       `Executing OpenAI request ${id} starting at ${new Date().toISOString()}`
     );
-    const result = await this.openAiClient.chat.completions.create(params);
+    const result = await this.aiServiceClient.chat.completions.create(params);
     if (!result.choices.length) {
       throw new Error('OpenAI API Error: No choices provided.');
     }
@@ -125,6 +131,9 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   ): ChatCompletionCreateParamsNonStreaming {
     const { aiStep, docsPlainText, systemRole, previousOutput } =
       requestContext;
+    if (!this.approvedGptModels.includes(aiStep.targetGptModel)) {
+      throw new Error('Invalid GPT model provided');
+    }
     const request: ChatCompletionCreateParamsNonStreaming = {
       messages: [],
       model:

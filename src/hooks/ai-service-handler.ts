@@ -59,8 +59,9 @@ export class AiServiceHandler {
       );
       const { aiStepData, answer } = res;
       allStepsData.push({
-        aiServiceRequestParams: aiStepData.aiServiceRequestParams,
-        aiServiceResponse: aiStepData.aiServiceResponse,
+        // TODO: currently shoehorning the typing here, remove the any and determine fix.
+        aiServiceRequestParams: aiStepData.aiServiceRequestParams as any,
+        aiServiceResponse: aiStepData.aiServiceResponse as any,
       });
       previousOutput = answer;
       finalAnswer = answer;

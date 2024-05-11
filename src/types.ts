@@ -56,11 +56,6 @@ export enum PromptOutputTypes {
   JSON = 'JSON',
 }
 
-export interface AiStep {
-  aiServiceRequestParams: string;
-  aiServiceResponse: string;
-}
-
 export interface GQLPromptRunResponse {
   googleDocId: string;
 }

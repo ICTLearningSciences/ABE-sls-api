@@ -5,6 +5,11 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import {
+  AzureOpenAiPromptResponse,
+  AzureOpenAiService,
+  AzureOpenAiStepDataType,
+} from './azure/azure-ai-service.js';
+import {
   OpenAiPromptResponse,
   OpenAiService,
   OpenAiStepDataType,
@@ -28,9 +33,13 @@ export interface AiServiceFinalResponseType {
 /**
  * Merge all types here for use in abstract locations
  */
-export type AiServiceStepDataTypes = OpenAiStepDataType;
-export type AiServicesPromptResponseTypes = OpenAiPromptResponse;
-export type AvailableAiServices = OpenAiService;
+export type AiServiceStepDataTypes =
+  | OpenAiStepDataType
+  | AzureOpenAiStepDataType;
+export type AiServicesPromptResponseTypes =
+  | OpenAiPromptResponse
+  | AzureOpenAiPromptResponse;
+export type AvailableAiServices = OpenAiService | AzureOpenAiService;
 
 export enum AvailableAiServiceNames {
   OPEN_AI = 'OPEN_AI',
@@ -42,6 +51,8 @@ export class AiServiceFactory {
     switch (targetAiService) {
       case AvailableAiServiceNames.OPEN_AI:
         return OpenAiService.getInstance();
+      case AvailableAiServiceNames.AZURE_OPEN_AI:
+        return AzureOpenAiService.getInstance();
       default:
         throw new Error('Invalid AI service');
     }

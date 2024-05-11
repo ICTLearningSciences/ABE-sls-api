@@ -83,6 +83,8 @@ provider:
     GOOGLE_DRIVE_FOLDER_ID: ${self:custom.stages.${self:provider.stage}.GOOGLE_DRIVE_FOLDER_ID}
     ADMIN_EMAILS: ${self:custom.stages.${self:provider.stage}.ADMIN_EMAILS}
     OPENAI_API_KEY: ${self:custom.stages.${self:provider.stage}.OPENAI_API_KEY}
+    AZURE_API_ENDPOINT: ${ssm:/ABE/azure_api_endpoint, ''}
+    AZURE_API_KEY: ${ssm:/ABE/azure_api_key, ''}
     GOOGLE_API_ENDPOINT: ${self:custom.stages.${self:provider.stage}.GOOGLE_API_ENDPOINT}
     GRAPHQL_ENDPOINT: ${self:custom.stages.${self:provider.stage}.GRAPHQL_ENDPOINT}
     SECRET_HEADER_NAME: ${self:custom.stages.${self:provider.stage}.SECRET_HEADER_NAME}

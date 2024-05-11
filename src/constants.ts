@@ -4,7 +4,6 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { GptModels } from './types.js';
 
 export const SYSTEM_ASSIGNMENT =
   'Provided is the plain text from a text document that was written by a student writer. It is your job to look for any mistakes made in the text or any improvements that can be made to the text.';
