@@ -5,7 +5,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { AiServicesPromptResponseTypes } from '../../ai_services/ai-service-factory.js';
-import { AiRequestContext, GptModels } from '../../types.js';
+import { AiRequestContext, TargetAiModelServiceType } from '../../types.js';
 
 /**
  * Response from OpenAI API
@@ -18,25 +18,22 @@ export interface CompleteChatResponse<Req, Res> {
 
 export abstract class AiService<Req, Res> {
   serviceName: string;
-  approvedGptModels: GptModels[];
+  defaultAiServiceModel: TargetAiModelServiceType;
   abstract aiServiceClient: any;
 
-  constructor(serviceName: string, approvedGptModels: GptModels[]) {
+  constructor(serviceName: string, defaultModel: string) {
     this.serviceName = serviceName;
-    this.approvedGptModels = approvedGptModels;
+    this.defaultAiServiceModel = {
+      serviceName,
+      model: defaultModel,
+    };
   }
 
   abstract convertContextDataToServiceParams(
-    requestContext: AiRequestContext,
-    overrideModel?: string
+    requestContext: AiRequestContext
   ): any;
 
-  isValidGptModel(model: string): boolean {
-    return this.approvedGptModels.includes(model as GptModels);
-  }
-
   abstract completeChat(
-    context: AiRequestContext,
-    overrideModel?: string
+    context: AiRequestContext
   ): Promise<AiServicesPromptResponseTypes>;
 }

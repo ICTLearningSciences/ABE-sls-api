@@ -54,7 +54,7 @@ export class AiServiceFactory {
       case AvailableAiServiceNames.AZURE_OPEN_AI:
         return AzureOpenAiService.getInstance();
       default:
-        throw new Error('Invalid AI service');
+        throw new Error('Invalid AI service name');
     }
   }
 }

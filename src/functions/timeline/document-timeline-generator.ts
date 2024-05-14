@@ -23,7 +23,7 @@ import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import { changeSummaryPromptRequest } from './change-summary.js';
 import Sentry from '../../sentry-helpers.js';
 import { storeDoctimelineDynamoDB } from '../../dynamo-helpers.js';
-import { AiAsyncJobStatus } from '../../types.js';
+import { AiAsyncJobStatus, TargetAiModelServiceType } from '../../types.js';
 import {
   AiServiceFactory,
   AvailableAiServiceNames,
@@ -205,9 +205,13 @@ export const NUM_GENERATED_PER_REQUEST = 5;
 
 export class DocumentTimelineGenerator {
   aiService: AvailableAiServices;
+  targetAiService: TargetAiModelServiceType;
 
-  constructor(targetAiService: AvailableAiServiceNames) {
-    this.aiService = AiServiceFactory.getAiService(targetAiService);
+  constructor(targetAiService: TargetAiModelServiceType) {
+    this.aiService = AiServiceFactory.getAiService(
+      targetAiService.serviceName as AvailableAiServiceNames
+    );
+    this.targetAiService = targetAiService;
   }
 
   /**
@@ -230,7 +234,8 @@ export class DocumentTimelineGenerator {
         timelinePoint.changeSummary = await changeSummaryPromptRequest(
           '',
           timelinePoint.version.plainText,
-          this.aiService
+          this.aiService,
+          this.targetAiService
         );
       } else {
         if (
@@ -244,7 +249,8 @@ export class DocumentTimelineGenerator {
           timelinePoint.changeSummary = await changeSummaryPromptRequest(
             previousTimelinePoint.version.plainText,
             timelinePoint.version.plainText,
-            this.aiService
+            this.aiService,
+            this.targetAiService
           );
         }
       }

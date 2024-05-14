@@ -5,7 +5,11 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { AiService } from '../../ai_services/abstract-classes/abstract-ai-service.js';
-import { AiRequestContext, GptModels, PromptRoles } from '../../types.js';
+import {
+  AiRequestContext,
+  DefaultGptModels,
+  PromptRoles,
+} from '../../types.js';
 import {
   OpenAIClient,
   AzureKeyCredential,
@@ -46,7 +50,7 @@ export type AzureOpenAiPromptResponse = AiServiceResponse<
 export const DefaultAzureOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:
     'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture. Knowledge cutoff: 2021-09.',
-  DEFAULT_GPT_MODEL: GptModels.AZURE_GPT_3_5,
+  DEFAULT_GPT_MODEL: DefaultGptModels.AZURE_GPT_3_5,
 };
 
 export class AzureOpenAiService extends AiService<
@@ -57,11 +61,10 @@ export class AzureOpenAiService extends AiService<
   aiServiceClient: OpenAIClient;
 
   constructor() {
-    const approvedGptModels = [
-      GptModels.AZURE_GPT_3_5,
-      GptModels.AZURE_GPT_4_TURBO_PREVIEW,
-    ];
-    super(AvailableAiServiceNames.AZURE_OPEN_AI, approvedGptModels);
+    super(
+      AvailableAiServiceNames.AZURE_OPEN_AI,
+      DefaultGptModels.AZURE_GPT_3_5
+    );
     const azureApiEndpoint = requireEnv('AZURE_API_ENDPOINT');
     const azureApiKey = requireEnv('AZURE_API_KEY');
     this.aiServiceClient = new OpenAIClient(
@@ -148,20 +151,13 @@ export class AzureOpenAiService extends AiService<
   }
 
   convertContextDataToServiceParams(
-    requestContext: AiRequestContext,
-    overrideModel?: string | undefined
+    requestContext: AiRequestContext
   ): AzureOpenAiReqType {
-    const { aiStep, docsPlainText, systemRole, previousOutput } =
-      requestContext;
-    if (aiStep.targetGptModel && !this.isValidGptModel(aiStep.targetGptModel)) {
-      throw new Error('Invalid GPT model provided');
-    }
-    if (overrideModel && !this.isValidGptModel(overrideModel)) {
-      throw new Error(`Invalid GPT model: ${overrideModel}`);
-    }
+    const { aiStep, docsPlainText, previousOutput } = requestContext;
     const request: AzureOpenAiReqType = {
       deploymentName:
-        aiStep.targetGptModel || DefaultAzureOpenAiConfig.DEFAULT_GPT_MODEL,
+        aiStep.targetAiServiceModel.model ||
+        DefaultAzureOpenAiConfig.DEFAULT_GPT_MODEL,
       messages: [],
       options: {
         temperature: AI_DEFAULT_TEMP,
@@ -170,9 +166,7 @@ export class AzureOpenAiService extends AiService<
     request.messages.push({
       role: PromptRoles.SYSTEM,
       content:
-        aiStep.customSystemRole ||
-        systemRole ||
-        DefaultAzureOpenAiConfig.DEFAULT_SYSTEM_ROLE,
+        aiStep.systemRole || DefaultAzureOpenAiConfig.DEFAULT_SYSTEM_ROLE,
     });
     if (previousOutput) {
       request.messages.push({
@@ -196,13 +190,10 @@ export class AzureOpenAiService extends AiService<
   }
 
   async completeChat(
-    context: AiRequestContext,
-    overrideModel?: string | undefined
+    context: AiRequestContext
   ): Promise<AzureOpenAiPromptResponse> {
-    const azureAiRequestContext = this.convertContextDataToServiceParams(
-      context,
-      overrideModel
-    );
+    const azureAiRequestContext =
+      this.convertContextDataToServiceParams(context);
     const [choices, answer] = await this.executeAiUntilProperData(
       azureAiRequestContext,
       false

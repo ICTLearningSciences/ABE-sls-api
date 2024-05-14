@@ -6,7 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { MAX_OPEN_AI_CHAIN_REQUESTS } from '../constants.js';
 import { getDocData } from '../api.js';
-import { AiPromptStep, GptModels } from '../types.js';
+import { AiPromptStep } from '../types.js';
 import { storePromptRun } from './graphql_api.js';
 import { AuthHeaders } from '../functions/openai/helpers.js';
 import {
@@ -14,15 +14,10 @@ import {
   AiServiceFinalResponseType,
   AiServiceStepDataTypes,
   AvailableAiServiceNames,
-  AvailableAiServices,
 } from '../ai_services/ai-service-factory.js';
 
 export class AiServiceHandler {
-  aiService: AvailableAiServices;
-
-  constructor(targetAiService: AvailableAiServiceNames) {
-    this.aiService = AiServiceFactory.getAiService(targetAiService);
-  }
+  constructor() {}
 
   /**
    * Handles multistep prompts which use the output of the previous prompt as the input for the next prompt.
@@ -32,9 +27,7 @@ export class AiServiceHandler {
     aiSteps: AiPromptStep[],
     docsId: string,
     userId: string,
-    authHeaders: AuthHeaders,
-    systemRole: string,
-    overrideGptModels: GptModels
+    authHeaders: AuthHeaders
   ): Promise<AiServiceFinalResponseType> {
     if (aiSteps.length >= MAX_OPEN_AI_CHAIN_REQUESTS) {
       throw new Error(
@@ -48,15 +41,14 @@ export class AiServiceHandler {
     let previousOutput = '';
     for (let i = 0; i < aiSteps.length; i++) {
       const curAiStep = aiSteps[i];
-      const res = await this.aiService.completeChat(
-        {
-          aiStep: curAiStep,
-          docsPlainText,
-          previousOutput,
-          systemRole,
-        },
-        overrideGptModels
+      const aiService = AiServiceFactory.getAiService(
+        curAiStep.targetAiServiceModel.serviceName as AvailableAiServiceNames
       );
+      const res = await aiService.completeChat({
+        aiStep: curAiStep,
+        docsPlainText,
+        previousOutput,
+      });
       const { aiStepData, answer } = res;
       allStepsData.push({
         // TODO: currently shoehorning the typing here, remove the any and determine fix.

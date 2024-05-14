@@ -7,21 +7,22 @@ The full terms of this copyright and license should always be found in the root 
 import { AvailableAiServices } from '../../ai_services/ai-service-factory.js';
 import {
   AiRequestContext,
-  GptModels,
   AiPromptStep,
   PromptOutputTypes,
   PromptRoles,
+  TargetAiModelServiceType,
 } from '../../types.js';
 
 export async function changeSummaryPromptRequest(
   lastVersionText: string,
   currentVersionText: string,
-  aiService: AvailableAiServices
+  aiService: AvailableAiServices,
+  targetAiServiceModel: TargetAiModelServiceType
 ) {
   const isCurrentVersionFirstVersion = !lastVersionText;
 
   const compareVersionAiPromptStep: AiPromptStep = {
-    targetGptModel: GptModels.OPEN_AI_GPT_3_5,
+    targetAiServiceModel: targetAiServiceModel,
     outputDataType: PromptOutputTypes.TEXT,
     prompts: [
       {
@@ -46,7 +47,7 @@ export async function changeSummaryPromptRequest(
   };
 
   const summarizeVersionPromptStep: AiPromptStep = {
-    targetGptModel: GptModels.OPEN_AI_GPT_3_5,
+    targetAiServiceModel: targetAiServiceModel,
     outputDataType: PromptOutputTypes.TEXT,
     prompts: [
       {
@@ -68,7 +69,6 @@ export async function changeSummaryPromptRequest(
       : compareVersionAiPromptStep,
     docsPlainText: currentVersionText,
     previousOutput: '',
-    systemRole: '',
   };
 
   const res = await aiService.completeChat(aiReqContext);

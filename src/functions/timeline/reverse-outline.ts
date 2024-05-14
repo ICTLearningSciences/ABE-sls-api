@@ -8,7 +8,6 @@ import { GQLIGDocVersion } from './types.js';
 import { Schema } from 'jsonschema';
 import {
   AiRequestContext,
-  GptModels,
   AiPromptStep,
   PromptOutputTypes,
   PromptRoles,
@@ -111,7 +110,7 @@ export async function reverseOutlinePromptRequest(
         includeEssay: true,
       },
     ],
-    targetGptModel: GptModels.OPEN_AI_GPT_3_5,
+    targetAiServiceModel: aiService.defaultAiServiceModel,
     responseSchema: reverseOutlineSchema,
     outputDataType: PromptOutputTypes.JSON,
   };
@@ -120,7 +119,6 @@ export async function reverseOutlinePromptRequest(
     aiStep: aiStep,
     docsPlainText: currentVersion.plainText,
     previousOutput: '',
-    systemRole: '',
   };
 
   const res = await aiService.completeChat(aiReqContext);

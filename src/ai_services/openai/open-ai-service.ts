@@ -7,7 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 import OpenAI from 'openai';
 import {
   AiRequestContext,
-  GptModels,
+  DefaultGptModels,
   PromptOutputTypes,
   PromptRoles,
 } from '../../types.js';
@@ -26,7 +26,7 @@ import {
 export const DefaultOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:
     'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture. Knowledge cutoff: 2021-09.',
-  DEFAULT_GPT_MODEL: GptModels.OPEN_AI_GPT_3_5,
+  DEFAULT_GPT_MODEL: DefaultGptModels.OPEN_AI_GPT_3_5,
 };
 
 export type OpenAiReqType = ChatCompletionCreateParamsNonStreaming;
@@ -43,12 +43,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   aiServiceClient: OpenAI;
 
   constructor() {
-    const approvedGptModels = [
-      GptModels.OPEN_AI_GPT_3_5,
-      GptModels.OPEN_AI_GPT_4,
-      GptModels.OPEN_AI_GPT_4_TURBO_PREVIEW,
-    ];
-    super(AvailableAiServiceNames.OPEN_AI, approvedGptModels);
+    super(AvailableAiServiceNames.OPEN_AI, DefaultGptModels.OPEN_AI_GPT_3_5);
     this.aiServiceClient = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
       timeout: 30 * 1000, // 30 seconds (default is 10 minutes)
@@ -126,27 +121,16 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   }
 
   convertContextDataToServiceParams(
-    requestContext: AiRequestContext,
-    overrideModel?: GptModels
+    requestContext: AiRequestContext
   ): ChatCompletionCreateParamsNonStreaming {
-    const { aiStep, docsPlainText, systemRole, previousOutput } =
-      requestContext;
-    if (!this.approvedGptModels.includes(aiStep.targetGptModel)) {
-      throw new Error('Invalid GPT model provided');
-    }
+    const { aiStep, docsPlainText, previousOutput } = requestContext;
     const request: ChatCompletionCreateParamsNonStreaming = {
       messages: [],
-      model:
-        overrideModel ||
-        aiStep.targetGptModel ||
-        DefaultOpenAiConfig.DEFAULT_GPT_MODEL,
+      model: aiStep.targetAiServiceModel.model,
     };
     request.messages.push({
       role: PromptRoles.SYSTEM,
-      content:
-        aiStep.customSystemRole ||
-        systemRole ||
-        DefaultOpenAiConfig.DEFAULT_SYSTEM_ROLE,
+      content: aiStep.systemRole || DefaultOpenAiConfig.DEFAULT_SYSTEM_ROLE,
     });
     if (previousOutput) {
       request.messages.push({
@@ -168,14 +152,8 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     return request;
   }
 
-  async completeChat(
-    context: AiRequestContext,
-    overrideModel?: GptModels
-  ): Promise<OpenAiPromptResponse> {
-    const params = this.convertContextDataToServiceParams(
-      context,
-      overrideModel
-    );
+  async completeChat(context: AiRequestContext): Promise<OpenAiPromptResponse> {
+    const params = this.convertContextDataToServiceParams(context);
     const [chatCompleteResponse, answer] = await this.executeAiUntilProperData(
       params,
       context.aiStep.outputDataType == PromptOutputTypes.JSON,

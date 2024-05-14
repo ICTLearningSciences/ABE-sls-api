@@ -6,7 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { APIGatewayEvent } from 'aws-lambda';
 import { getFieldFromEventBody } from '../../helpers.js';
-import { AiPromptStep } from '../../types.js';
+import { AiPromptStep, TargetAiModelServiceType } from '../../types.js';
 import { AvailableAiServiceNames } from '../../ai_services/ai-service-factory.js';
 
 export type AuthHeaders = Record<string, string>;
@@ -45,10 +45,7 @@ export const ValidOpenAiModels = [
 export interface ExtractedOpenAiRequestData {
   docsId: string;
   userId: string;
-  systemPrompt: string;
-  overrideAiModel: string;
   aiPromptSteps: AiPromptStep[];
-  targetAiService: AvailableAiServiceNames;
   authHeaders: AuthHeaders;
 }
 
@@ -57,13 +54,6 @@ export function extractOpenAiRequestData(
 ): ExtractedOpenAiRequestData {
   const docsId = event.queryStringParameters?.['docId'];
   const userId = event.queryStringParameters?.['userId'];
-  const systemPrompt = event.queryStringParameters?.['systemPrompt'] || '';
-  const overrideAiModel =
-    event.queryStringParameters?.['overrideAiModel'] || '';
-  const targetAiService: AvailableAiServiceNames =
-    (event.queryStringParameters?.[
-      'targetAiService'
-    ] as AvailableAiServiceNames) || AvailableAiServiceNames.OPEN_AI;
   const aiPromptSteps: AiPromptStep[] = getFieldFromEventBody<AiPromptStep[]>(
     event,
     'aiPromptSteps'
@@ -78,22 +68,10 @@ export function extractOpenAiRequestData(
   if (!aiPromptSteps) {
     throw new Error('OpenAI Prompt Steps are empty');
   }
-  if (overrideAiModel && !ValidOpenAiModels.includes(overrideAiModel)) {
-    throw new Error('invalid OpenAI model');
-  }
-  if (
-    !targetAiService ||
-    !Object.keys(AvailableAiServiceNames).includes(targetAiService)
-  ) {
-    throw new Error('invalid target AI service');
-  }
   return {
     docsId,
     userId,
-    systemPrompt,
-    overrideAiModel,
     aiPromptSteps,
     authHeaders,
-    targetAiService,
   };
 }

@@ -15,7 +15,7 @@
                 },
                 "NewImage": {
                     "timelineRequestData": {
-                        "S": "{\"docId\":\"1L4U07KVne3V6u3cBKJ9BTb_pZ6DDXwCqG75-mJIZfGA\",\"userId\":\"653972706e601e65dbc3acea\",\"targetAiService\":\"OPEN_AI\",\"authHeaders\":{\"Authorization\":\"bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1Mzk3MjcwNmU2MDFlNjVkYmMzYWNlYSIsInJvbGUiOiJBRE1JTiIsImV4cGlyYXRpb25EYXRlIjoiMjAyNC0wNS0xMVQyMjowNjozMS40MTVaIiwiaWF0IjoxNzE1Mzc4NzkxLCJleHAiOjE3MTU0NjUxOTF9.I5SwEXBhbE1HtuCL95TCjgEeqo6xO2gkZH0aQpgbcjM\"}}"
+                        "S": "{\"targetAiService\":{\"serviceName\":\"OPEN_AI\",\"model\":\"gpt-3.5-turbo-16k\"},\"docId\":\"1L4U07KVne3V6u3cBKJ9BTb_pZ6DDXwCqG75-mJIZfGA\",\"userId\":\"653972706e601e65dbc3acea\",\"authHeaders\":{\"Authorization\":\"bearer xxxx\"}}"
                     },
                     "id": {
                         "S": "xxxx"

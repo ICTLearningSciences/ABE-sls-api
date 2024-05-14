@@ -7,7 +7,7 @@ import { externalGoogleDocRevisionGenerator, gqlDocVersionGenerator, isoStringMi
 import { docTimeline } from "../fixtures/documents/2-sessions-inbetween-outside-ABE/doc-timeline.js";
 import {ddbMock} from "../init.spec.js";
 import { UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { AiAsyncJobStatus } from "../../src/types.js";
+import { AiAsyncJobStatus, DefaultGptModels } from "../../src/types.js";
 import {AvailableAiServiceNames} from '../../src/ai_services/ai-service-factory.js'
 
 describe("Document Timeline Unit Tests", () => {
@@ -71,7 +71,10 @@ describe("Document Timeline Unit Tests", () => {
       const openAiNocScope = mockOpenAiCall(
         "fake-summary"
       )
-      const docTimelineGenerator = new DocumentTimelineGenerator(AvailableAiServiceNames.OPEN_AI)
+      const docTimelineGenerator = new DocumentTimelineGenerator({
+        serviceName:AvailableAiServiceNames.OPEN_AI,
+        model: DefaultGptModels.OPEN_AI_GPT_3_5
+      })
 
       const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
 
@@ -121,7 +124,10 @@ describe("Document Timeline Unit Tests", () => {
           numCallsAccumulator: numReverseOutlineCalls
         }
       )
-      const docTimelineGenerator = new DocumentTimelineGenerator(AvailableAiServiceNames.OPEN_AI)
+      const docTimelineGenerator = new DocumentTimelineGenerator({
+        serviceName:AvailableAiServiceNames.OPEN_AI,
+        model: DefaultGptModels.OPEN_AI_GPT_3_5
+      })
       const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
       assert.equal(openAiChangeSummaryNock.isDone(), true);
       assert.equal(reverseOutlineNock.isDone(), true);
@@ -191,7 +197,10 @@ describe("Document Timeline Unit Tests", () => {
           numCallsAccumulator: numReverseOutlineCalls
         }
       )
-      const docTimelineGenerator = new DocumentTimelineGenerator(AvailableAiServiceNames.OPEN_AI)
+      const docTimelineGenerator = new DocumentTimelineGenerator({
+        serviceName:AvailableAiServiceNames.OPEN_AI,
+        model: DefaultGptModels.OPEN_AI_GPT_3_5
+      })
 
       await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
       assert.equal(openAiChangeSummaryNock.isDone(), true);

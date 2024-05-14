@@ -5,9 +5,12 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 // Note: had to add .js to find this file in serverless
-import requireEnv, { createResponseJson } from '../../helpers.js';
+import requireEnv, {
+  createResponseJson,
+  getFieldFromEventBody,
+} from '../../helpers.js';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
-import { AiAsyncJobStatus } from '../../types.js';
+import { AiAsyncJobStatus, TargetAiModelServiceType } from '../../types.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
 import { wrapHandler } from '../../sentry-helpers.js';
@@ -19,15 +22,14 @@ const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const documentId = event.queryStringParameters?.['docId'];
   const userId = event.queryStringParameters?.['userId'];
-  const targetAiService: AvailableAiServiceNames = event
-    .queryStringParameters?.['targetAiService'] as AvailableAiServiceNames;
+  const targetAiService: TargetAiModelServiceType = getFieldFromEventBody(
+    event,
+    'targetAiService'
+  );
   if (!documentId || !userId || !targetAiService) {
     throw new Error(
       'Missing required query parameters [docId, userId, targetAiService]'
     );
-  }
-  if (!Object.keys(targetAiService).includes(targetAiService)) {
-    throw new Error('Invalid targetAiService');
   }
   // Queue the job
   const newUuid = uuid();

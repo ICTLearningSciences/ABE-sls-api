@@ -6,7 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 // Note: had to add .js to find this file in serverless
 import { DynamoDBStreamEvent } from 'aws-lambda';
-import { GptModels, AiAsyncJobStatus } from '../../types.js';
+import { AiAsyncJobStatus } from '../../types.js';
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import requireEnv from '../../helpers.js';
 import { wrapHandler } from '../../sentry-helpers.js';
@@ -30,26 +30,17 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
       console.error('openAiRequestData/jobId not found in dynamo db record');
       continue;
     }
-    const {
-      docsId,
-      userId,
-      systemPrompt,
-      overrideAiModel,
-      targetAiService,
-      aiPromptSteps,
-      authHeaders,
-    } = openAiRequestData;
-    const aiServiceHandler = new AiServiceHandler(targetAiService);
+    const { docsId, userId, aiPromptSteps, authHeaders } = openAiRequestData;
+    const aiServiceHandler = new AiServiceHandler();
     const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
     try {
       const aiServiceResponse = await aiServiceHandler.executeAiSteps(
         aiPromptSteps,
         docsId,
         userId,
-        authHeaders,
-        systemPrompt,
-        overrideAiModel as GptModels
+        authHeaders
       );
+      console.log(aiServiceResponse);
       // Update the job in dynamo db
       const tableRequest: UpdateItemCommandInput = {
         TableName: jobsTableName,

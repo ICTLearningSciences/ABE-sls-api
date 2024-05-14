@@ -26,7 +26,7 @@ export interface PromptConfiguration {
   promptRole?: PromptRoles;
 }
 
-export enum GptModels {
+export enum DefaultGptModels {
   OPEN_AI_GPT_3_5 = 'gpt-3.5-turbo-16k',
   OPEN_AI_GPT_4 = 'gpt-4',
   OPEN_AI_GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
@@ -34,10 +34,15 @@ export enum GptModels {
   AZURE_GPT_4_TURBO_PREVIEW = 'ABE-gpt-4-turbo-preview',
 }
 
+export interface TargetAiModelServiceType {
+  serviceName: string;
+  model: string;
+}
+
 export interface AiPromptStep {
   prompts: PromptConfiguration[];
-  targetGptModel: GptModels;
-  customSystemRole?: string;
+  targetAiServiceModel: TargetAiModelServiceType;
+  systemRole?: string;
   outputDataType: PromptOutputTypes;
   responseSchema?: Schema;
 }
@@ -48,7 +53,6 @@ export interface AiRequestContext {
   aiStep: AiPromptStep;
   docsPlainText: string;
   previousOutput: string;
-  systemRole: string;
 }
 
 export enum PromptOutputTypes {

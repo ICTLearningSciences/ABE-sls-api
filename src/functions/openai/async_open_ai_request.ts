@@ -17,15 +17,8 @@ const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
-  const {
-    docsId,
-    userId,
-    systemPrompt,
-    overrideAiModel,
-    targetAiService,
-    aiPromptSteps,
-    authHeaders,
-  } = extractOpenAiRequestData(event);
+  const { docsId, userId, aiPromptSteps, authHeaders } =
+    extractOpenAiRequestData(event);
   // Queue the job
   const newUuid = uuid();
   // Store the job in dynamo db, triggers async lambda
@@ -49,11 +42,8 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
         S: JSON.stringify({
           docsId,
           userId,
-          systemPrompt,
-          overrideAiModel,
           aiPromptSteps,
           authHeaders,
-          targetAiService,
         }),
       },
     },

@@ -12,29 +12,19 @@ import {
 } from '../../helpers.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { extractOpenAiRequestData } from './helpers.js';
-import { GptModels } from '../../types.js';
 import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
 
 // modern module syntax
 export const handler = async (event: APIGatewayEvent) => {
-  const {
-    docsId,
-    userId,
-    systemPrompt,
-    overrideAiModel,
-    targetAiService,
-    aiPromptSteps,
-    authHeaders,
-  } = extractOpenAiRequestData(event);
-  const aiServiceHandler = new AiServiceHandler(targetAiService);
+  const { docsId, userId, aiPromptSteps, authHeaders } =
+    extractOpenAiRequestData(event);
+  const aiServiceHandler = new AiServiceHandler();
   try {
     const aiServiceResponse = await aiServiceHandler.executeAiSteps(
       aiPromptSteps,
       docsId,
       userId,
-      authHeaders,
-      systemPrompt,
-      overrideAiModel as GptModels
+      authHeaders
     );
     return createResponseJson(200, { response: aiServiceResponse });
   } catch (err) {
