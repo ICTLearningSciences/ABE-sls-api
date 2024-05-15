@@ -4,7 +4,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import OpenAI from 'openai';
+import { Schema } from 'jsonschema';
 
 export interface DocData {
   plainText: string;
@@ -12,28 +12,6 @@ export interface DocData {
   title: string;
   lastModifyingUser: string;
   modifiedTime: string;
-}
-
-export interface OpenAIReqRes {
-  openAiPrompt: OpenAI.Chat.Completions.ChatCompletionCreateParams;
-  openAiResponse: OpenAI.Chat.Completions.ChatCompletion.Choice[];
-  originalRequestPrompts?: OpenAiPromptStep;
-}
-
-export interface InputQuestionResponse extends OpenAIReqRes {
-  answer: string;
-}
-
-export interface SinglePromptResponse extends OpenAIReqRes {
-  originalPromptConfigs: PromptConfiguration[];
-}
-
-/**
- * Multistep Prompt Types
- */
-export interface OpenAiPromptResponse {
-  openAiData: OpenAIReqRes[];
-  answer: string;
 }
 
 export enum PromptRoles {
@@ -48,17 +26,33 @@ export interface PromptConfiguration {
   promptRole?: PromptRoles;
 }
 
-export enum GptModels {
-  GPT_3_5 = 'gpt-3.5-turbo-16k',
-  GPT_4 = 'gpt-4',
-  GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
+export enum DefaultGptModels {
+  OPEN_AI_GPT_3_5 = 'gpt-3.5-turbo-16k',
+  OPEN_AI_GPT_4 = 'gpt-4',
+  OPEN_AI_GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
+  AZURE_GPT_3_5 = 'ABE-GPT-3_5_turbo_16k',
+  AZURE_GPT_4_TURBO_PREVIEW = 'ABE-gpt-4-turbo-preview',
 }
 
-export interface OpenAiPromptStep {
+export interface TargetAiModelServiceType {
+  serviceName: string;
+  model: string;
+}
+
+export interface AiPromptStep {
   prompts: PromptConfiguration[];
-  targetGptModel: GptModels;
-  customSystemRole?: string;
+  targetAiServiceModel: TargetAiModelServiceType;
+  systemRole?: string;
   outputDataType: PromptOutputTypes;
+  responseSchema?: Schema;
+}
+
+export type AiRequestContextPrompt = Omit<PromptConfiguration, 'includeEssay'>;
+
+export interface AiRequestContext {
+  aiStep: AiPromptStep;
+  docsPlainText: string;
+  previousOutput: string;
 }
 
 export enum PromptOutputTypes {
@@ -66,19 +60,11 @@ export enum PromptOutputTypes {
   JSON = 'JSON',
 }
 
-export interface OpenAiStep {
-  openAiPromptStringify: string;
-  openAiResponseStringify: string;
-}
-
 export interface GQLPromptRunResponse {
   googleDocId: string;
-  user: string;
-  promptConfiguration: PromptConfiguration[];
-  openAiSteps: OpenAiStep[];
 }
 
-export enum OpenAiAsyncJobStatus {
+export enum AiAsyncJobStatus {
   QUEUED = 'QUEUED',
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETE = 'COMPLETE',

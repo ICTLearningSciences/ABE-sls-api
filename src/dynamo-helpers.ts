@@ -7,14 +7,14 @@ The full terms of this copyright and license should always be found in the root 
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import { GQLDocumentTimeline } from './functions/timeline/types.js';
 import requireEnv from './helpers.js';
-import { OpenAiAsyncJobStatus } from './types.js';
+import { AiAsyncJobStatus } from './types.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 export const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
 
 export async function updateDynamoJobStatus(
   jobId: string,
-  jobStatus: OpenAiAsyncJobStatus
+  jobStatus: AiAsyncJobStatus
 ): Promise<void> {
   const tableRequest: UpdateItemCommandInput = {
     TableName: jobsTableName,
@@ -44,7 +44,7 @@ export async function updateDynamoJobStatus(
 export async function storeDoctimelineDynamoDB(
   jobId: string,
   docTimeline: GQLDocumentTimeline,
-  jobStatus: OpenAiAsyncJobStatus
+  jobStatus: AiAsyncJobStatus
 ): Promise<void> {
   const tableRequest: UpdateItemCommandInput = {
     TableName: jobsTableName,
@@ -73,4 +73,24 @@ export async function storeDoctimelineDynamoDB(
     .then(() => {
       console.log('Updated dynamo db record');
     });
+}
+
+export async function updateDynamoAnswer(answer: string, dynamoJobId: string) {
+  const tableRequest: UpdateItemCommandInput = {
+    TableName: jobsTableName,
+    Key: {
+      id: {
+        S: dynamoJobId,
+      },
+    },
+    UpdateExpression: 'set answer = :answer',
+    ExpressionAttributeValues: {
+      ':answer': {
+        S: answer,
+      },
+    },
+  };
+  await dynamoDbClient.updateItem(tableRequest).catch((err) => {
+    console.error(err);
+  });
 }

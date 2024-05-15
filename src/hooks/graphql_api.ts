@@ -5,22 +5,15 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import axios from 'axios';
-import {
-  GQLPromptRunResponse,
-  OpenAIReqRes,
-  OpenAiPromptStep,
-  OpenAiStep,
-  PromptConfiguration,
-} from '../types.js';
-import OpenAI from 'openai';
+import { GQLPromptRunResponse, AiPromptStep } from '../types.js';
 import {
   GQLDocumentTimeline,
-  GQLIGDocVersion,
-  GQLTimelinePoint,
   IGDocVersion,
 } from '../functions/timeline/types.js';
 import { execGql } from '../api.js';
 import pkg from 'lodash';
+import { GQLAiStep } from '../gql_types.js';
+import { AiServiceStepDataTypes } from '../ai_services/ai-service-factory.js';
 const { omit } = pkg;
 const GRAPHQL_ENDPOINT = process.env.GRAPHQL_ENDPOINT || '';
 const SECRET_HEADER_NAME = process.env.SECRET_HEADER_NAME || '';
@@ -67,55 +60,38 @@ export async function storeGoogleDoc(
 export async function storePromptRun(
   docId: string,
   userId: string,
-  openAiPromptSteps: OpenAiPromptStep[],
-  openAiReqres: OpenAIReqRes[]
+  aiPromptSteps: AiPromptStep[],
+  aiSteps: AiServiceStepDataTypes[]
 ): Promise<GQLPromptRunResponse> {
-  const openAiSteps: OpenAiStep[] = openAiReqres.map((openAiReqres) => {
+  const aiStepsStringified: GQLAiStep[] = aiSteps.map((step) => {
     return {
-      openAiPromptStringify: JSON.stringify(openAiReqres.openAiPrompt),
-      openAiResponseStringify: JSON.stringify(openAiReqres.openAiResponse),
+      aiServiceRequestParams: JSON.stringify(step.aiServiceRequestParams),
+      aiServiceResponse: JSON.stringify(step.aiServiceResponse),
     };
   });
-  const res = await axios
-    .post(
-      GRAPHQL_ENDPOINT,
-      {
-        query: `mutation StorePromptRun($googleDocId: String!, $user: ID!, $openAiPromptSteps: [OpenAiPromptStepInputType]!, $openAiSteps: [OpenAiStepsInputType]!) {
-            storePromptRun(googleDocId: $googleDocId, user: $user, openAiPromptSteps: $openAiPromptSteps, openAiSteps: $openAiSteps) {
+  return await execGql<GQLPromptRunResponse>(
+    {
+      query: `mutation StorePromptRun($googleDocId: String!, $user: ID!, $aiPromptSteps: [AiPromptStepInputType]!, $aiSteps: [AiStepsInputType]!) {
+            storePromptRun(googleDocId: $googleDocId, user: $user, aiPromptSteps: $aiPromptSteps, aiSteps: $aiSteps) {
                 googleDocId
-                user
-                openAiPromptSteps {
-                    prompts{
-                      promptText
-                      includeEssay
-                      promptRole
-                    }
-                    outputDataType
-                }
-                openAiSteps {
-                    openAiPromptStringify
-                    openAiResponseStringify
-                }
               }
          }`,
-        variables: {
-          googleDocId: docId,
-          user: userId,
-          openAiPromptSteps: openAiPromptSteps,
-          openAiSteps: openAiSteps,
-        },
+      variables: {
+        googleDocId: docId,
+        user: userId,
+        aiPromptSteps: aiPromptSteps,
+        aiSteps: aiStepsStringified,
       },
-      {
+    },
+    {
+      dataPath: ['storePromptRun'],
+      axiosConfig: {
         headers: {
           [SECRET_HEADER_NAME]: SECRET_HEADER_VALUE,
         },
-      }
-    )
-    .catch((err) => {
-      console.log(err.response.data);
-      throw err;
-    });
-  return res.data.data.storePromptRun;
+      },
+    }
+  );
 }
 
 export async function fetchGoogleDocVersion(

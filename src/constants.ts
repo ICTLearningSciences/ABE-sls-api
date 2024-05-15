@@ -4,7 +4,6 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { GptModels } from './types.js';
 
 export const SYSTEM_ASSIGNMENT =
   'Provided is the plain text from a text document that was written by a student writer. It is your job to look for any mistakes made in the text or any improvements that can be made to the text.';
@@ -27,13 +26,12 @@ export const IMPROVEMENT_TEMPLATE = {
       'string // The explanation of the improvement you want to make to the text',
   },
 };
+
 export const RETRY_ATTEMPTS = 3;
-export const OPENAI_DEFAULT_TEMP = 0.1;
+export const AI_DEFAULT_TEMP = 0.1;
 
 export const MAX_OPEN_AI_CHAIN_REQUESTS = 10;
 export const MAX_OPEN_AI_MESSAGES = 10;
-
-export const DEFAULT_GPT_MODEL = GptModels.GPT_3_5;
 
 export const UPDATE_DYNAMO_ANSWER_THRESHOLD = 100;
 

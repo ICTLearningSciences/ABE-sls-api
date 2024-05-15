@@ -6,36 +6,27 @@ The full terms of this copyright and license should always be found in the root 
 */
 // Note: had to add .js to find this file in serverless
 import OpenAI from 'openai';
-import { useWithOpenAI } from '../../hooks/use-with-open-ai.js';
 import {
   createResponseJson,
   extractErrorMessageFromError,
 } from '../../helpers.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { extractOpenAiRequestData } from './helpers.js';
+import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
 
 // modern module syntax
 export const handler = async (event: APIGatewayEvent) => {
-  const {
-    docsId,
-    userId,
-    systemPrompt,
-    openAiModel,
-    openAiPromptSteps,
-    authHeaders,
-  } = extractOpenAiRequestData(event);
-  const { askAboutGDoc } = useWithOpenAI();
+  const { docsId, userId, aiPromptSteps, authHeaders } =
+    extractOpenAiRequestData(event);
+  const aiServiceHandler = new AiServiceHandler();
   try {
-    const openAiResponse = await askAboutGDoc(
+    const aiServiceResponse = await aiServiceHandler.executeAiSteps(
+      aiPromptSteps,
       docsId,
       userId,
-      openAiPromptSteps,
-      systemPrompt,
-      authHeaders,
-      openAiModel,
-      ''
+      authHeaders
     );
-    return createResponseJson(200, { response: openAiResponse });
+    return createResponseJson(200, { response: aiServiceResponse });
   } catch (err) {
     if (err instanceof OpenAI.APIError) {
       return createResponseJson(500, {

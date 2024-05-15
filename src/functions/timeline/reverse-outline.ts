@@ -4,11 +4,15 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import OpenAI from 'openai';
-import { DEFAULT_GPT_MODEL } from '../../constants.js';
-import { executeOpenAiUntilProperResponse } from '../../hooks/use-with-open-ai.js';
 import { GQLIGDocVersion } from './types.js';
 import { Schema } from 'jsonschema';
+import {
+  AiRequestContext,
+  AiPromptStep,
+  PromptOutputTypes,
+  PromptRoles,
+} from '../../types.js';
+import { AvailableAiServices } from '../../ai_services/ai-service-factory.js';
 
 export interface ReverseOutline {
   'Thesis Statement': string;
@@ -68,14 +72,19 @@ const reverseOutlineSchema: Schema = {
 };
 
 export async function reverseOutlinePromptRequest(
-  currentVersion: GQLIGDocVersion
+  currentVersion: GQLIGDocVersion,
+  aiService: AvailableAiServices
 ) {
-  const params: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
-    messages: [
-      { role: 'assistant', content: currentVersion.plainText },
+  const aiStep: AiPromptStep = {
+    prompts: [
       {
-        role: 'system',
-        content: `You are a literary and scholarly expert and have been evaluating university-level essays and thesis statements. You have been invited as an evaluation judge of writing, where a detailed and specific evaluation is expected.
+        promptText: currentVersion.plainText,
+        includeEssay: true,
+        promptRole: PromptRoles.ASSISSANT,
+      },
+      {
+        promptRole: PromptRoles.SYSTEM,
+        promptText: `You are a literary and scholarly expert and have been evaluating university-level essays and thesis statements. You have been invited as an evaluation judge of writing, where a detailed and specific evaluation is expected.
   
               Your task is to generate an outline for this writing. This outline should have a logical inverted pyramid structure. First, identify the most likely thesis statement for that essay. For the thesis statement, I want you to evaluate the claims that made to support the thesis statement. Based on this goal and the format below, list each main point.
               
@@ -98,14 +107,20 @@ export async function reverseOutlinePromptRequest(
               The essay you are rating is given below:
               ----------------------------------------------
               `,
+        includeEssay: true,
       },
     ],
-    model: DEFAULT_GPT_MODEL,
+    targetAiServiceModel: aiService.defaultAiServiceModel,
+    responseSchema: reverseOutlineSchema,
+    outputDataType: PromptOutputTypes.JSON,
   };
-  const [res, answer] = await executeOpenAiUntilProperResponse(
-    params,
-    true,
-    reverseOutlineSchema
-  );
-  return answer;
+
+  const aiReqContext: AiRequestContext = {
+    aiStep: aiStep,
+    docsPlainText: currentVersion.plainText,
+    previousOutput: '',
+  };
+
+  const res = await aiService.completeChat(aiReqContext);
+  return res.answer;
 }

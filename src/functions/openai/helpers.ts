@@ -6,7 +6,8 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { APIGatewayEvent } from 'aws-lambda';
 import { getFieldFromEventBody } from '../../helpers.js';
-import { OpenAiPromptStep } from '../../types.js';
+import { AiPromptStep, TargetAiModelServiceType } from '../../types.js';
+import { AvailableAiServiceNames } from '../../ai_services/ai-service-factory.js';
 
 export type AuthHeaders = Record<string, string>;
 
@@ -44,9 +45,7 @@ export const ValidOpenAiModels = [
 export interface ExtractedOpenAiRequestData {
   docsId: string;
   userId: string;
-  systemPrompt: string;
-  openAiModel: string;
-  openAiPromptSteps: OpenAiPromptStep[];
+  aiPromptSteps: AiPromptStep[];
   authHeaders: AuthHeaders;
 }
 
@@ -55,11 +54,10 @@ export function extractOpenAiRequestData(
 ): ExtractedOpenAiRequestData {
   const docsId = event.queryStringParameters?.['docId'];
   const userId = event.queryStringParameters?.['userId'];
-  const systemPrompt = event.queryStringParameters?.['systemPrompt'] || '';
-  const openAiModel = event.queryStringParameters?.['openAiModel'] || '';
-  const openAiPromptSteps: OpenAiPromptStep[] = getFieldFromEventBody<
-    OpenAiPromptStep[]
-  >(event, 'openAiPromptSteps');
+  const aiPromptSteps: AiPromptStep[] = getFieldFromEventBody<AiPromptStep[]>(
+    event,
+    'aiPromptSteps'
+  );
   const authHeaders = getAuthHeaders(event);
   if (!docsId) {
     throw new Error('Google Doc ID is empty');
@@ -67,18 +65,13 @@ export function extractOpenAiRequestData(
   if (!userId) {
     throw new Error('User ID is empty');
   }
-  if (!openAiPromptSteps) {
+  if (!aiPromptSteps) {
     throw new Error('OpenAI Prompt Steps are empty');
-  }
-  if (openAiModel && !ValidOpenAiModels.includes(openAiModel)) {
-    throw new Error('invalid OpenAI model');
   }
   return {
     docsId,
     userId,
-    systemPrompt,
-    openAiModel,
-    openAiPromptSteps,
+    aiPromptSteps,
     authHeaders,
   };
 }

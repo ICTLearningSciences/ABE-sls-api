@@ -8,9 +8,9 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import requireEnv, { createResponseJson } from '../../helpers.js';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
-import { OpenAiPromptResponse } from '../../types.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
+import { AiServiceFinalResponseType } from '../../ai_services/ai-service-factory.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
@@ -34,14 +34,13 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
       return createResponseJson(404, { response: { error: 'Job not found' } });
     }
     const jobStatus = data.Item.job_status.S;
-    const _openAiResponse = data.Item.openAiResponse.S;
+    const _aiServiceResponse = data.Item.aiServiceResponse.S;
     const answer = data.Item.answer.S || '';
-    const openAiResponse: OpenAiPromptResponse | null = _openAiResponse
-      ? JSON.parse(_openAiResponse)
-      : null;
+    const aiServiceResponse: AiServiceFinalResponseType | null =
+      _aiServiceResponse ? JSON.parse(_aiServiceResponse) : null;
     return createResponseJson(200, {
       response: {
-        openAiResponse,
+        aiServiceResponse,
         answer,
         jobStatus,
       },

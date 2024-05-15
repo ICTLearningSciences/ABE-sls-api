@@ -5,13 +5,13 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 // Note: had to add .js to find this file in serverless
-import { useWithOpenAI } from '../../hooks/use-with-open-ai.js';
 import { DynamoDBStreamEvent } from 'aws-lambda';
-import { OpenAiAsyncJobStatus } from '../../types.js';
+import { AiAsyncJobStatus } from '../../types.js';
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import requireEnv from '../../helpers.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { ExtractedOpenAiRequestData } from './helpers.js';
+import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
@@ -30,26 +30,17 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
       console.error('openAiRequestData/jobId not found in dynamo db record');
       continue;
     }
-    const {
-      docsId,
-      userId,
-      systemPrompt,
-      openAiModel,
-      openAiPromptSteps,
-      authHeaders,
-    } = openAiRequestData;
-    const { asyncAskAboutGDoc } = useWithOpenAI();
+    const { docsId, userId, aiPromptSteps, authHeaders } = openAiRequestData;
+    const aiServiceHandler = new AiServiceHandler();
     const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
     try {
-      const openAiResponse = await asyncAskAboutGDoc(
+      const aiServiceResponse = await aiServiceHandler.executeAiSteps(
+        aiPromptSteps,
         docsId,
         userId,
-        openAiPromptSteps,
-        systemPrompt,
-        authHeaders,
-        openAiModel,
-        jobId
+        authHeaders
       );
+      console.log(aiServiceResponse);
       // Update the job in dynamo db
       const tableRequest: UpdateItemCommandInput = {
         TableName: jobsTableName,
@@ -59,16 +50,16 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
           },
         },
         UpdateExpression:
-          'set openAiResponse = :openAiResponse, job_status = :job_status, answer = :answer',
+          'set aiServiceResponse = :aiServiceResponse, job_status = :job_status, answer = :answer',
         ExpressionAttributeValues: {
-          ':openAiResponse': {
-            S: JSON.stringify(openAiResponse),
+          ':aiServiceResponse': {
+            S: JSON.stringify(aiServiceResponse),
           },
           ':job_status': {
-            S: OpenAiAsyncJobStatus.COMPLETE,
+            S: AiAsyncJobStatus.COMPLETE,
           },
           ':answer': {
-            S: openAiResponse.answer,
+            S: aiServiceResponse.answer,
           },
         },
       };
@@ -91,7 +82,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         UpdateExpression: 'set job_status = :job_status',
         ExpressionAttributeValues: {
           ':job_status': {
-            S: OpenAiAsyncJobStatus.FAILED,
+            S: AiAsyncJobStatus.FAILED,
           },
         },
       };
