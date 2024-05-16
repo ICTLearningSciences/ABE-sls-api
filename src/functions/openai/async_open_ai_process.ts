@@ -8,7 +8,7 @@ The full terms of this copyright and license should always be found in the root 
 import { DynamoDBStreamEvent } from 'aws-lambda';
 import { AiAsyncJobStatus } from '../../types.js';
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
-import requireEnv from '../../helpers.js';
+import requireEnv, { extractErrorMessageFromError } from '../../helpers.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { ExtractedOpenAiRequestData } from './helpers.js';
 import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
@@ -40,7 +40,6 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         userId,
         authHeaders
       );
-      console.log(aiServiceResponse);
       // Update the job in dynamo db
       const tableRequest: UpdateItemCommandInput = {
         TableName: jobsTableName,
@@ -79,10 +78,14 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
             S: jobId,
           },
         },
-        UpdateExpression: 'set job_status = :job_status',
+        UpdateExpression:
+          'set job_status = :job_status, api_error = :api_error',
         ExpressionAttributeValues: {
           ':job_status': {
             S: AiAsyncJobStatus.FAILED,
+          },
+          ':api_error': {
+            S: extractErrorMessageFromError(err),
           },
         },
       };

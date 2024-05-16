@@ -35,6 +35,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
     }
     const jobStatus = data.Item.job_status.S;
     const _aiServiceResponse = data.Item.aiServiceResponse.S;
+    const apiError = data?.Item?.api_error?.S || '';
     const answer = data.Item.answer.S || '';
     const aiServiceResponse: AiServiceFinalResponseType | null =
       _aiServiceResponse ? JSON.parse(_aiServiceResponse) : null;
@@ -43,6 +44,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
         aiServiceResponse,
         answer,
         jobStatus,
+        apiError,
       },
     });
   } catch (err) {
