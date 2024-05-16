@@ -30,7 +30,6 @@ import { Schema } from 'jsonschema';
 import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
 import { v4 as uuid } from 'uuid';
 
-// TODO
 export interface AzureOpenAiReqType {
   deploymentName: string;
   messages: ChatRequestMessageUnion[];

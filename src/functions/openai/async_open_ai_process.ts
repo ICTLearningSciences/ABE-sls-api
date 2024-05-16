@@ -40,7 +40,6 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         userId,
         authHeaders
       );
-      console.log(aiServiceResponse);
       // Update the job in dynamo db
       const tableRequest: UpdateItemCommandInput = {
         TableName: jobsTableName,

@@ -10,6 +10,11 @@ import {
   AzureOpenAiStepDataType,
 } from './azure/azure-ai-service.js';
 import {
+  GeminiAiService,
+  GeminiPromptResponse,
+  GeminiStepDataType,
+} from './gemini/gemini-ai-service.js';
+import {
   OpenAiPromptResponse,
   OpenAiService,
   OpenAiStepDataType,
@@ -35,15 +40,21 @@ export interface AiServiceFinalResponseType {
  */
 export type AiServiceStepDataTypes =
   | OpenAiStepDataType
-  | AzureOpenAiStepDataType;
+  | AzureOpenAiStepDataType
+  | GeminiStepDataType;
 export type AiServicesPromptResponseTypes =
   | OpenAiPromptResponse
-  | AzureOpenAiPromptResponse;
-export type AvailableAiServices = OpenAiService | AzureOpenAiService;
+  | AzureOpenAiPromptResponse
+  | GeminiPromptResponse;
+export type AvailableAiServices =
+  | OpenAiService
+  | AzureOpenAiService
+  | GeminiAiService;
 
 export enum AvailableAiServiceNames {
   OPEN_AI = 'OPEN_AI',
   AZURE_OPEN_AI = 'AZURE_OPEN_AI',
+  GEMINI = 'GEMINI',
 }
 
 export class AiServiceFactory {
@@ -53,6 +64,8 @@ export class AiServiceFactory {
         return OpenAiService.getInstance();
       case AvailableAiServiceNames.AZURE_OPEN_AI:
         return AzureOpenAiService.getInstance();
+      case AvailableAiServiceNames.GEMINI:
+        return GeminiAiService.getInstance();
       default:
         throw new Error('Invalid AI service name');
     }

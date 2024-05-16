@@ -32,6 +32,8 @@ export enum DefaultGptModels {
   OPEN_AI_GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
   AZURE_GPT_3_5 = 'ABE-GPT-3_5_turbo_16k',
   AZURE_GPT_4_TURBO_PREVIEW = 'ABE-gpt-4-turbo-preview',
+  GEMINI_1_PRO = 'gemini-pro',
+  GEMINI_1_5_PREVIEW = 'gemini-1.5-pro-latest',
 }
 
 export interface TargetAiModelServiceType {
