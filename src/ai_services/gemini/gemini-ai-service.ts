@@ -11,15 +11,28 @@ import {
   AiStepData,
   AvailableAiServiceNames,
 } from '../../ai_services/ai-service-factory.js';
-import requireEnv from '../../helpers.js';
+import requireEnv, {
+  isJsonString,
+  validateJsonResponse,
+} from '../../helpers.js';
 import {
   AiRequestContext,
   DefaultGptModels,
+  PromptOutputTypes,
   PromptRoles,
 } from '../../types.js';
+import { Schema } from 'jsonschema';
+import { RETRY_ATTEMPTS, AI_DEFAULT_TEMP } from '../../constants.js';
+import { EnhancedGenerateContentResponse } from '@google/generative-ai/dist/types';
+import {
+  GenerateContentCandidate,
+  PromptFeedback,
+  UsageMetadata,
+} from '@google/generative-ai/dist/types/responses';
+import { FunctionCall } from '@google/generative-ai/dist/types/content.js';
 
 export type GeminiReqType = GeminiChatCompletionRequest;
-export type GeminiResType = string;
+export type GeminiResType = GeminiJsonResponse;
 
 export type GeminiStepDataType = AiStepData<GeminiReqType, GeminiResType>;
 export type GeminiPromptResponse = AiServiceResponse<
@@ -31,6 +44,14 @@ export interface GeminiChatCompletionRequest {
   startChatParams: StartChatParams;
   model: string;
   requestText: string;
+}
+
+export interface GeminiJsonResponse {
+  text: string;
+  functionCalls?: FunctionCall[];
+  candidates?: GenerateContentCandidate[];
+  promptFeedback?: PromptFeedback;
+  usageMetadata?: UsageMetadata;
 }
 
 export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
@@ -48,6 +69,46 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
       GeminiAiService.instance = new GeminiAiService();
     }
     return GeminiAiService.instance;
+  }
+
+  async executeAiUntilProperData(
+    params: GeminiReqType,
+    mustBeJson: boolean,
+    request: (numAttemps: number) => Promise<EnhancedGenerateContentResponse>,
+    jsonSchema?: Schema
+  ): Promise<[EnhancedGenerateContentResponse, string]> {
+    let result = await request(0);
+    let answer = result.text();
+    if (mustBeJson) {
+      const checkJson = (answer: string) => {
+        if (jsonSchema) {
+          return validateJsonResponse(answer, jsonSchema);
+        } else {
+          return isJsonString(answer);
+        }
+      };
+      let isJsonResponse = checkJson(answer);
+      if (!isJsonResponse) {
+        for (let j = 0; j < RETRY_ATTEMPTS; j++) {
+          console.log(`Attempt ${j}`);
+          if (isJsonResponse) {
+            break;
+          }
+          result = await request(j);
+          answer = result.text();
+          if (!answer) {
+            throw new Error('Gemini API Error: No response message content.');
+          }
+          isJsonResponse = checkJson(answer);
+        }
+      }
+      if (!isJsonResponse) {
+        throw new Error(
+          `Gemini API Error: No valid JSON response after ${RETRY_ATTEMPTS} attempts.`
+        );
+      }
+    }
+    return [result, answer || ''];
   }
 
   convertContextDataToServiceParams(
@@ -115,22 +176,42 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
     };
   }
 
+  convertGeminiResToJson(res: EnhancedGenerateContentResponse): GeminiResType {
+    const _res: GeminiJsonResponse = {
+      text: res.text(),
+      functionCalls: res.functionCalls(),
+      candidates: res.candidates,
+      promptFeedback: res.promptFeedback,
+      usageMetadata: res.usageMetadata,
+    };
+    return _res;
+  }
+
   async completeChat(context: AiRequestContext): Promise<GeminiPromptResponse> {
     const requestData: GeminiReqType =
       this.convertContextDataToServiceParams(context);
     const model = this.aiServiceClient.getGenerativeModel({
       model: requestData.model,
     });
-    const chat = model.startChat(requestData.startChatParams);
-    const result = await chat.sendMessage(requestData.requestText);
-    const response = await result.response;
-    const text = response.text();
+    async function getResponse(numAttempts: number) {
+      model.generationConfig.temperature = AI_DEFAULT_TEMP + numAttempts * 0.1;
+      const chat = model.startChat(requestData.startChatParams);
+      const result = await chat.sendMessage(requestData.requestText);
+      const response = await result.response;
+      return response;
+    }
+    const [aiResponse, answer] = await this.executeAiUntilProperData(
+      requestData,
+      context.aiStep.outputDataType === PromptOutputTypes.JSON,
+      getResponse,
+      context.aiStep.responseSchema
+    );
     return {
       aiStepData: {
         aiServiceRequestParams: requestData,
-        aiServiceResponse: text,
+        aiServiceResponse: this.convertGeminiResToJson(aiResponse),
       },
-      answer: text,
+      answer: answer,
     };
   }
 }
