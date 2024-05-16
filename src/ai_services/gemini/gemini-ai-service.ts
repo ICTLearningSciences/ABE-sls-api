@@ -54,12 +54,28 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
     requestContext: AiRequestContext
   ): GeminiReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
+    const canUseSystemInstruction =
+      aiStep.targetAiServiceModel.model === DefaultGptModels.GEMINI_1_5_PREVIEW;
+
     const chatParams: StartChatParams = {
-      systemInstruction: requestContext.aiStep.systemRole,
+      systemInstruction: canUseSystemInstruction
+        ? {
+            role: 'system',
+            parts: [
+              {
+                text: aiStep.systemRole || '',
+              },
+            ],
+          }
+        : undefined,
       history: [],
     };
 
     let contextText = '';
+
+    if (!canUseSystemInstruction && aiStep.systemRole) {
+      contextText += `You must respond according to this role: ${aiStep.systemRole}\n\n`;
+    }
 
     if (previousOutput) {
       contextText += `Here is the previous Output:\n${previousOutput}\n\n`;
