@@ -129,15 +129,24 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
       model: aiStep.targetAiServiceModel.model,
     };
     request.messages.push({
-      role: PromptRoles.SYSTEM,
+      role: PromptRoles.USER,
       content: aiStep.systemRole || DefaultOpenAiConfig.DEFAULT_SYSTEM_ROLE,
     });
+
+    if (aiStep.responseFormat) {
+      request.messages.push({
+        role: PromptRoles.USER,
+        content: `Please format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`,
+      });
+    }
+
     if (previousOutput) {
       request.messages.push({
-        role: PromptRoles.ASSISSANT,
+        role: PromptRoles.USER,
         content: `Here is the previous output: ---------- \n\n ${previousOutput}`,
       });
     }
+
     aiStep.prompts.forEach((prompt) => {
       let text = prompt.promptText;
       if (prompt.includeEssay) {

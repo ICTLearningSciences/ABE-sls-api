@@ -153,6 +153,7 @@ export class AzureOpenAiService extends AiService<
     requestContext: AiRequestContext
   ): AzureOpenAiReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
+
     const request: AzureOpenAiReqType = {
       deploymentName:
         aiStep.targetAiServiceModel.model ||
@@ -163,14 +164,21 @@ export class AzureOpenAiService extends AiService<
       },
     };
     request.messages.push({
-      role: PromptRoles.SYSTEM,
+      role: PromptRoles.USER,
       content:
         aiStep.systemRole || DefaultAzureOpenAiConfig.DEFAULT_SYSTEM_ROLE,
     });
     if (previousOutput) {
       request.messages.push({
-        role: PromptRoles.ASSISSANT,
+        role: PromptRoles.USER,
         content: `Here is the previous output: ---------- \n\n ${previousOutput}`,
+      });
+    }
+
+    if (aiStep.responseFormat) {
+      request.messages.push({
+        role: PromptRoles.USER,
+        content: `Please format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`,
       });
     }
 

@@ -117,20 +117,45 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
     const canUseSystemInstruction =
       aiStep.targetAiServiceModel.model === DefaultGptModels.GEMINI_1_5_PREVIEW;
+    let customSystemInstructions = '';
+
+    if (aiStep.systemRole) {
+      customSystemInstructions += `You must respond according to this role: ${aiStep.systemRole}`;
+    }
+
+    if (aiStep.responseFormat) {
+      customSystemInstructions += `\n\nYou must respond following these guidelines: ${aiStep.responseFormat}`;
+    }
+
+    if (aiStep.outputDataType === PromptOutputTypes.JSON) {
+      customSystemInstructions += `\n\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA`;
+    }
 
     const chatParams: StartChatParams = {
-      systemInstruction: canUseSystemInstruction
-        ? {
-            role: 'system',
-            parts: [
-              {
-                text: aiStep.systemRole || '',
-              },
-            ],
-          }
-        : undefined,
       history: [],
     };
+
+    if (customSystemInstructions) {
+      if (canUseSystemInstruction) {
+        chatParams.systemInstruction = {
+          role: 'user',
+          parts: [
+            {
+              text: customSystemInstructions,
+            },
+          ],
+        };
+      } else {
+        chatParams.history?.push({
+          role: 'user',
+          parts: [
+            {
+              text: customSystemInstructions,
+            },
+          ],
+        });
+      }
+    }
 
     let contextText = '';
 
@@ -195,6 +220,7 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
     });
     async function getResponse(numAttempts: number) {
       model.generationConfig.temperature = AI_DEFAULT_TEMP + numAttempts * 0.1;
+
       const chat = model.startChat(requestData.startChatParams);
       const result = await chat.sendMessage(requestData.requestText);
       const response = await result.response;

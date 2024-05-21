@@ -15,7 +15,7 @@
                 },
                 "NewImage": {
                     "openAiRequestData": {
-                        "S": "{\"docsId\":\"1ZJDajRda33L8iKE7mM7tiD1AzrDJipUtEtIq7BFATzI\",\"userId\":\"653ad42b6e601e65dbf756d0\",\"aiPromptSteps\":[{\"targetAiServiceModel\":{\"serviceName\":\"GEMINI\",\"model\":\"gemini-pro\"},\"prompts\":[{\"promptRole\":\"user\",\"promptText\":\"What is 1 improvement I can do with this essay?\",\"includeEssay\":true}],\"outputDataType\":\"TEXT\"},{\"targetAiServiceModel\":{\"serviceName\":\"GEMINI\",\"model\":\"gemini-pro\"},\"prompts\":[{\"promptRole\":\"user\",\"promptText\":\"Do you agree that my essay would benefit with this improvement? Please ONLY respond in valid JSON\",\"includeEssay\":true}],\"outputDataType\":\"JSON\"}],\"authHeaders\":{\"Authorization\":\"bearer xxxx\"}}"
+                        "S": "{\"docsId\":\"1ZJDajRda33L8iKE7mM7tiD1AzrDJipUtEtIq7BFATzI\",\"userId\":\"653ad42b6e601e65dbf756d0\",\"aiPromptSteps\":[{\"targetAiServiceModel\":{\"serviceName\":\"OPEN_AI\",\"model\":\"gpt-3.5-turbo-16k\"},\"prompts\":[{\"promptRole\":\"user\",\"promptText\":\"What is 1 improvement I can do with this essay?\",\"includeEssay\":true}],\"outputDataType\":\"TEXT\"},{\"targetAiServiceModel\":{\"serviceName\":\"OPEN_AI\",\"model\":\"gpt-3.5-turbo-16k\"},\"prompts\":[{\"promptRole\":\"user\",\"promptText\":\"Do you agree that my essay would benefit with this improvement?\",\"includeEssay\":true}],\"outputDataType\":\"JSON\",\"responseFormat\":\"Please ONLY respond in valid JSON\"}],\"authHeaders\":{\"Authorization\":\"bearer xxxx\"}}"
                     },
                     "answer": {
                         "S": ""
