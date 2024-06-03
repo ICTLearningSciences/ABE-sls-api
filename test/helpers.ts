@@ -12,7 +12,7 @@ import request from "supertest";
 import requireEnv from "../src/helpers.js";
 import nock from "nock";
 import { textOpenAiResponse } from "./fixtures/documents/open-ai-responses.js";
-import { ReverseOutline } from "../src/functions/timeline/reverse-outline.js";
+import { ReverseOutline } from "../src/functions/timeline/functions/reverse-outline.js";
 
 export function fixturePath(p: string): string {
   return path.join(__dirname, "fixtures", p);

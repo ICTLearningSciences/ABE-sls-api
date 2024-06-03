@@ -8,6 +8,51 @@ import { APIGatewayEvent } from 'aws-lambda';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import Sentry from './sentry-helpers.js';
 import Validator from 'jsonschema';
+import { diffWords } from 'diff';
+
+export function numWordsInString(text: string): number {
+  return text.trim().split(' ').length;
+}
+
+export function percentageChangeUsingDiffWords(
+  text1: string,
+  text2: string
+): number {
+  const cleanedText1 = text1.trim().replace(/\s+/g, ' ');
+  const cleanedText2 = text2.trim().replace(/\s+/g, ' ');
+
+  const changes = diffWords(cleanedText1, cleanedText2);
+  let totalChanges = 0;
+  let totalLength = 0;
+
+  changes.forEach((part) => {
+    totalLength += part.value.split(' ').length;
+    if (part.added || part.removed) {
+      totalChanges += part.value.split(' ').length;
+    }
+  });
+
+  return (totalChanges / totalLength) * 100;
+}
+
+export function numberChangesUsingDiffWords(
+  text1: string,
+  text2: string
+): number {
+  const cleanedText1 = text1.trim().replace(/\s+/g, ' ');
+  const cleanedText2 = text2.trim().replace(/\s+/g, ' ');
+
+  const changes = diffWords(cleanedText1, cleanedText2);
+  let totalChanges = 0;
+
+  changes.forEach((part) => {
+    if (part.added || part.removed) {
+      totalChanges += 1;
+    }
+  });
+
+  return totalChanges;
+}
 
 export function createResponseJson(statusCode: number, body: any) {
   if (statusCode >= 400) {

@@ -1,5 +1,5 @@
 import { drive_v3 } from "googleapis";
-import { GQLDocumentTimeline, IGDocVersion, AiGenerationStatus, TimelinePointType } from "../../../../src/functions/timeline/types";
+import { GQLDocumentTimeline, IGDocVersion, AiGenerationStatus, TimelinePointType } from "../../../../src/functions/timeline/functions/types";
 import {v4 as uuidv4} from "uuid";
 
 export function isoStringMinsFromNow(mins: number): string {

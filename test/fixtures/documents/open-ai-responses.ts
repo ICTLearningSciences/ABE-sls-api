@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { ReverseOutline } from "../../../src/functions/timeline/reverse-outline";
+import { ReverseOutline } from "../../../src/functions/timeline/functions/reverse-outline";
 
 export const textOpenAiResponse = (response: string): OpenAI.Chat.Completions.ChatCompletion => ({
     "id": "123",

@@ -1,7 +1,7 @@
 // tests/calculator.spec.tx
 import { assert } from "chai";
-import { DocumentTimelineGenerator, createSlices } from "../../src/functions/timeline/document-timeline-generator.js";
-import { GQLDocumentTimeline, IGDocVersion, AiGenerationStatus, TimelinePointType } from "../../src/functions/timeline/types.js";
+import { DocumentTimelineGenerator, createSlices } from "../../src/functions/timeline/functions/document-timeline-generator.js";
+import { GQLDocumentTimeline, IGDocVersion, AiGenerationStatus, TimelinePointType } from "../../src/functions/timeline/functions/types.js";
 import { defaultChangeSummaryRes, defaultReverseOutlineRes, mockDefault, mockGraphqlQuery, mockOpenAiCall, mockOpenAiChangeSummaryResponse, mockOpenAiReverseOutlineResponse } from "../helpers.js";
 import { externalGoogleDocRevisionGenerator, gqlDocVersionGenerator, isoStringMinsFromNow } from "../fixtures/documents/helpers/document-generator.js";
 import { docTimeline } from "../fixtures/documents/2-sessions-inbetween-outside-ABE/doc-timeline.js";

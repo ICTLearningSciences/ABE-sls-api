@@ -14,7 +14,6 @@ import { AiAsyncJobStatus, TargetAiModelServiceType } from '../../types.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { AvailableAiServiceNames } from '../../ai_services/ai-service-factory.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 

@@ -8,7 +8,7 @@ import {
   fetchDocTimeline,
   fetchGoogleDocVersion,
   storeDocTimeline,
-} from '../../hooks/graphql_api.js';
+} from '../../../hooks/graphql_api.js';
 import {
   GQLDocumentTimeline,
   GQLTimelinePoint,
@@ -21,14 +21,14 @@ import { collectGoogleDocSlicesOutsideOfSessions } from './google-doc-version-ha
 import { drive_v3 } from 'googleapis';
 import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import { changeSummaryPromptRequest } from './change-summary.js';
-import Sentry from '../../sentry-helpers.js';
-import { storeDoctimelineDynamoDB } from '../../dynamo-helpers.js';
-import { AiAsyncJobStatus, TargetAiModelServiceType } from '../../types.js';
+import Sentry from '../../../sentry-helpers.js';
+import { storeDoctimelineDynamoDB } from '../../../dynamo-helpers.js';
+import { AiAsyncJobStatus, TargetAiModelServiceType } from '../../../types.js';
 import {
   AiServiceFactory,
   AvailableAiServiceNames,
   AvailableAiServices,
-} from '../../ai_services/ai-service-factory.js';
+} from '../../../ai_services/ai-service-factory.js';
 
 export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,
@@ -56,57 +56,6 @@ function sortTimelineSlices(slices: TimelineSlice[]): TimelineSlice[] {
     const bTime = new Date(b.versions[0].createdAt).getTime();
     return aTime - bTime;
   });
-}
-
-export async function createSlices(
-  versions: IGDocVersion[],
-  externalGoogleDocRevisions: drive_v3.Schema$Revision[],
-  googleAccessToken: string
-): Promise<TimelineSlice[]> {
-  const slices: TimelineSlice[] = [];
-  let currentSlice: IGDocVersion[] = [];
-  let lastStartSliceReason = TimelinePointType.START;
-  // iterate through versions and create slices with isNextTimelinePoint as a boundary
-  for (let i = 0; i < versions.length; i++) {
-    const currentVersion = versions[i];
-    const previousVersion = versions[i - 1];
-    if (!previousVersion) {
-      currentSlice.push(currentVersion);
-      continue;
-    }
-
-    const nextTimelinePointType = isNextTimelinePoint(
-      previousVersion,
-      currentVersion
-    );
-    if (nextTimelinePointType) {
-      if (currentSlice.length > 0) {
-        slices.push({
-          startReason: lastStartSliceReason,
-          versions: currentSlice,
-        });
-        lastStartSliceReason = nextTimelinePointType;
-      }
-      currentSlice = [currentVersion];
-    } else {
-      currentSlice.push(currentVersion);
-    }
-  }
-
-  if (currentSlice.length > 0) {
-    slices.push({
-      startReason: lastStartSliceReason,
-      versions: currentSlice,
-    });
-  }
-
-  const googleDocSlicesOutsideOfSessions =
-    await collectGoogleDocSlicesOutsideOfSessions(
-      slices,
-      externalGoogleDocRevisions,
-      googleAccessToken
-    );
-  return sortTimelineSlices([...slices, ...googleDocSlicesOutsideOfSessions]);
 }
 
 interface DocTextWithOutline {
@@ -167,7 +116,7 @@ function mergeExistingTimelinePoints(
   });
 }
 
-export function timelinePointGenerationComplete(
+function timelinePointGenerationComplete(
   timelinePoint: GQLTimelinePoint
 ): boolean {
   return (
@@ -202,6 +151,57 @@ export function getTimelinePointsToGenerate(
 }
 
 export const NUM_GENERATED_PER_REQUEST = 5;
+
+export async function createSlices(
+  versions: IGDocVersion[],
+  externalGoogleDocRevisions: drive_v3.Schema$Revision[],
+  googleAccessToken: string
+): Promise<TimelineSlice[]> {
+  const slices: TimelineSlice[] = [];
+  let currentSlice: IGDocVersion[] = [];
+  let lastStartSliceReason = TimelinePointType.START;
+  // iterate through versions and create slices with isNextTimelinePoint as a boundary
+  for (let i = 0; i < versions.length; i++) {
+    const currentVersion = versions[i];
+    const previousVersion = versions[i - 1];
+    if (!previousVersion) {
+      currentSlice.push(currentVersion);
+      continue;
+    }
+
+    const nextTimelinePointType = isNextTimelinePoint(
+      previousVersion,
+      currentVersion
+    );
+    if (nextTimelinePointType) {
+      if (currentSlice.length > 0) {
+        slices.push({
+          startReason: lastStartSliceReason,
+          versions: currentSlice,
+        });
+        lastStartSliceReason = nextTimelinePointType;
+      }
+      currentSlice = [currentVersion];
+    } else {
+      currentSlice.push(currentVersion);
+    }
+  }
+
+  if (currentSlice.length > 0) {
+    slices.push({
+      startReason: lastStartSliceReason,
+      versions: currentSlice,
+    });
+  }
+
+  const googleDocSlicesOutsideOfSessions =
+    await collectGoogleDocSlicesOutsideOfSessions(
+      slices,
+      externalGoogleDocRevisions,
+      googleAccessToken
+    );
+  return sortTimelineSlices([...slices, ...googleDocSlicesOutsideOfSessions]);
+}
 
 export class DocumentTimelineGenerator {
   aiService: AvailableAiServices;
@@ -338,6 +338,9 @@ export class DocumentTimelineGenerator {
       timelinePoints,
       existingDocumentTimeline?.timelinePoints
     );
+
+    // TODO: determine all keyframes to generate
+
     let timelinePointsToGenerate = getTimelinePointsToGenerate(timelinePoints);
     let numLoops = 0;
     const maxLoopsNeeded =

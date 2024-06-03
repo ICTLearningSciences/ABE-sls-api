@@ -1,4 +1,4 @@
-import { GQLDocumentTimeline, AiGenerationStatus, TimelinePointType } from "../../../../src/functions/timeline/types";
+import { GQLDocumentTimeline, AiGenerationStatus, TimelinePointType } from "../../../../src/functions/timeline/functions/types";
 
 export const docTimeline: GQLDocumentTimeline = {
     "docId": "1L4U07KVne3V6u3cBKJ9BTb_pZ6DDXwCqG75-mJIZfGA",

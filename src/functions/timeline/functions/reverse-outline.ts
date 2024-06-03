@@ -11,8 +11,8 @@ import {
   AiPromptStep,
   PromptOutputTypes,
   PromptRoles,
-} from '../../types.js';
-import { AvailableAiServices } from '../../ai_services/ai-service-factory.js';
+} from '../../../types.js';
+import { AvailableAiServices } from '../../../ai_services/ai-service-factory.js';
 
 export interface ReverseOutline {
   'Thesis Statement': string;
@@ -80,10 +80,10 @@ export async function reverseOutlinePromptRequest(
       {
         promptText: currentVersion.plainText,
         includeEssay: true,
-        promptRole: PromptRoles.ASSISSANT,
+        promptRole: PromptRoles.USER,
       },
       {
-        promptRole: PromptRoles.SYSTEM,
+        promptRole: PromptRoles.USER,
         promptText: `You are a literary and scholarly expert and have been evaluating university-level essays and thesis statements. You have been invited as an evaluation judge of writing, where a detailed and specific evaluation is expected.
   
               Your task is to generate an outline for this writing. This outline should have a logical inverted pyramid structure. First, identify the most likely thesis statement for that essay. For the thesis statement, I want you to evaluate the claims that made to support the thesis statement. Based on this goal and the format below, list each main point.
