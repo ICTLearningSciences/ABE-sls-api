@@ -1,7 +1,7 @@
 // tests/calculator.spec.tx
 import { assert } from "chai";
-import { DocumentTimelineGenerator, createSlices } from "../../src/functions/timeline/document-timeline-generator.js";
-import { GQLDocumentTimeline, IGDocVersion, AiGenerationStatus, TimelinePointType } from "../../src/functions/timeline/types.js";
+import { DocumentTimelineGenerator, createSlices } from "../../src/functions/timeline/functions/document-timeline-generator.js";
+import { GQLDocumentTimeline, IGDocVersion, AiGenerationStatus, TimelinePointType } from "../../src/functions/timeline/functions/types.js";
 import { defaultChangeSummaryRes, defaultReverseOutlineRes, mockDefault, mockGraphqlQuery, mockOpenAiCall, mockOpenAiChangeSummaryResponse, mockOpenAiReverseOutlineResponse } from "../helpers.js";
 import { externalGoogleDocRevisionGenerator, gqlDocVersionGenerator, isoStringMinsFromNow } from "../fixtures/documents/helpers/document-generator.js";
 import { docTimeline } from "../fixtures/documents/2-sessions-inbetween-outside-ABE/doc-timeline.js";
@@ -89,6 +89,7 @@ describe("Document Timeline Unit Tests", () => {
       }
     });
 
+    
     it("generates change summary only for documents when text changes (or is first version)", async () => {
       const gdocVersions: IGDocVersion[] = gqlDocVersionGenerator([
         {},
@@ -104,24 +105,16 @@ describe("Document Timeline Unit Tests", () => {
       const storeDocTimelineNoc = mockGraphqlQuery("StoreDocTimeline", {
         "storeDocTimeline": docTimeline
       })
-      let numChangeSummaryCalls = {
-        calls: 0 // js object to force pass by reference
-      }
-      const openAiChangeSummaryNock = mockOpenAiChangeSummaryResponse(
+      const [openAiChangeSummaryNock, csNockRequestData] = mockOpenAiChangeSummaryResponse(
         defaultChangeSummaryRes,
         {
           interceptAllCalls: true,
-          numCallsAccumulator: numChangeSummaryCalls
         }
       )
-      let numReverseOutlineCalls = {
-        calls: 0 // js object to force pass by reference
-      }
-      const reverseOutlineNock = mockOpenAiReverseOutlineResponse(
+      const [reverseOutlineNock, roRequestData] = mockOpenAiReverseOutlineResponse(
         defaultReverseOutlineRes,
         {
           interceptAllCalls: true,
-          numCallsAccumulator: numReverseOutlineCalls
         }
       )
       const docTimelineGenerator = new DocumentTimelineGenerator({
@@ -143,8 +136,8 @@ describe("Document Timeline Unit Tests", () => {
       assert.equal(res.timelinePoints[2].changeSummaryStatus, AiGenerationStatus.COMPLETED);
       assert.equal(res.timelinePoints[2].reverseOutline, JSON.stringify(defaultReverseOutlineRes)); // uses previous reverse outline
       assert.equal(res.timelinePoints[2].reverseOutlineStatus, AiGenerationStatus.COMPLETED);
-      assert.equal(numChangeSummaryCalls.calls, 2);
-      assert.equal(numReverseOutlineCalls.calls, 2);
+      assert.equal(csNockRequestData.calls, 2);
+      assert.equal(roRequestData.calls, 2);
       assert.equal(storeDocTimelineNoc.isDone(), true);
     })
 
@@ -177,24 +170,16 @@ describe("Document Timeline Unit Tests", () => {
       const storeDocTimelineNoc = mockGraphqlQuery("StoreDocTimeline", {
         "storeDocTimeline": docTimeline
       })
-      let numChangeSummaryCalls = {
-        calls: 0 // js object to force pass by reference
-      }
-      const openAiChangeSummaryNock = mockOpenAiChangeSummaryResponse(
+      const [openAiChangeSummaryNock, csRequestData] = mockOpenAiChangeSummaryResponse(
         defaultChangeSummaryRes,
         {
           interceptAllCalls: true,
-          numCallsAccumulator: numChangeSummaryCalls
         }
       )
-      let numReverseOutlineCalls = {
-        calls: 0 // js object to force pass by reference
-      }
-      const reverseOutlineNock = mockOpenAiReverseOutlineResponse(
+      const [reverseOutlineNock, roRequestData] = mockOpenAiReverseOutlineResponse(
         defaultReverseOutlineRes,
         {
           interceptAllCalls: true,
-          numCallsAccumulator: numReverseOutlineCalls
         }
       )
       const docTimelineGenerator = new DocumentTimelineGenerator({
@@ -206,10 +191,10 @@ describe("Document Timeline Unit Tests", () => {
       assert.equal(openAiChangeSummaryNock.isDone(), true);
       assert.equal(reverseOutlineNock.isDone(), true);
       assert.equal(storeDocTimelineNoc.isDone(), true);
-      assert.equal(numChangeSummaryCalls.calls, 16);
-      assert.equal(numReverseOutlineCalls.calls, 16);
-            // TODO: check that the first request to dynamoDb has first and last 5 complete, but others in progress
-      // TODO: check that the second request to dynamoDb has all 16 complete
+      assert.equal(csRequestData.calls, 16);
+      assert.equal(roRequestData.calls, 16);
+      // check that the first request to dynamoDb has first and last 5 complete, but others in progress
+      // check that the second request to dynamoDb has all 16 complete
       const updateDynamoDbCalls = ddbMock.commandCalls(UpdateItemCommand)
       assert.equal(updateDynamoDbCalls.length, 2);
       const firstUpdate = updateDynamoDbCalls[0];

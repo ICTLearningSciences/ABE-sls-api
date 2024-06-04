@@ -1,4 +1,4 @@
-import { GQLTimelinePoint, IGDocVersion, TimelinePointType } from "../../../../src/functions/timeline/types";
+import { GQLTimelinePoint, IGDocVersion, TimelinePointType } from "../../../../src/functions/timeline/functions/types";
 import { GoogleDocVersion } from "../../../../src/hooks/google_api";
 
 export const docVersions: IGDocVersion[] = [

@@ -10,8 +10,7 @@ import { AiAsyncJobStatus, TargetAiModelServiceType } from '../../types.js';
 import { useWithGoogleApi } from '../../hooks/google_api.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { updateDynamoJobStatus } from '../../dynamo-helpers.js';
-import { DocumentTimelineGenerator } from './document-timeline-generator.js';
-import { AvailableAiServiceNames } from '../../ai_services/ai-service-factory.js';
+import { DocumentTimelineGenerator } from './functions/document-timeline-generator.js';
 
 interface ExtractedDocumentTimelineRequestData {
   docId: string;

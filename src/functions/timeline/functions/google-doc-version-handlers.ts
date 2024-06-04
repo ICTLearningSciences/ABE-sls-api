@@ -8,7 +8,7 @@ import { drive_v3 } from 'googleapis';
 import {
   GoogleDocVersion,
   convertGoogleDocRevisions,
-} from '../../hooks/google_api.js';
+} from '../../../hooks/google_api.js';
 import { IGDocVersion, TimelineSlice, TimelinePointType } from './types.js';
 
 interface VersionBoundaries {

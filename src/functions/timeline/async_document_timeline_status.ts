@@ -9,7 +9,7 @@ The full terms of this copyright and license should always be found in the root 
 import requireEnv, { createResponseJson } from '../../helpers.js';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { APIGatewayEvent } from 'aws-lambda';
-import { GQLDocumentTimeline } from './types.js';
+import { GQLDocumentTimeline } from './functions/types.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 
 const jobsTableName = requireEnv('JOBS_TABLE_NAME');

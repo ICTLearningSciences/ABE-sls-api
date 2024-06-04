@@ -11,8 +11,8 @@ import {
   AiPromptStep,
   PromptOutputTypes,
   PromptRoles,
-} from '../../types.js';
-import { AvailableAiServices } from '../../ai_services/ai-service-factory.js';
+} from '../../../types.js';
+import { AvailableAiServices } from '../../../ai_services/ai-service-factory.js';
 
 export interface ReverseOutline {
   'Thesis Statement': string;
@@ -73,17 +73,20 @@ const reverseOutlineSchema: Schema = {
 
 export async function reverseOutlinePromptRequest(
   currentVersion: GQLIGDocVersion,
-  aiService: AvailableAiServices
+  aiService: AvailableAiServices,
+  outlineKeyframe?: string
 ) {
+  if (outlineKeyframe) {
+    // last 20 characters of the previous reverse outline
+    console.log(
+      currentVersion.plainText.substring(currentVersion.plainText.length - 20)
+    );
+    console.log(outlineKeyframe);
+  }
   const aiStep: AiPromptStep = {
     prompts: [
       {
-        promptText: currentVersion.plainText,
-        includeEssay: true,
-        promptRole: PromptRoles.ASSISSANT,
-      },
-      {
-        promptRole: PromptRoles.SYSTEM,
+        promptRole: PromptRoles.USER,
         promptText: `You are a literary and scholarly expert and have been evaluating university-level essays and thesis statements. You have been invited as an evaluation judge of writing, where a detailed and specific evaluation is expected.
   
               Your task is to generate an outline for this writing. This outline should have a logical inverted pyramid structure. First, identify the most likely thesis statement for that essay. For the thesis statement, I want you to evaluate the claims that made to support the thesis statement. Based on this goal and the format below, list each main point.
@@ -103,12 +106,18 @@ export async function reverseOutlinePromptRequest(
                 ]
               }
               You must respond as JSON following the format above. Only respond using valid JSON. The thesis statement, claims, and evidence must all be described in briefly (20 words or less). Please check that the JSON is valid and follows the format given.
-              
-              The essay you are rating is given below:
-              ----------------------------------------------
               `,
         includeEssay: true,
       },
+      ...(outlineKeyframe
+        ? [
+            {
+              promptText: `Use this previous reverse outline as the base for generating the new reverse outline: ${outlineKeyframe}`,
+              includeEssay: false,
+              promptRole: PromptRoles.USER,
+            },
+          ]
+        : []),
     ],
     targetAiServiceModel: aiService.defaultAiServiceModel,
     responseSchema: reverseOutlineSchema,

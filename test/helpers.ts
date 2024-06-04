@@ -12,7 +12,7 @@ import request from "supertest";
 import requireEnv from "../src/helpers.js";
 import nock from "nock";
 import { textOpenAiResponse } from "./fixtures/documents/open-ai-responses.js";
-import { ReverseOutline } from "../src/functions/timeline/reverse-outline.js";
+import { ReverseOutline } from "../src/functions/timeline/functions/reverse-outline.js";
 
 export function fixturePath(p: string): string {
   return path.join(__dirname, "fixtures", p);
@@ -86,6 +86,11 @@ export function mockGraphqlQuery(queryName: string, data: any){
     });
 }
 
+interface NockRequestData{
+  calls: number,
+  requestBodies: any[]
+}
+
 interface MockOpenAiCallOptions{
     interceptAllCalls?: boolean,
     delay?: number,
@@ -93,21 +98,24 @@ interface MockOpenAiCallOptions{
     /**
      * must be an object for js to pass by reference
      */
-    numCallsAccumulator?: {
-      calls: number
-    }
+    requestData?: NockRequestData
 }
 
 /**
  * 
  * @param response data that will be returned in choices[0].message.content of the openAi response
- * @param interceptAllCalls nock usually only intercepts the first call, this will intercept all calls if true
  * @returns the scope of the nock call (can be used to check if called, etc.)
  */
 export function mockOpenAiCall(response: string, options?: MockOpenAiCallOptions, requestBodyMatcher?: (body: any) =>boolean ): nock.Scope{
   const {interceptAllCalls, delay, statusCode} = options || {};
   const nockScope = nock("https://api.openai.com")
-  const nockInterceptor = nockScope.post(/.*/ , requestBodyMatcher || (() => true))
+  const nockInterceptor = nockScope.post(/.*/ , (body: any)=>{
+    options?.requestData && (options.requestData.requestBodies?.push(body))
+    if(requestBodyMatcher){
+      return requestBodyMatcher(body)
+    }
+    return true
+  })
   if(interceptAllCalls){
     nockScope.persist()
   }
@@ -119,13 +127,13 @@ export function mockOpenAiCall(response: string, options?: MockOpenAiCallOptions
   if(Array.isArray(response)){
     response.forEach((r) => {
       nockInterceptor.reply(statusCode || 200, ()=>{
-        options?.numCallsAccumulator && options.numCallsAccumulator.calls++;
+        options?.requestData && options.requestData.calls++;
         return textOpenAiResponse(r)
       });
     })
   }else{
       nockInterceptor.reply(statusCode || 200, ()=>{
-        options?.numCallsAccumulator && options.numCallsAccumulator.calls++;
+        options?.requestData && options.requestData.calls++;
         return textOpenAiResponse(response)
       });
   }
@@ -133,17 +141,27 @@ export function mockOpenAiCall(response: string, options?: MockOpenAiCallOptions
 }
 
 
+export function assertRequestIncludesMessage(expectedMessage: string, messages: any[]){
+  expect(messages.find((m)=>{
+    return m.content.includes(expectedMessage)
+  })).to.not.be.undefined
+}
+
 export const defaultChangeSummaryRes = "mock change summary text"
-export function mockOpenAiChangeSummaryResponse(response: string, options?: MockOpenAiCallOptions){
-  return mockOpenAiCall(response, options,
+export function mockOpenAiChangeSummaryResponse(response: string, options?: MockOpenAiCallOptions): [nock.Scope, NockRequestData]{
+  let dataCollector = {
+    calls: 0, // js object to force pass by reference
+    requestBodies: [] as any[]
+  }
+  return [mockOpenAiCall(response, {...options, requestData: dataCollector},
   (body) => {
     return body.messages.find((m)=>{
       return m.content.includes("Please summarize")
     })
-  })
+  }), dataCollector]
 }
 
-export const defaultReverseOutlineRes:ReverseOutline = {
+export const defaultReverseOutlineRes: ReverseOutline = {
   'Thesis Statement': 'fake thesis',
   'Supporting Claims': ['fake claims'],
   'Evidence Given for Each Claim': [
@@ -160,11 +178,15 @@ export const defaultReverseOutlineRes:ReverseOutline = {
 ]
 }
 
-export function mockOpenAiReverseOutlineResponse(response: ReverseOutline, options?: MockOpenAiCallOptions){
-  return mockOpenAiCall(JSON.stringify(response), options,
+export function mockOpenAiReverseOutlineResponse(response: ReverseOutline, options?: MockOpenAiCallOptions): [nock.Scope, NockRequestData]{
+  let dataCollector = {
+    calls: 0, // js object to force pass by reference
+    requestBodies: [] as any[]
+  }
+  return [mockOpenAiCall(JSON.stringify(response), {...options, requestData: dataCollector},
   (body) => {
     return body.messages.find((m)=>{
       return m.content.includes("Your task is to generate an outline for this writing.")
     })
-  })
+  }), dataCollector]
 }
