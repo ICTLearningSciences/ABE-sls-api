@@ -29,6 +29,7 @@ import {
   AvailableAiServiceNames,
   AvailableAiServices,
 } from '../../../ai_services/ai-service-factory.js';
+import { KeyframeGenerator } from './keyframe-generator.js';
 
 export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,
@@ -263,10 +264,21 @@ export class DocumentTimelineGenerator {
    * The requests will modify the timeline points in place once the requests are resolved
    */
   generateReverseOutlineRequests(
-    timelinePoints: GQLTimelinePoint[]
+    timelinePoints: GQLTimelinePoint[],
+    keyframeGenerator: KeyframeGenerator
   ): Promise<void>[] {
     return timelinePoints.map(async (timelinePoint, i) => {
       const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
+      const keyframeOutline = keyframeGenerator.getKeyFrameForTime(
+        timelinePoint.versionTime
+      );
+
+      if (keyframeOutline?.time === timelinePoint.versionTime) {
+        timelinePoint.reverseOutline = keyframeOutline.reverseOutline;
+        timelinePoint.reverseOutlineStatus = AiGenerationStatus.COMPLETED;
+        return;
+      }
+
       if (
         !timelinePoint.reverseOutline ||
         timelinePoint.reverseOutlineStatus !== AiGenerationStatus.COMPLETED
@@ -279,9 +291,11 @@ export class DocumentTimelineGenerator {
           // Will get filled in later from previous timeline point
         } else {
           console.log('Reverse Outline: making request to openai');
+
           timelinePoint.reverseOutline = await reverseOutlinePromptRequest(
             timelinePoint.version,
-            this.aiService
+            this.aiService,
+            keyframeOutline ? keyframeOutline.reverseOutline : ''
           );
         }
         timelinePoint.reverseOutlineStatus = AiGenerationStatus.COMPLETED;
@@ -290,13 +304,16 @@ export class DocumentTimelineGenerator {
   }
 
   async fillSummariesInPlace(
-    timelinePoints: GQLTimelinePoint[]
+    timelinePoints: GQLTimelinePoint[],
+    keyframeGenerator: KeyframeGenerator
   ): Promise<GQLTimelinePoint[]> {
     // Generate summary and reverse outline in parallel for timeline points without these values
     const changeSummaryRequests =
       this.generateChangeSummaryRequests(timelinePoints);
-    const reverseOutlineRequests =
-      this.generateReverseOutlineRequests(timelinePoints);
+    const reverseOutlineRequests = this.generateReverseOutlineRequests(
+      timelinePoints,
+      keyframeGenerator
+    );
     await Promise.all([...changeSummaryRequests, ...reverseOutlineRequests]);
     timelinePoints = fillInExistingReverseOutlines(timelinePoints);
     return timelinePoints;
@@ -339,9 +356,16 @@ export class DocumentTimelineGenerator {
       existingDocumentTimeline?.timelinePoints
     );
 
-    // TODO: determine all keyframes to generate
-
     let timelinePointsToGenerate = getTimelinePointsToGenerate(timelinePoints);
+
+    const keyframeGenerator = new KeyframeGenerator(
+      timelinePoints,
+      this.targetAiService
+    );
+    if (timelinePointsToGenerate.length > 0) {
+      await keyframeGenerator.generateKeyframes();
+    }
+
     let numLoops = 0;
     const maxLoopsNeeded =
       timelinePoints.length / NUM_GENERATED_PER_REQUEST + 1;
@@ -353,7 +377,10 @@ export class DocumentTimelineGenerator {
       }
       numLoops++;
       // modifies timeline points in place by reference
-      await this.fillSummariesInPlace(timelinePointsToGenerate);
+      await this.fillSummariesInPlace(
+        timelinePointsToGenerate,
+        keyframeGenerator
+      );
       timelinePointsToGenerate = getTimelinePointsToGenerate(timelinePoints);
       if (timelinePointsToGenerate.length > 0) {
         const documentTimeline: GQLDocumentTimeline = {

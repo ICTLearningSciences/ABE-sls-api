@@ -12,7 +12,7 @@ import {
 } from 'helpers';
 import { TargetAiModelServiceType } from 'types';
 
-interface Keyframe {
+export interface ReverseOutlineKeyframe {
   time: string;
   reverseOutline: string;
 }
@@ -22,7 +22,7 @@ export const NUM_WORD_DIFF_THRESHOLD = 100;
 
 export class KeyframeGenerator {
   timelinePoints: GQLTimelinePoint[];
-  keyframes: Keyframe[];
+  keyframes: ReverseOutlineKeyframe[];
   aiService: AvailableAiServices;
 
   constructor(
@@ -74,6 +74,10 @@ export class KeyframeGenerator {
   }
 
   /**
+   * Generates keyframes in positions where there is a major change in the document.
+   *
+   * Will re-use reverse outlines if they are already present in the timeline points.
+   *
    * First keyframe always comes from the first document version that has some content.
    * Subsequent keyframes are generated when there is a major change in the document.
    */
@@ -120,9 +124,9 @@ export class KeyframeGenerator {
     // find the key frame that comes before this timeline point.
     for (let i = this.keyframes.length - 1; i >= 0; i--) {
       if (this.keyframes[i].time <= time) {
-        return this.keyframes[i].reverseOutline;
+        return this.keyframes[i];
       }
     }
-    return '';
+    return undefined;
   }
 }
