@@ -2,15 +2,15 @@ import {
   AiServiceFactory,
   AvailableAiServiceNames,
   AvailableAiServices,
-} from 'ai_services/ai-service-factory';
-import { GQLTimelinePoint } from './types';
-import { reverseOutlinePromptRequest } from './reverse-outline';
+} from '../../../ai_services/ai-service-factory.js';
+import { GQLTimelinePoint } from './types.js';
+import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import {
   numWordsInString,
   numberChangesUsingDiffWords,
   percentageChangeUsingDiffWords,
-} from 'helpers';
-import { TargetAiModelServiceType } from 'types';
+} from '../../../helpers.js';
+import { TargetAiModelServiceType } from '../../../types.js';
 
 export interface ReverseOutlineKeyframe {
   time: string;

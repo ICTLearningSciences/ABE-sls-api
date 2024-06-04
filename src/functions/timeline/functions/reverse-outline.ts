@@ -13,7 +13,6 @@ import {
   PromptRoles,
 } from '../../../types.js';
 import { AvailableAiServices } from '../../../ai_services/ai-service-factory.js';
-import { ReverseOutlineKeyframe } from './keyframe-generator.js';
 
 export interface ReverseOutline {
   'Thesis Statement': string;
