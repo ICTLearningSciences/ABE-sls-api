@@ -106,11 +106,12 @@ function mergeExistingTimelinePoints(
     return timelinePoints;
   }
   return timelinePoints.map((timelinePoint, i) => {
-    const existingTimelinePoint = existingTimelinePoints[i];
-    if (
-      existingTimelinePoint.version.docId === timelinePoint.version.docId &&
-      existingTimelinePoint.versionTime === timelinePoint.versionTime
-    ) {
+    const existingTimelinePoint = existingTimelinePoints.find(
+      (existingTimelinePoint) =>
+        existingTimelinePoint.version.docId === timelinePoint.version.docId &&
+        existingTimelinePoint.versionTime === timelinePoint.versionTime
+    );
+    if (existingTimelinePoint) {
       return existingTimelinePoint;
     }
     return timelinePoint;
