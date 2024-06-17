@@ -184,8 +184,14 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
 
     for (let i = 0; i < aiStep.prompts.length - 1; i++) {
       const prompt = aiStep.prompts[i];
+      const promptRole =
+        prompt.promptRole === PromptRoles.USER
+          ? 'user'
+          : prompt.promptRole === PromptRoles.SYSTEM
+            ? 'model'
+            : 'user';
       chatParams.history?.push({
-        role: prompt.promptRole || PromptRoles.USER,
+        role: promptRole,
         parts: [
           {
             text: prompt.promptText,
