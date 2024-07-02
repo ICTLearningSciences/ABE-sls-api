@@ -11,7 +11,7 @@ import {
   PromptOutputTypes,
   PromptRoles,
   TargetAiModelServiceType,
-} from 'types';
+} from '../../types.js';
 
 export interface PromptConfiguration {
   promptText: string;
