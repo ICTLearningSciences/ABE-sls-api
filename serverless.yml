@@ -111,6 +111,13 @@ provider:
             - dynamodb:UpdateItem
           Resource:
             Fn::GetAtt: [TimelineTable, Arn]
+        - Effect: "Allow"
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+          Resource:
+            Fn::GetAtt: [GenericJobsTable, Arn]
 
 functions:
   authorizer_func:
@@ -323,7 +330,48 @@ functions:
             resultTtlInSeconds: 300
             identitySource: method.request.header.Authorization
             type: token
-
+  generic_llm_request:
+    handler: src/functions/generic_llm_request/generic_request.handler
+    timeout: 30
+    environment:
+      JOBS_TABLE_NAME: generic-llm-request-${self:provider.stage}
+    events:
+      - http:
+          path: /generic_llm_request/
+          method: any
+          cors:
+            origin: '*'
+  generic_llm_process:
+    description: Triggered by new records in dynamo, implements async processing of generic llm requests
+    handler: src/functions/generic_llm_request/generic_request_process.handler
+    memorySize: 2048
+    timeout: 900 # max
+    environment:
+      JOBS_TABLE_NAME: generic-llm-request-${self:provider.stage}
+    events:
+      - stream:
+          type: dynamodb
+          maximumRetryAttempts: 3
+          arn:
+            Fn::GetAtt: [GenericJobsTable, StreamArn]
+          # to avoid triggers on status update, make sure it's only when a new job is added:
+          filterPatterns:
+            - eventName: [INSERT]
+  generic_llm_status:
+    handler: src/functions/generic_llm_request/generic_request_status.handler
+    timeout: 30
+    environment:
+      JOBS_TABLE_NAME: generic-llm-request-${self:provider.stage}
+    events:
+      - http:
+          path: /generic_llm_request_status/
+          method: any
+          request:
+            parameters:
+              querystrings:
+                jobId: true
+          cors:
+            origin: '*'
   
 
 
@@ -362,6 +410,25 @@ resources:
       UpdateReplacePolicy: Delete
       Properties:
         TableName: open-ai-jobs-${self:provider.stage}
+        BillingMode: PAY_PER_REQUEST
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        # to cleanup jobs after a while set this attribute as a number
+        TimeToLiveSpecification: 
+          AttributeName: ttl
+          Enabled: true
+    GenericJobsTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Delete
+      UpdateReplacePolicy: Delete
+      Properties:
+        TableName: generic-llm-request-${self:provider.stage}
         BillingMode: PAY_PER_REQUEST
         StreamSpecification:
           StreamViewType: NEW_IMAGE
