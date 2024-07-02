@@ -74,9 +74,15 @@ export class AiServiceHandler {
 
   async executeGenericLlmRequest(
     llmRequest: GenericLlmRequest
-  ): Promise<AiServiceFinalResponseType>{
-    if(!Object.values(AvailableAiServiceNames).includes(llmRequest.targetAiServiceModel.serviceName as AvailableAiServiceNames)){
-      throw new Error(`Invalid targetAiServiceModel.serviceName: ${llmRequest.targetAiServiceModel.serviceName}`);
+  ): Promise<AiServiceFinalResponseType> {
+    if (
+      !Object.values(AvailableAiServiceNames).includes(
+        llmRequest.targetAiServiceModel.serviceName as AvailableAiServiceNames
+      )
+    ) {
+      throw new Error(
+        `Invalid targetAiServiceModel.serviceName: ${llmRequest.targetAiServiceModel.serviceName}`
+      );
     }
     const curAiStep: AiPromptStep = {
       prompts: llmRequest.prompts.map((prompt) => ({
@@ -96,8 +102,8 @@ export class AiServiceHandler {
     );
     const res = await aiService.completeChat({
       aiStep: curAiStep,
-      docsPlainText: "",
-      previousOutput: "",
+      docsPlainText: '',
+      previousOutput: '',
     });
     const { aiStepData, answer } = res;
     allStepsData.push({

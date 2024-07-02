@@ -34,9 +34,8 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
     const aiServiceHandler = new AiServiceHandler();
     const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
     try {
-      const aiServiceResponse = await aiServiceHandler.executeGenericLlmRequest(
-        llmRequest
-      )
+      const aiServiceResponse =
+        await aiServiceHandler.executeGenericLlmRequest(llmRequest);
       // Update the job in dynamo db
       const tableRequest: UpdateItemCommandInput = {
         TableName: jobsTableName,

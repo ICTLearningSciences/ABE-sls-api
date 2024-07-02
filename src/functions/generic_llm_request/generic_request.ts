@@ -17,8 +17,7 @@ const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
-  const { llmRequest } =
-  extractGenericRequestData(event);
+  const { llmRequest } = extractGenericRequestData(event);
   // Queue the job
   const newUuid = uuid();
   // Store the job in dynamo db, triggers async lambda

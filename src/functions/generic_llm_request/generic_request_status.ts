@@ -40,8 +40,8 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
       _aiServiceResponse ? JSON.parse(_aiServiceResponse) : null;
     return createResponseJson(200, {
       response: {
-        aiServiceResponse, 
-        answer: aiServiceResponse?.answer || "",
+        aiServiceResponse,
+        answer: aiServiceResponse?.answer || '',
         jobStatus,
         apiError,
       },
