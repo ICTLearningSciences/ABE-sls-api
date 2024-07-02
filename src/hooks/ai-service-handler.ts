@@ -15,6 +15,7 @@ import {
   AiServiceStepDataTypes,
   AvailableAiServiceNames,
 } from '../ai_services/ai-service-factory.js';
+import { GenericLlmRequest } from 'functions/generic_llm_request/helpers.js';
 
 export class AiServiceHandler {
   constructor() {}
@@ -69,5 +70,44 @@ export class AiServiceHandler {
         answer: finalAnswer,
       };
     }
+  }
+
+  async executeGenericLlmRequest(
+    llmRequest: GenericLlmRequest
+  ): Promise<AiServiceFinalResponseType>{
+    if(!Object.values(AvailableAiServiceNames).includes(llmRequest.targetAiServiceModel.serviceName as AvailableAiServiceNames)){
+      throw new Error(`Invalid targetAiServiceModel.serviceName: ${llmRequest.targetAiServiceModel.serviceName}`);
+    }
+    const curAiStep: AiPromptStep = {
+      prompts: llmRequest.prompts.map((prompt) => ({
+        promptText: prompt.promptText,
+        promptRole: prompt.promptRole,
+        includeEssay: false,
+      })),
+      targetAiServiceModel: llmRequest.targetAiServiceModel,
+      outputDataType: llmRequest.outputDataType,
+      responseSchema: llmRequest.responseSchema,
+      responseFormat: llmRequest.responseFormat,
+      systemRole: llmRequest.systemRole,
+    };
+    const allStepsData: AiServiceStepDataTypes[] = [];
+    const aiService = AiServiceFactory.getAiService(
+      llmRequest.targetAiServiceModel.serviceName as AvailableAiServiceNames
+    );
+    const res = await aiService.completeChat({
+      aiStep: curAiStep,
+      docsPlainText: "",
+      previousOutput: "",
+    });
+    const { aiStepData, answer } = res;
+    allStepsData.push({
+      // TODO: currently shoehorning the typing here, remove the any and determine fix.
+      aiServiceRequestParams: aiStepData.aiServiceRequestParams as any,
+      aiServiceResponse: aiStepData.aiServiceResponse as any,
+    });
+    return {
+      aiAllStepsData: allStepsData,
+      answer: answer,
+    };
   }
 }
