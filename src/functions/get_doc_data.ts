@@ -6,18 +6,24 @@ The full terms of this copyright and license should always be found in the root 
 */
 // Note: had to add .js to find this file in serverless
 import { APIGatewayEvent } from 'aws-lambda';
-import { useWithGoogleApi } from '../hooks/google_api.js';
 import { wrapHandler } from '../sentry-helpers.js';
+import { DocServiceFactory } from '../doc_services/doc-service-factory.js';
+import { DocServices } from '../types.js';
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const docsId = event.pathParameters?.['docs_id'];
-  if (!docsId) {
-    throw new Error('Google Doc ID is empty');
+  const docService = event.pathParameters?.['doc_service'];
+  if (!docsId || !docService) {
+    throw new Error('Google Doc ID or Doc Service is empty');
   }
-  const { getGoogleAPIs, getDocCurrentData } = useWithGoogleApi();
-  const { drive, docs } = await getGoogleAPIs();
-  const docData = await getDocCurrentData(docs, drive, docsId);
+
+  if(Object.values(DocServices).indexOf(docService as DocServices) === -1) {
+    throw new Error('Invalid Doc Service');
+  }
+
+  const docHandler = DocServiceFactory.getDocService(docService as DocServices, {});
+  const docData = await docHandler.getDocData(docsId);
 
   const response = {
     statusCode: 200,

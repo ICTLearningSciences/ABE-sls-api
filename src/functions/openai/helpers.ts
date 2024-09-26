@@ -6,8 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { APIGatewayEvent } from 'aws-lambda';
 import { getFieldFromEventBody } from '../../helpers.js';
-import { AiPromptStep, TargetAiModelServiceType } from '../../types.js';
-import { AvailableAiServiceNames } from '../../ai_services/ai-service-factory.js';
+import { AiPromptStep, DocServices } from '../../types.js';
 
 export type AuthHeaders = Record<string, string>;
 
@@ -47,6 +46,7 @@ export interface ExtractedOpenAiRequestData {
   userId: string;
   aiPromptSteps: AiPromptStep[];
   authHeaders: AuthHeaders;
+  docService: DocServices;
 }
 
 export function extractOpenAiRequestData(
@@ -54,6 +54,7 @@ export function extractOpenAiRequestData(
 ): ExtractedOpenAiRequestData {
   const docsId = event.queryStringParameters?.['docId'];
   const userId = event.queryStringParameters?.['userId'];
+  const docService = event.queryStringParameters?.['docService'];
   const aiPromptSteps: AiPromptStep[] = getFieldFromEventBody<AiPromptStep[]>(
     event,
     'aiPromptSteps'
@@ -73,5 +74,8 @@ export function extractOpenAiRequestData(
     userId,
     aiPromptSteps,
     authHeaders,
+    docService: docService
+      ? (docService as DocServices)
+      : DocServices.GOOGLE_DOCS,
   };
 }

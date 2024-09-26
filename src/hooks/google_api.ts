@@ -7,6 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 import { google, drive_v3, docs_v1 } from 'googleapis';
 import axios, { AxiosRequestConfig } from 'axios';
 import { exponentialBackoff } from '../helpers.js';
+import { DocData } from '../types.js';
 
 export interface GoogleDocVersion {
   id: string;
@@ -125,7 +126,51 @@ function findSubstringInParagraphs(
   };
 }
 
-export function useWithGoogleApi() {
+export interface UseWithGoogleApi {
+  getGoogleAPIs: () => Promise<{
+    drive: drive_v3.Drive;
+    docs: docs_v1.Docs;
+    accessToken: string | null | undefined;
+}>
+  createGoogleDoc: (
+    driveAPI: drive_v3.Drive,
+    emailsToGiveAccess: string[],
+    copyFromDocId: string,
+    newDocTitle: string
+  ) => Promise<{
+    docId: string;
+    webViewLink: string;
+    createdTime: string;
+  }>;
+  getGoogleDocVersions: (
+    driveAPI: drive_v3.Drive,
+    docsId: string,
+    driveAccessToken: string
+  ) => Promise<drive_v3.Schema$Revision[]>;
+  highlightGoogleDocText: (
+    docsAPI: docs_v1.Docs,
+    docId: string,
+    textToHighlight: string
+  ) => Promise<void>;
+  removeGoogleDocText: (
+    docsAPI: docs_v1.Docs,
+    docId: string,
+    textToRemove: string
+  ) => Promise<void>;
+  insertGoogleDocText: (
+    docsAPI: docs_v1.Docs,
+    docId: string,
+    textToInsert: string,
+    insertAfterText: string
+  ) => Promise<void>;
+  getDocCurrentData: (
+    docsAPI: docs_v1.Docs,
+    driveAPI: drive_v3.Drive,
+    docId: string
+  ) => Promise<DocData>;
+}
+
+export function useWithGoogleApi(): UseWithGoogleApi {
   async function getGoogleAPIs() {
     // create json file with google service credentials
     const googleServiceCredentials = JSON.parse(
@@ -377,7 +422,7 @@ export function useWithGoogleApi() {
     docsAPI: docs_v1.Docs,
     driveAPI: drive_v3.Drive,
     docId: string
-  ) {
+  ): Promise<DocData> {
     const doc = await docsAPI.documents.get({ documentId: docId });
     const docContent = doc.data.body?.content || [];
     const lastChangedId = doc.data.revisionId || '';
@@ -401,7 +446,7 @@ export function useWithGoogleApi() {
       lastChangedId,
       title,
       lastModifyingUser,
-      modifiedTime,
+      modifiedTime : modifiedTime || "",
     };
   }
 
