@@ -145,6 +145,57 @@ export async function fetchGoogleDocVersion(
   );
 }
 
+export async function fetchMostRecentVersion(
+  docId: string
+): Promise<IGDocVersion | undefined> {
+  return await execGql<IGDocVersion>(
+    {
+      query: `query FetchMostRecentVersion($googleDocId: String!) {
+          fetchMostRecentVersion(googleDocId: $googleDocId) {
+          docId
+          plainText
+          lastChangedId
+          sessionId
+          sessionIntention{
+            description
+            createdAt
+          }
+          dayIntention{
+            description
+            createdAt
+          }
+          documentIntention{
+            description
+            createdAt
+          }
+          chatLog {
+            sender
+            message
+          }
+          activity
+          intent
+          title
+          lastModifyingUser
+          modifiedTime
+          createdAt
+          updatedAt
+        }
+    }`,
+      variables: {
+        googleDocId: docId,
+      },
+    },
+    {
+      dataPath: ['fetchMostRecentVersion'],
+      axiosConfig: {
+        headers: {
+          [SECRET_HEADER_NAME]: SECRET_HEADER_VALUE,
+        },
+      },
+    }
+  );
+}
+
 export async function fetchDocTimeline(
   userId: string,
   docId: string

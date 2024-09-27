@@ -18,11 +18,14 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
     throw new Error('Google Doc ID or Doc Service is empty');
   }
 
-  if(Object.values(DocServices).indexOf(docService as DocServices) === -1) {
+  if (Object.values(DocServices).indexOf(docService as DocServices) === -1) {
     throw new Error('Invalid Doc Service');
   }
 
-  const docHandler = DocServiceFactory.getDocService(docService as DocServices, {});
+  const docHandler = DocServiceFactory.getDocService(
+    docService as DocServices,
+    {}
+  );
   const docData = await docHandler.getDocData(docsId);
 
   const response = {

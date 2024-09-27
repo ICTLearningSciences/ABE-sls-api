@@ -8,7 +8,10 @@ import { DocData, DocServices } from '../types.js';
 import { DocService } from './abstract-doc-service.js';
 import { getDocData as _getDocData } from '../api.js';
 import { AuthHeaders } from '../functions/openai/helpers.js';
-import { UseWithGoogleApi, useWithGoogleApi as _useWithGoogleApi } from '../hooks/google_api.js';
+import {
+  UseWithGoogleApi,
+  useWithGoogleApi as _useWithGoogleApi,
+} from '../hooks/google_api.js';
 
 export class GoogleDocService extends DocService {
   authHeaders: AuthHeaders;
@@ -22,10 +25,10 @@ export class GoogleDocService extends DocService {
   }
 
   async getDocData(docsId: string): Promise<DocData> {
-    const {getGoogleAPIs, getDocCurrentData} = this.useWithGoogleApi;
+    const { getGoogleAPIs, getDocCurrentData } = this.useWithGoogleApi;
     const { drive, docs } = await getGoogleAPIs();
     const docData = await getDocCurrentData(docs, drive, docsId);
-    return docData
+    return docData;
   }
 
   static getInstance(authHeaders: AuthHeaders): DocService {

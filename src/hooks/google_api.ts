@@ -131,7 +131,7 @@ export interface UseWithGoogleApi {
     drive: drive_v3.Drive;
     docs: docs_v1.Docs;
     accessToken: string | null | undefined;
-}>
+  }>;
   createGoogleDoc: (
     driveAPI: drive_v3.Drive,
     emailsToGiveAccess: string[],
@@ -446,7 +446,7 @@ export function useWithGoogleApi(): UseWithGoogleApi {
       lastChangedId,
       title,
       lastModifyingUser,
-      modifiedTime : modifiedTime || "",
+      modifiedTime: modifiedTime || '',
     };
   }
 

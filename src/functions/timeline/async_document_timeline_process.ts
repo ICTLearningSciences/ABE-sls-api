@@ -6,7 +6,11 @@ The full terms of this copyright and license should always be found in the root 
 */
 // Note: had to add .js to find this file in serverless
 import { DynamoDBStreamEvent } from 'aws-lambda';
-import { AiAsyncJobStatus, DocServices, TargetAiModelServiceType } from '../../types.js';
+import {
+  AiAsyncJobStatus,
+  DocServices,
+  TargetAiModelServiceType,
+} from '../../types.js';
 import { useWithGoogleApi } from '../../hooks/google_api.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { updateDynamoJobStatus } from '../../dynamo-helpers.js';
@@ -38,7 +42,8 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
       continue;
     }
     try {
-      const { docId, userId, targetAiService, docService } = docTimelineRequestData;
+      const { docId, userId, targetAiService, docService } =
+        docTimelineRequestData;
       const { getGoogleAPIs, getGoogleDocVersions } = useWithGoogleApi();
       const { drive, accessToken: _accessToken } = await getGoogleAPIs();
       const accessToken = _accessToken || '';

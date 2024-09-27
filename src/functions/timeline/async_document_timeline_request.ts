@@ -10,7 +10,11 @@ import requireEnv, {
   getFieldFromEventBody,
 } from '../../helpers.js';
 import { DynamoDB } from '@aws-sdk/client-dynamodb';
-import { AiAsyncJobStatus, DocServices, TargetAiModelServiceType } from '../../types.js';
+import {
+  AiAsyncJobStatus,
+  DocServices,
+  TargetAiModelServiceType,
+} from '../../types.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
 import { wrapHandler } from '../../sentry-helpers.js';
@@ -21,7 +25,8 @@ const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const documentId = event.queryStringParameters?.['docId'];
   const userId = event.queryStringParameters?.['userId'];
-  const docService = event.queryStringParameters?.['docService'] || DocServices.GOOGLE_DOCS;
+  const docService =
+    event.queryStringParameters?.['docService'] || DocServices.GOOGLE_DOCS;
   const targetAiService: TargetAiModelServiceType = getFieldFromEventBody(
     event,
     'targetAiService'
@@ -52,7 +57,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
           docId: documentId,
           userId,
           targetAiService,
-          docService
+          docService,
         }),
       },
     },

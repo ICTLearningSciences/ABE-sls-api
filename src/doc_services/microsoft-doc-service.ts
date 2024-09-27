@@ -8,6 +8,7 @@ import { DocData } from '../types.js';
 import { DocService } from './abstract-doc-service.js';
 import { getDocData as _getDocData } from '../api.js';
 import { AuthHeaders } from '../functions/openai/helpers.js';
+import { fetchMostRecentVersion } from '../hooks/graphql_api.js';
 
 export class MicrosoftDocService extends DocService {
   authHeaders: AuthHeaders;
@@ -19,13 +20,13 @@ export class MicrosoftDocService extends DocService {
   }
 
   async getDocData(docId: string): Promise<DocData> {
+    const version = await fetchMostRecentVersion(docId);
     return Promise.resolve({
-      plainText:
-        'Pinto beans are a versatile and nutritious legume commonly used in various cuisines, especially in Mexican and Southwestern dishes. They are known for their earthy flavor and creamy texture, making them perfect for soups, stews, refried beans, and burritos. Rich in protein, fiber, vitamins, and minerals, pinto beans are a great plant-based protein source for vegetarians and vegans. When cooked, they turn from speckled pink and brown to a solid light brown, and they readily absorb the flavors of spices and seasonings, making them a staple in flavorful, hearty meals.',
-      lastChangedId: '1234',
-      title: 'Test Doc',
-      lastModifyingUser: 'testuser',
-      modifiedTime: new Date().toISOString(),
+      plainText: version?.plainText || '',
+      lastChangedId: version?.lastChangedId || '',
+      title: version?.title || '',
+      lastModifyingUser: version?.lastModifyingUser || '',
+      modifiedTime: version?.modifiedTime || new Date().toISOString(),
     });
   }
 
