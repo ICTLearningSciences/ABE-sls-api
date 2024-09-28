@@ -13,8 +13,8 @@ import {
   UseWithGoogleApi,
   useWithGoogleApi as _useWithGoogleApi,
 } from '../hooks/google_api.js';
-import { IGDocVersion } from 'functions/timeline/functions/types.js';
-import { exponentialBackoff } from 'helpers.js';
+import { IGDocVersion } from '../functions/timeline/functions/types.js';
+import { exponentialBackoff } from '../helpers.js';
 import { AxiosRequestConfig } from 'axios';
 
 type GoogleDocVersion = drive_v3.Schema$Revision;

@@ -6,7 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { AuthHeaders } from '../functions/openai/helpers.js';
 import { DocData } from '../types.js';
-import { IGDocVersion } from 'functions/timeline/functions/types.js';
+import { IGDocVersion } from '../functions/timeline/functions/types.js';
 
 export abstract class DocService<T> {
   abstract authHeaders: AuthHeaders;
