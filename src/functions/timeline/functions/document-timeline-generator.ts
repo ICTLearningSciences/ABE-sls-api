@@ -30,6 +30,7 @@ import {
   AvailableAiServices,
 } from '../../../ai_services/ai-service-factory.js';
 import { KeyframeGenerator } from './keyframe-generator.js';
+import { DocService } from '../../../doc_services/abstract-doc-service.js';
 
 export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,
@@ -156,8 +157,8 @@ export const NUM_GENERATED_PER_REQUEST = 5;
 
 export async function createSlices(
   versions: IGDocVersion[],
-  externalGoogleDocRevisions: drive_v3.Schema$Revision[],
-  googleAccessToken: string
+  externalDocVersions: any[],
+  docService: DocService<any>
 ): Promise<TimelineSlice[]> {
   const slices: TimelineSlice[] = [];
   let currentSlice: IGDocVersion[] = [];
@@ -199,8 +200,8 @@ export async function createSlices(
   const googleDocSlicesOutsideOfSessions =
     await collectGoogleDocSlicesOutsideOfSessions(
       slices,
-      externalGoogleDocRevisions,
-      googleAccessToken
+      externalDocVersions,
+      docService
     );
   return sortTimelineSlices([...slices, ...googleDocSlicesOutsideOfSessions]);
 }
@@ -232,7 +233,6 @@ export class DocumentTimelineGenerator {
       }
       const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
       if (!previousTimelinePoint) {
-        console.log('Change Summary: first version');
         timelinePoint.changeSummary = await changeSummaryPromptRequest(
           '',
           timelinePoint.version.plainText,
@@ -244,10 +244,8 @@ export class DocumentTimelineGenerator {
           previousTimelinePoint?.version.plainText ===
           timelinePoint.version.plainText
         ) {
-          console.log('Change Summary: no changes from previous version');
           timelinePoint.changeSummary = 'No changes from previous version';
         } else {
-          console.log('Change Summary: making request to openai');
           timelinePoint.changeSummary = await changeSummaryPromptRequest(
             previousTimelinePoint.version.plainText,
             timelinePoint.version.plainText,
@@ -324,14 +322,14 @@ export class DocumentTimelineGenerator {
     jobId: string,
     userId: string,
     docId: string,
-    externalGoogleDocRevisions: drive_v3.Schema$Revision[],
-    googleAccessToken: string
+    externalDocVersions: any[],
+    docService: DocService<any>
   ): Promise<GQLDocumentTimeline> {
     const docVersions = await fetchGoogleDocVersion(docId);
     const docTimelineSlices = await createSlices(
       docVersions,
-      externalGoogleDocRevisions,
-      googleAccessToken
+      externalDocVersions,
+      docService
     );
     let timelinePoints: GQLTimelinePoint[] = docTimelineSlices.map((slice) => {
       const type = slice.startReason;

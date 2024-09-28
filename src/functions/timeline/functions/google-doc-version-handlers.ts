@@ -4,38 +4,12 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { drive_v3 } from 'googleapis';
-import {
-  GoogleDocVersion,
-  convertGoogleDocRevisions,
-} from '../../../hooks/google_api.js';
 import { IGDocVersion, TimelineSlice, TimelinePointType } from './types.js';
+import { DocService } from 'doc_services/abstract-doc-service.js';
 
 interface VersionBoundaries {
   startOfNewSlice: IGDocVersion;
   endOfLastSlice: IGDocVersion;
-}
-
-function convertGoogleDocVersionToIGdocVersion(
-  googleDocVersion: GoogleDocVersion,
-  lastRealVersion: IGDocVersion
-): IGDocVersion {
-  return {
-    docId: googleDocVersion.id,
-    plainText: googleDocVersion.rawText,
-    lastChangedId: '',
-    documentIntention: lastRealVersion.documentIntention,
-    dayIntention: lastRealVersion.dayIntention,
-    sessionId: '',
-    chatLog: [],
-    activity: '',
-    intent: '',
-    title: lastRealVersion.title,
-    lastModifyingUser: '',
-    modifiedTime: googleDocVersion.modifiedTime,
-    createdAt: googleDocVersion.modifiedTime,
-    updatedAt: googleDocVersion.modifiedTime,
-  };
 }
 
 /**
@@ -47,8 +21,8 @@ function convertGoogleDocVersionToIGdocVersion(
  */
 export async function collectGoogleDocSlicesOutsideOfSessions(
   currentSlices: TimelineSlice[],
-  externalGoogleDocRevisions: drive_v3.Schema$Revision[],
-  googleApiAccessToken: string
+  externalDocVersions: any[],
+  docService: DocService<any>
 ): Promise<TimelineSlice[]> {
   if (!currentSlices.length) {
     console.log('No current slices');
@@ -59,32 +33,28 @@ export async function collectGoogleDocSlicesOutsideOfSessions(
   // First, get edits made in google doc after the last slice (modified outside of ABE and didn't come back)
   const lastSlice = currentSlices[currentSlices.length - 1];
   const lastSliceEndVersion = lastSlice.versions[lastSlice.versions.length - 1];
-  const externalGoogleDocRevisionsAfterLastSlice =
-    externalGoogleDocRevisions.filter((externalRevision) => {
-      if (!externalRevision.modifiedTime) {
+  const externalDocVersionsAfterLastSlice = externalDocVersions.filter(
+    (externalDocVersion) => {
+      if (!externalDocVersion.modifiedTime) {
         console.error('No modified time found for google doc revision');
         return false;
       }
-      const modifiedTime = new Date(externalRevision.modifiedTime).getTime();
+      const modifiedTime = new Date(externalDocVersion.modifiedTime).getTime();
       const lastSliceEndVersionTime = new Date(
         lastSliceEndVersion.createdAt
       ).getTime();
       return modifiedTime > lastSliceEndVersionTime;
-    });
-  if (externalGoogleDocRevisionsAfterLastSlice.length > 0) {
-    const googleDocVersions: GoogleDocVersion[] =
-      await convertGoogleDocRevisions(
-        externalGoogleDocRevisionsAfterLastSlice,
-        googleApiAccessToken
+    }
+  );
+  if (externalDocVersionsAfterLastSlice.length > 0) {
+    const docVersions: IGDocVersion[] =
+      await docService.convertExternalDocVersionsToIGDocVersion(
+        externalDocVersionsAfterLastSlice,
+        lastSliceEndVersion
       );
     newSlices.push({
       startReason: TimelinePointType.EDITED_OUTSIDE_OF_ABE,
-      versions: googleDocVersions.map((version) => {
-        return convertGoogleDocVersionToIGdocVersion(
-          version,
-          lastSliceEndVersion
-        );
-      }),
+      versions: docVersions,
     });
   }
 
@@ -105,7 +75,7 @@ export async function collectGoogleDocSlicesOutsideOfSessions(
   }
   // collect google doc versions between the timestamps, and create slices out of them
   for (const versionBoundary of versionBoundaries) {
-    const externalRevisionsWithintimestamp = externalGoogleDocRevisions.filter(
+    const externalRevisionsWithintimestamp = externalDocVersions.filter(
       (externalRevision) => {
         if (!externalRevision.modifiedTime) {
           console.error('No modified time found for google doc revision');
@@ -125,19 +95,14 @@ export async function collectGoogleDocSlicesOutsideOfSessions(
       }
     );
     if (externalRevisionsWithintimestamp.length > 0) {
-      const googleDocVersionsWithinTimestamps: GoogleDocVersion[] =
-        await convertGoogleDocRevisions(
+      const googleDocVersionsWithinTimestamps: IGDocVersion[] =
+        await docService.convertExternalDocVersionsToIGDocVersion(
           externalRevisionsWithintimestamp,
-          googleApiAccessToken
+          versionBoundary.endOfLastSlice
         );
       newSlices.push({
         startReason: TimelinePointType.EDITED_OUTSIDE_OF_ABE,
-        versions: googleDocVersionsWithinTimestamps.map((version) => {
-          return convertGoogleDocVersionToIGdocVersion(
-            version,
-            versionBoundary.endOfLastSlice
-          );
-        }),
+        versions: googleDocVersionsWithinTimestamps,
       });
     }
   }

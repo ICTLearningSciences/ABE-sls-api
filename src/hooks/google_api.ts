@@ -13,7 +13,6 @@ export interface GoogleDocVersion {
   id: string;
   modifiedTime: string;
   rawText: string;
-  exportLinks: any;
 }
 
 export async function convertGoogleDocRevisions(

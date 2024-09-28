@@ -9,8 +9,15 @@ import { DocService } from './abstract-doc-service.js';
 import { getDocData as _getDocData } from '../api.js';
 import { AuthHeaders } from '../functions/openai/helpers.js';
 import { fetchMostRecentVersion } from '../hooks/graphql_api.js';
+import { IGDocVersion } from '../functions/timeline/functions/types.js';
 
-export class MicrosoftDocService extends DocService {
+type MicrosoftDocVersion = {
+  id: string;
+  modifiedTime: string;
+  rawText: string; // Might not be available
+};
+
+export class MicrosoftDocService extends DocService<MicrosoftDocVersion> {
   authHeaders: AuthHeaders;
   private static instance: MicrosoftDocService;
 
@@ -30,10 +37,25 @@ export class MicrosoftDocService extends DocService {
     });
   }
 
-  static getInstance(authHeaders: AuthHeaders): DocService {
+  static getInstance(
+    authHeaders: AuthHeaders
+  ): DocService<MicrosoftDocVersion> {
     if (!MicrosoftDocService.instance) {
       MicrosoftDocService.instance = new MicrosoftDocService(authHeaders);
     }
     return MicrosoftDocService.instance;
+  }
+
+  fetchExternalDocVersion(docId: string): Promise<MicrosoftDocVersion[]> {
+    // TODO: implement
+    return Promise.resolve([]);
+  }
+
+  convertExternalDocVersionsToIGDocVersion(
+    externalDocVersion: MicrosoftDocVersion[],
+    lastRealVersion: IGDocVersion
+  ): Promise<IGDocVersion[]> {
+    // TODO: implement
+    return Promise.resolve([]);
   }
 }
