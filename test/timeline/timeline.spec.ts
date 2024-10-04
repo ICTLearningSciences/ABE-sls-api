@@ -7,9 +7,12 @@ import { externalGoogleDocRevisionGenerator, gqlDocVersionGenerator, isoStringMi
 import { docTimeline } from "../fixtures/documents/2-sessions-inbetween-outside-ABE/doc-timeline.js";
 import {ddbMock} from "../init.spec.js";
 import { UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { AiAsyncJobStatus, DefaultGptModels } from "../../src/types.js";
+import { AiAsyncJobStatus, DefaultGptModels, DocServices } from "../../src/types.js";
 import {AvailableAiServiceNames} from '../../src/ai_services/ai-service-factory.js'
-
+import {DocServiceFactory} from '../../src/doc_services/doc-service-factory.js'
+import sinon from "sinon";
+import { GoogleDocService } from "../../src/doc_services/google-doc-services.js";
+import { useWithGoogleApi } from "../../src/hooks/google_api.js";
 describe("Document Timeline Unit Tests", () => {
   beforeEach(() => {
     mockDefault()
@@ -27,7 +30,17 @@ describe("Document Timeline Unit Tests", () => {
           {modifiedTime: isoStringMinsFromNow(3)}
         ]
       )
-      const res = await createSlices(gdocVersions, externalGoogleDocRevisions, "fake-key")
+      const googleDocService = new GoogleDocService({} as any);
+      const mockGetGoogleAPIs = sinon.stub().resolves({
+        drive: {} as any,
+        docs: {} as any,
+        accessToken: 'fake-access-token'
+      });
+      googleDocService.useWithGoogleApi = {
+        ...useWithGoogleApi(),
+        getGoogleAPIs: mockGetGoogleAPIs
+      };
+      const res = await createSlices(gdocVersions, externalGoogleDocRevisions, googleDocService)
       assert.equal(res.length, 3);
       assert.equal(res[0].startReason, TimelinePointType.START);
       assert.equal(res[1].startReason, TimelinePointType.NEW_ACTIVITY);
@@ -43,9 +56,18 @@ describe("Document Timeline Unit Tests", () => {
           [
             {modifiedTime: isoStringMinsFromNow(1)}
           ]
-        )
-      
-      const res = await createSlices(gdocVersions, externalGoogleDocRevisions, "fake-key")
+        ) 
+        const googleDocService = new GoogleDocService({} as any);
+        const mockGetGoogleAPIs = sinon.stub().resolves({
+          drive: {} as any,
+          docs: {} as any,
+          accessToken: 'fake-access-token'
+        });
+        googleDocService.useWithGoogleApi = {
+          ...useWithGoogleApi(),
+          getGoogleAPIs: mockGetGoogleAPIs
+        };
+      const res = await createSlices(gdocVersions, externalGoogleDocRevisions, googleDocService)
       assert.equal(res.length, 3);
       const lastVersionText = res[0].versions[res[0].versions.length - 1].plainText;
       const startVersionText = res[2].versions[0].plainText;
@@ -75,8 +97,9 @@ describe("Document Timeline Unit Tests", () => {
         serviceName:AvailableAiServiceNames.OPEN_AI,
         model: DefaultGptModels.OPEN_AI_GPT_3_5
       })
+      const externalDocService = DocServiceFactory.getDocService(DocServices.GOOGLE_DOCS, {})
 
-      const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
+      const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], externalDocService)
 
       assert.equal(openAiNocScope.isDone(), false); // no openAi calls should have occured since we utilize existing timeline
       assert.equal(res.timelinePoints.length, docTimeline.timelinePoints.length);
@@ -121,7 +144,8 @@ describe("Document Timeline Unit Tests", () => {
         serviceName:AvailableAiServiceNames.OPEN_AI,
         model: DefaultGptModels.OPEN_AI_GPT_3_5
       })
-      const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
+      const externalDocService = DocServiceFactory.getDocService(DocServices.GOOGLE_DOCS, {})
+      const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], externalDocService)
       assert.equal(openAiChangeSummaryNock.isDone(), true);
       assert.equal(reverseOutlineNock.isDone(), true);
       assert.equal(res.timelinePoints[0].changeSummary, defaultChangeSummaryRes);
@@ -186,8 +210,8 @@ describe("Document Timeline Unit Tests", () => {
         serviceName:AvailableAiServiceNames.OPEN_AI,
         model: DefaultGptModels.OPEN_AI_GPT_3_5
       })
-
-      await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
+      const externalDocService = DocServiceFactory.getDocService(DocServices.GOOGLE_DOCS, {})
+      await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], externalDocService)
       assert.equal(openAiChangeSummaryNock.isDone(), true);
       assert.equal(reverseOutlineNock.isDone(), true);
       assert.equal(storeDocTimelineNoc.isDone(), true);
