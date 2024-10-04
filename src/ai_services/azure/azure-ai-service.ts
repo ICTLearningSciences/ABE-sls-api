@@ -8,6 +8,7 @@ import { AiService } from '../../ai_services/abstract-classes/abstract-ai-servic
 import {
   AiRequestContext,
   DefaultGptModels,
+  PromptOutputTypes,
   PromptRoles,
 } from '../../types.js';
 import {
@@ -179,6 +180,13 @@ export class AzureOpenAiService extends AiService<
       request.messages.push({
         role: PromptRoles.SYSTEM,
         content: `Please format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`,
+      });
+    }
+
+    if (aiStep.outputDataType === PromptOutputTypes.JSON) {
+      request.messages.push({
+        role: PromptRoles.SYSTEM,
+        content: `\n\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA`,
       });
     }
 

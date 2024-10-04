@@ -140,6 +140,13 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
       });
     }
 
+    if (aiStep.outputDataType === PromptOutputTypes.JSON) {
+      request.messages.push({
+        role: PromptRoles.SYSTEM,
+        content: `\n\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA`,
+      });
+    }
+
     if (previousOutput) {
       request.messages.push({
         role: PromptRoles.SYSTEM,

@@ -14,6 +14,12 @@ import nock from "nock";
 import { textOpenAiResponse } from "./fixtures/documents/open-ai-responses.js";
 import { ReverseOutline } from "../src/functions/timeline/functions/reverse-outline.js";
 
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 export function fixturePath(p: string): string {
   return path.join(__dirname, "fixtures", p);
 }
