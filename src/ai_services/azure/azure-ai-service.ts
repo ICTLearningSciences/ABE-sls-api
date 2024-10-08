@@ -223,6 +223,11 @@ export class AzureOpenAiService extends AiService<
       aiStepData: {
         aiServiceRequestParams: azureAiRequestContext,
         aiServiceResponse: choices,
+        tokenUsage: {
+          promptUsage: choices.usage?.promptTokens || -1,
+          completionUsage: choices.usage?.completionTokens || -1,
+          totalUsage: choices.usage?.totalTokens || -1,
+        },
       },
       answer: answer,
     };

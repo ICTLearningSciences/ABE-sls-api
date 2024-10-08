@@ -186,6 +186,11 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
       aiStepData: {
         aiServiceRequestParams: params,
         aiServiceResponse: chatCompleteResponse.choices,
+        tokenUsage: {
+          promptUsage: chatCompleteResponse.usage?.prompt_tokens || -1,
+          completionUsage: chatCompleteResponse.usage?.completion_tokens || -1,
+          totalUsage: chatCompleteResponse.usage?.total_tokens || -1,
+        },
       },
       answer: answer,
     };

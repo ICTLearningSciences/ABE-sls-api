@@ -242,6 +242,11 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
       aiStepData: {
         aiServiceRequestParams: requestData,
         aiServiceResponse: this.convertGeminiResToJson(aiResponse),
+        tokenUsage: {
+          promptUsage: aiResponse.usageMetadata?.promptTokenCount || -1,
+          completionUsage: aiResponse.usageMetadata?.candidatesTokenCount || -1,
+          totalUsage: aiResponse.usageMetadata?.totalTokenCount || -1,
+        },
       },
       answer: answer,
     };
