@@ -30,7 +30,8 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
       console.error('openAiRequestData/jobId not found in dynamo db record');
       continue;
     }
-    const { docsId, userId, aiPromptSteps, authHeaders } = openAiRequestData;
+    const { docsId, userId, aiPromptSteps, authHeaders, docService } =
+      openAiRequestData;
     const aiServiceHandler = new AiServiceHandler();
     const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
     try {
@@ -38,7 +39,8 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         aiPromptSteps,
         docsId,
         userId,
-        authHeaders
+        authHeaders,
+        docService
       );
       // Update the job in dynamo db
       const tableRequest: UpdateItemCommandInput = {

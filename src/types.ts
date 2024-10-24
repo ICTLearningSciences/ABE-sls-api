@@ -73,3 +73,8 @@ export enum AiAsyncJobStatus {
   COMPLETE = 'COMPLETE',
   FAILED = 'FAILED',
 }
+
+export enum DocServices {
+  GOOGLE_DOCS = 'GOOGLE_DOCS',
+  MICROSOFT_WORD = 'MICROSOFT_WORD',
+}
