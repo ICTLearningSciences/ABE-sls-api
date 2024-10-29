@@ -5,7 +5,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import jwt from 'jsonwebtoken';
-import requireEnv from '../helpers.js';
+import requireEnv, { extractErrorMessageFromError } from '../helpers.js';
 import Sentry, { wrapHandler } from '../sentry-helpers.js';
 
 const JWT_SECRET = requireEnv('JWT_SECRET');
@@ -63,6 +63,9 @@ export const handler = wrapHandler(async (event: any) => {
             Resource: '*',
           },
         ],
+      },
+      context: {
+        errorMessage: `Authorization failed: ${extractErrorMessageFromError(err)}`,
       },
     };
   }

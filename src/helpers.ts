@@ -169,3 +169,18 @@ export function validateJsonResponse(response: string, schema: any): boolean {
     return false;
   }
 }
+
+export function isJsonMarkdown(jsonMarkdown: string): boolean {
+  return jsonMarkdown.startsWith('```json\n');
+}
+
+export function convertMarkdownToJsonString(jsonMarkdown: string): string {
+  const trimmedMarkdown = jsonMarkdown.trim();
+  const withoutStart = trimmedMarkdown.startsWith('```json\n')
+    ? trimmedMarkdown.slice(7) // Length of "```json\n"
+    : trimmedMarkdown;
+  const withoutEnd = withoutStart.endsWith('```')
+    ? withoutStart.slice(0, -3) // Length of "```"
+    : withoutStart;
+  return withoutEnd.trim();
+}

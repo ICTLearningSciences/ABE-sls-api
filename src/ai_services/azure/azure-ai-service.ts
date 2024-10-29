@@ -8,6 +8,7 @@ import { AiService } from '../../ai_services/abstract-classes/abstract-ai-servic
 import {
   AiRequestContext,
   DefaultGptModels,
+  PromptOutputTypes,
   PromptRoles,
 } from '../../types.js';
 import {
@@ -182,6 +183,13 @@ export class AzureOpenAiService extends AiService<
       });
     }
 
+    if (aiStep.outputDataType === PromptOutputTypes.JSON) {
+      request.messages.push({
+        role: PromptRoles.SYSTEM,
+        content: `\n\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA`,
+      });
+    }
+
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
 
     if (includeEssay) {
@@ -215,6 +223,11 @@ export class AzureOpenAiService extends AiService<
       aiStepData: {
         aiServiceRequestParams: azureAiRequestContext,
         aiServiceResponse: choices,
+        tokenUsage: {
+          promptUsage: choices.usage?.promptTokens || -1,
+          completionUsage: choices.usage?.completionTokens || -1,
+          totalUsage: choices.usage?.totalTokens || -1,
+        },
       },
       answer: answer,
     };

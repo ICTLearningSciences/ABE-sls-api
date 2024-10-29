@@ -56,11 +56,7 @@ export class AiServiceHandler {
         previousOutput,
       });
       const { aiStepData, answer } = res;
-      allStepsData.push({
-        // TODO: currently shoehorning the typing here, remove the any and determine fix.
-        aiServiceRequestParams: aiStepData.aiServiceRequestParams as any,
-        aiServiceResponse: aiStepData.aiServiceResponse as any,
-      });
+      allStepsData.push(aiStepData);
       previousOutput = answer;
       finalAnswer = answer;
     }
@@ -111,11 +107,7 @@ export class AiServiceHandler {
       previousOutput: '',
     });
     const { aiStepData, answer } = res;
-    allStepsData.push({
-      // TODO: currently shoehorning the typing here, remove the any and determine fix.
-      aiServiceRequestParams: aiStepData.aiServiceRequestParams as any,
-      aiServiceResponse: aiStepData.aiServiceResponse as any,
-    });
+    allStepsData.push(aiStepData);
     return {
       aiAllStepsData: allStepsData,
       answer: answer,
