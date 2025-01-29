@@ -6,16 +6,22 @@ The full terms of this copyright and license should always be found in the root 
 */
 // Note: had to add .js to find this file in serverless
 import { DynamoDBStreamEvent } from 'aws-lambda';
-import { AiAsyncJobStatus, TargetAiModelServiceType } from '../../types.js';
+import {
+  AiAsyncJobStatus,
+  DocServices,
+  TargetAiModelServiceType,
+} from '../../types.js';
 import { useWithGoogleApi } from '../../hooks/google_api.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { updateDynamoJobStatus } from '../../dynamo-helpers.js';
 import { DocumentTimelineGenerator } from './functions/document-timeline-generator.js';
+import { DocServiceFactory } from '../../doc_services/doc-service-factory.js';
 
 interface ExtractedDocumentTimelineRequestData {
   docId: string;
   userId: string;
   targetAiService: TargetAiModelServiceType;
+  docService: DocServices;
 }
 
 // modern module syntax
@@ -37,15 +43,22 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
       continue;
     }
     try {
-      const { docId, userId, targetAiService } = docTimelineRequestData;
-      const { getGoogleAPIs, getGoogleDocVersions } = useWithGoogleApi();
-      const { drive, accessToken: _accessToken } = await getGoogleAPIs();
-      const accessToken = _accessToken || '';
-      const externalGoogleDocRevisions = await getGoogleDocVersions(
-        drive,
-        docId,
-        accessToken
+      const { docId, userId, targetAiService, docService } =
+        docTimelineRequestData;
+      // const { getGoogleAPIs, getGoogleDocVersions } = useWithGoogleApi();
+      // const { drive, accessToken: _accessToken } = await getGoogleAPIs();
+      const docServiceInstance = DocServiceFactory.getDocService(
+        docService,
+        {}
       );
+      const externalGoogleDocRevisions =
+        await docServiceInstance.fetchExternalDocVersion(docId);
+      // const accessToken = _accessToken || '';
+      // const externalGoogleDocRevisions = await getGoogleDocVersions(
+      //   drive,
+      //   docId,
+      //   accessToken
+      // );
       const docTimelineGenerator = new DocumentTimelineGenerator(
         targetAiService
       );
@@ -54,7 +67,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         userId,
         docId,
         externalGoogleDocRevisions,
-        accessToken
+        docServiceInstance
       );
     } catch (err) {
       await updateDynamoJobStatus(jobId, AiAsyncJobStatus.FAILED);

@@ -17,7 +17,7 @@ const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
-  const { docsId, userId, aiPromptSteps, authHeaders } =
+  const { docsId, userId, aiPromptSteps, authHeaders, docService } =
     extractOpenAiRequestData(event);
   // Queue the job
   const newUuid = uuid();
@@ -44,6 +44,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
           userId,
           aiPromptSteps,
           authHeaders,
+          docService,
         }),
       },
     },

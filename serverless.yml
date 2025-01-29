@@ -7,8 +7,12 @@ frameworkVersion: "3"
 plugins:
   - serverless-plugin-typescript
   - serverless-domain-manager
+  - serverless-prune-plugin
 
 custom:
+  prune:
+    automatic: true
+    number: 10
   domain:
     dev: api-dev.abewriting.org
     qa: api-qa.abewriting.org
@@ -166,12 +170,13 @@ functions:
     timeout: 20
     events:
       - http:
-          path: /get_doc_data/{docs_id}
+          path: /get_doc_data/{docs_id}/{doc_service}
           method: get
           request:
             parameters:
               paths:
                 docs_id: true
+                doc_service: true
           cors:
             origin: '*'
           authorizer:

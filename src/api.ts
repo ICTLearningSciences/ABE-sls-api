@@ -10,7 +10,7 @@ import axios, {
   AxiosResponse,
   AxiosInstance,
 } from 'axios';
-import { DocData } from './types.js';
+import { DocData, DocServices } from './types.js';
 import { AuthHeaders } from './functions/openai/helpers.js';
 
 const GOOGLE_API_ENDPOINT = process.env.GOOGLE_API_ENDPOINT || '';
@@ -118,14 +118,15 @@ function getDataFromAxiosResponse(res: AxiosResponse, path: string | string[]) {
 
 export async function getDocData(
   docId: string,
-  authHeaders: AuthHeaders
+  authHeaders: AuthHeaders,
+  docService: DocServices
 ): Promise<DocData> {
   const headers = {
     [SECRET_HEADER_NAME]: SECRET_HEADER_VALUE,
     ...authHeaders,
   };
   const res = await axios.get<DocData>(
-    `${GOOGLE_API_ENDPOINT}/get_doc_data/${docId}`,
+    `${GOOGLE_API_ENDPOINT}/get_doc_data/${docId}/${docService}`,
     {
       headers: headers,
     }

@@ -5,8 +5,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { MAX_OPEN_AI_CHAIN_REQUESTS } from '../constants.js';
-import { getDocData } from '../api.js';
-import { AiPromptStep } from '../types.js';
+import { AiPromptStep, DocServices } from '../types.js';
 import { storePromptRun } from './graphql_api.js';
 import { AuthHeaders } from '../functions/openai/helpers.js';
 import {
@@ -15,7 +14,8 @@ import {
   AiServiceStepDataTypes,
   AvailableAiServiceNames,
 } from '../ai_services/ai-service-factory.js';
-import { GenericLlmRequest } from 'functions/generic_llm_request/helpers.js';
+import { GenericLlmRequest } from '../functions/generic_llm_request/helpers.js';
+import { DocServiceFactory } from '../doc_services/doc-service-factory.js';
 
 export class AiServiceHandler {
   constructor() {}
@@ -28,7 +28,8 @@ export class AiServiceHandler {
     aiSteps: AiPromptStep[],
     docsId: string,
     userId: string,
-    authHeaders: AuthHeaders
+    authHeaders: AuthHeaders,
+    targetDocService: DocServices
   ): Promise<AiServiceFinalResponseType> {
     if (aiSteps.length >= MAX_OPEN_AI_CHAIN_REQUESTS) {
       throw new Error(
@@ -36,8 +37,12 @@ export class AiServiceHandler {
       );
     }
     let finalAnswer = '';
+    const docHandler = DocServiceFactory.getDocService(
+      targetDocService,
+      authHeaders
+    );
     const allStepsData: AiServiceStepDataTypes[] = [];
-    const docsContent = await getDocData(docsId, authHeaders);
+    const docsContent = await docHandler.getDocData(docsId);
     const docsPlainText = docsContent.plainText;
     let previousOutput = '';
     for (let i = 0; i < aiSteps.length; i++) {
