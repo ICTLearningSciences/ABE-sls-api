@@ -39,8 +39,8 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const { docId, webViewLink, createdTime } = await createGoogleDoc(
     drive,
     [...adminEmails, ...userEmails],
-    copyFromDocId,
-    newDocTitle
+    copyFromDocId || '',
+    newDocTitle || ''
   );
   await storeGoogleDoc(docId, userId, isAdminDoc === 'true', newDocTitle);
   return createResponseJson(200, {

@@ -16,7 +16,7 @@ import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
 
 // modern module syntax
 export const handler = async (event: APIGatewayEvent) => {
-  const { docsId, userId, aiPromptSteps, authHeaders } =
+  const { docsId, userId, aiPromptSteps, authHeaders, docService } =
     extractOpenAiRequestData(event);
   const aiServiceHandler = new AiServiceHandler();
   try {
@@ -24,7 +24,8 @@ export const handler = async (event: APIGatewayEvent) => {
       aiPromptSteps,
       docsId,
       userId,
-      authHeaders
+      authHeaders,
+      docService
     );
     return createResponseJson(200, { response: aiServiceResponse });
   } catch (err) {
