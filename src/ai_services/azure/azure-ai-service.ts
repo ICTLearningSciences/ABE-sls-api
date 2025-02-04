@@ -176,10 +176,7 @@ export class AzureOpenAiService extends AiService<
       });
     }
 
-    if (
-      aiStep.outputDataType === PromptOutputTypes.TEXT &&
-      aiStep.responseFormat
-    ) {
+    if (aiStep.responseFormat) {
       request.messages.push({
         role: PromptRoles.SYSTEM,
         content: `Please format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`,
