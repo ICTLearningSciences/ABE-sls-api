@@ -8,12 +8,12 @@ import { drive_v3 } from 'googleapis';
 import { DocData } from '../types.js';
 import { DocService } from './abstract-doc-service.js';
 import { getDocData as _getDocData } from '../api.js';
-import { AuthHeaders } from '../functions/openai/helpers.js';
+import { AuthHeaders } from '../aws_functions/openai/helpers.js';
 import {
   UseWithGoogleApi,
   useWithGoogleApi as _useWithGoogleApi,
 } from '../hooks/google_api.js';
-import { IGDocVersion } from '../functions/timeline/functions/types.js';
+import { IGDocVersion } from '../aws_functions/timeline/functions/types.js';
 import { exponentialBackoff } from '../helpers.js';
 import { AxiosRequestConfig } from 'axios';
 

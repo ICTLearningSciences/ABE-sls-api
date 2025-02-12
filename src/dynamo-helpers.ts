@@ -5,7 +5,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
-import { GQLDocumentTimeline } from './functions/timeline/functions/types.js';
+import { GQLDocumentTimeline } from './aws_functions/timeline/functions/types.js';
 import requireEnv from './helpers.js';
 import { AiAsyncJobStatus } from './types.js';
 

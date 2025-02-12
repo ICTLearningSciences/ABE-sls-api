@@ -75,6 +75,8 @@ package:
       - '!./node_modules/aws-sdk/**'
       - '!./node_modules/@aws-sdk/**'
       - '!./node_modules/@types/**'
+      - '!./node_modules/@azure/**'
+      - '!./node_modules/azure-functions-core-tools'
 
 provider:
   name: aws
@@ -125,11 +127,11 @@ provider:
 
 functions:
   authorizer_func:
-    handler: src/functions/authorizer.handler
+    handler: src/aws_functions/authorizer.handler
     environment:
       JWT_SECRET: ${self:custom.stages.${self:provider.stage}.JWT_SECRET}
   create_google_doc:
-    handler: src/functions/create_google_doc.handler
+    handler: src/aws_functions/create_google_doc.handler
     timeout: 20
     events:
       - http:
@@ -148,7 +150,7 @@ functions:
             identitySource: method.request.header.Authorization
             type: token
   get_doc_revisions:
-    handler: src/functions/get_doc_revisions.handler
+    handler: src/aws_functions/get_doc_revisions.handler
     timeout: 20
     events:
       - http:
@@ -166,7 +168,7 @@ functions:
             identitySource: method.request.header.Authorization
             type: token
   get_doc_data:
-    handler: src/functions/get_doc_data.handler
+    handler: src/aws_functions/get_doc_data.handler
     timeout: 20
     events:
       - http:
@@ -185,7 +187,7 @@ functions:
             identitySource: method.request.header.Authorization
             type: token
   google_doc_text_modify:
-    handler: src/functions/google_doc_text_modify.handler
+    handler: src/aws_functions/google_doc_text_modify.handler
     timeout: 20
     events:
       - http:
@@ -205,7 +207,7 @@ functions:
             identitySource: method.request.header.Authorization
             type: token
   open_ai_doc_question:
-    handler: src/functions/openai/open_ai.handler
+    handler: src/aws_functions/openai/open_ai.handler
     timeout: 30
     events:
       - http:
@@ -223,7 +225,7 @@ functions:
             identitySource: method.request.header.Authorization
             type: token
   open_ai_async_request:
-    handler: src/functions/openai/async_open_ai_request.handler
+    handler: src/aws_functions/openai/async_open_ai_request.handler
     timeout: 30
     environment:
       JOBS_TABLE_NAME: open-ai-jobs-${self:provider.stage}
@@ -244,7 +246,7 @@ functions:
             type: token
   open_ai_async_process:
     description: Triggered by new records in dynamo, implements async processing of openai requests
-    handler: src/functions/openai/async_open_ai_process.handler
+    handler: src/aws_functions/openai/async_open_ai_process.handler
     memorySize: 2048
     timeout: 900 # max
     environment:
@@ -259,7 +261,7 @@ functions:
           filterPatterns:
             - eventName: [INSERT]
   open_ai_async_status:
-    handler: src/functions/openai/async_open_ai_job_status.handler
+    handler: src/aws_functions/openai/async_open_ai_job_status.handler
     timeout: 30
     environment:
       JOBS_TABLE_NAME: open-ai-jobs-${self:provider.stage}
@@ -279,7 +281,7 @@ functions:
             identitySource: method.request.header.Authorization
             type: token
   async_document_timeline_request:
-    handler: src/functions/timeline/async_document_timeline_request.handler
+    handler: src/aws_functions/timeline/async_document_timeline_request.handler
     timeout: 30
     environment:
       JOBS_TABLE_NAME: document-timeline-jobs-${self:provider.stage}
@@ -301,7 +303,7 @@ functions:
             type: token
   async_document_timeline_process:
     description: Triggered by new records in dynamo, implements async processing of document timeline requests
-    handler: src/functions/timeline/async_document_timeline_process.handler
+    handler: src/aws_functions/timeline/async_document_timeline_process.handler
     memorySize: 2048
     timeout: 900 # max
     environment:
@@ -316,7 +318,7 @@ functions:
           filterPatterns:
             - eventName: [INSERT]
   async_document_timeline_status:
-    handler: src/functions/timeline/async_document_timeline_status.handler
+    handler: src/aws_functions/timeline/async_document_timeline_status.handler
     timeout: 30
     environment:
       JOBS_TABLE_NAME: document-timeline-jobs-${self:provider.stage}
@@ -336,7 +338,7 @@ functions:
             identitySource: method.request.header.Authorization
             type: token
   generic_llm_request:
-    handler: src/functions/generic_llm_request/generic_request.handler
+    handler: src/aws_functions/generic_llm_request/generic_request.handler
     timeout: 30
     environment:
       JOBS_TABLE_NAME: generic-llm-request-${self:provider.stage}
@@ -348,7 +350,7 @@ functions:
             origin: '*'
   generic_llm_process:
     description: Triggered by new records in dynamo, implements async processing of generic llm requests
-    handler: src/functions/generic_llm_request/generic_request_process.handler
+    handler: src/aws_functions/generic_llm_request/generic_request_process.handler
     memorySize: 2048
     timeout: 900 # max
     environment:
@@ -363,7 +365,7 @@ functions:
           filterPatterns:
             - eventName: [INSERT]
   generic_llm_status:
-    handler: src/functions/generic_llm_request/generic_request_status.handler
+    handler: src/aws_functions/generic_llm_request/generic_request_status.handler
     timeout: 30
     environment:
       JOBS_TABLE_NAME: generic-llm-request-${self:provider.stage}

@@ -1,0 +1,3 @@
+Important Notes:
+- Environment Variables are set in terraform under the Azure Function App resource.
+

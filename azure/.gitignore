@@ -1,17 +1,3 @@
-# package directories
-node_modules
-jspm_packages
-
-# Serverless directories
-.serverless
-.build
-
-/src/.env
-google_service_creds.json
-credentials.json
-
-
-# Azure Functions
 bin
 obj
 csx
