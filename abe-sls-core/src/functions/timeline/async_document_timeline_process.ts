@@ -13,10 +13,10 @@ import {
 } from '../../types.js';
 import { useWithGoogleApi } from '../../hooks/google_api.js';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { updateDynamoJobStatus } from '../../dynamo-helpers.js';
 import { DocumentTimelineGenerator } from './functions/document-timeline-generator.js';
 import { DocServiceFactory } from '../../doc_services/doc-service-factory.js';
-
+import { getCloudService } from '../../helpers.js';
+import { getDocumentDBManager } from '../../cloud_services/generic_classes/document_db_manager.js';
 interface ExtractedDocumentTimelineRequestData {
   docId: string;
   userId: string;
@@ -29,6 +29,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
   const records = event.Records.filter(
     (record) => record.eventName === 'INSERT' && record.dynamodb?.NewImage
   );
+  const documentDBManager = getDocumentDBManager();
   for (let record of records) {
     const newImage = record.dynamodb?.NewImage;
     const requestData = newImage?.timelineRequestData.S;
@@ -45,20 +46,12 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
     try {
       const { docId, userId, targetAiService, docService } =
         docTimelineRequestData;
-      // const { getGoogleAPIs, getGoogleDocVersions } = useWithGoogleApi();
-      // const { drive, accessToken: _accessToken } = await getGoogleAPIs();
       const docServiceInstance = DocServiceFactory.getDocService(
         docService,
         {}
       );
       const externalGoogleDocRevisions =
         await docServiceInstance.fetchExternalDocVersion(docId);
-      // const accessToken = _accessToken || '';
-      // const externalGoogleDocRevisions = await getGoogleDocVersions(
-      //   drive,
-      //   docId,
-      //   accessToken
-      // );
       const docTimelineGenerator = new DocumentTimelineGenerator(
         targetAiService
       );
@@ -70,7 +63,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         docServiceInstance
       );
     } catch (err) {
-      await updateDynamoJobStatus(jobId, AiAsyncJobStatus.FAILED);
+      await documentDBManager.updateJobStatus(jobId, AiAsyncJobStatus.FAILED);
       throw err;
     }
   }

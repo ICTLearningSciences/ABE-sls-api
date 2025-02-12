@@ -7,9 +7,11 @@ The full terms of this copyright and license should always be found in the root 
 import dotenv from "dotenv";
 import { fixturePath } from "./helpers.js";
 import { before, after } from "mocha";
-import {dynamoDbClient} from "../src/dynamo-helpers.js";
 import { mockClient } from "aws-sdk-client-mock";
 import nock from "nock";
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
+
+export const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
 
 export const ddbMock = mockClient(dynamoDbClient)
 

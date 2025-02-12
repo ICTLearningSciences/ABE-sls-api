@@ -96,6 +96,7 @@ provider:
     SECRET_HEADER_VALUE: ${self:custom.stages.${self:provider.stage}.SECRET_HEADER_VALUE}
     SENTRY_DSN: ${ssm:/ABE/sentry_dsn_sls_api, ''}
     STAGE: ${self:provider.stage}
+    CLOUD_SERVICE: "aws"
 
   # iam permissions for all lambda functions
   iam:

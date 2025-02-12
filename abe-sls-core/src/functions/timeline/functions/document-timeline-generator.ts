@@ -18,11 +18,9 @@ import {
   TimelineSlice,
 } from './types.js';
 import { collectGoogleDocSlicesOutsideOfSessions } from './google-doc-version-handlers.js';
-import { drive_v3 } from 'googleapis';
 import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import { changeSummaryPromptRequest } from './change-summary.js';
 import Sentry from '../../../sentry-helpers.js';
-import { storeDoctimelineDynamoDB } from '../../../dynamo-helpers.js';
 import { AiAsyncJobStatus, TargetAiModelServiceType } from '../../../types.js';
 import {
   AiServiceFactory,
@@ -31,6 +29,7 @@ import {
 } from '../../../ai_services/ai-service-factory.js';
 import { KeyframeGenerator } from './keyframe-generator.js';
 import { DocService } from '../../../doc_services/abstract-doc-service.js';
+import { getDocumentDBManager } from '../../../cloud_services/generic_classes/document_db_manager.js';
 
 export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,
@@ -325,6 +324,7 @@ export class DocumentTimelineGenerator {
     externalDocVersions: any[],
     docService: DocService<any>
   ): Promise<GQLDocumentTimeline> {
+    const documentDBManager = getDocumentDBManager();
     const docVersions = await fetchGoogleDocVersion(docId);
     const docTimelineSlices = await createSlices(
       docVersions,
@@ -387,8 +387,8 @@ export class DocumentTimelineGenerator {
           user: userId,
           timelinePoints: sortDocumentTimelinePoints(timelinePoints),
         };
-        await storeDoctimelineDynamoDB(
-          jobId,
+        await documentDBManager.storeDoctimeline(
+          jobId,  
           documentTimeline,
           AiAsyncJobStatus.IN_PROGRESS
         );
@@ -399,7 +399,7 @@ export class DocumentTimelineGenerator {
       user: userId,
       timelinePoints: sortDocumentTimelinePoints(timelinePoints),
     };
-    await storeDoctimelineDynamoDB(
+    await documentDBManager.storeDoctimeline(
       jobId,
       documentTimeline,
       AiAsyncJobStatus.COMPLETE

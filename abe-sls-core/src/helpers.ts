@@ -9,6 +9,7 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import Sentry from './sentry-helpers.js';
 import Validator from 'jsonschema';
 import { diffWords } from 'diff';
+import { CloudServices } from 'cloud_services/generic_classes/types.js';
 
 export function numWordsInString(text: string): number {
   return text.trim().split(' ').length;
@@ -93,6 +94,18 @@ export default function requireEnv(name: string): string {
   throw new Error(
     `required env variable '${name}' is not defined. Make sure .env file exists in root and has ${name} set`
   );
+}
+
+export function getCloudService(): CloudServices {
+  const val = process.env['CLOUD_SERVICE'];
+  if (val) {
+    if (Object.values(CloudServices).includes(val as CloudServices)) {
+      return val as CloudServices;
+    }else{
+      throw new Error(`Invalid CLOUD_SERVICE: ${val}`);
+    }
+  }
+  throw new Error('CLOUD_SERVICE is not defined');
 }
 
 export function isJsonString(str: string | undefined | null): boolean {
