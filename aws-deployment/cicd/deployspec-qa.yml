@@ -1,0 +1,14 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14
+
+  pre_build:
+    commands:
+      - n 18 # workaround https://github.com/aws/aws-codebuild-docker-images/issues/490
+  build:
+    commands:
+      - echo Deploying stack
+      - npm run deploy:qa
