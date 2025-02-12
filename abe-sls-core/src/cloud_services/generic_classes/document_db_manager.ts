@@ -3,10 +3,19 @@ import { GQLDocumentTimeline } from "../../functions/timeline/functions/types.js
 import { AiAsyncJobStatus } from "../../types.js";
 import { CloudServices } from "./types.js";
 import { CosmosDBManager } from "../azure/cosmos_db_manager.js";
+import { ExtractedOpenAiRequestData } from "../../functions/openai/helpers.js";
+
+export interface JobStatusRes{
+    aiServiceResponse: string;
+    jobStatus: AiAsyncJobStatus;
+    answer: string;
+    apiError: string;
+}
 
 export abstract class DocumentDBManager {
-    abstract updateJobStatus(jobId: string, jobStatus: AiAsyncJobStatus): Promise<void>;
-    abstract storeDoctimeline(jobId: string, docTimeline: GQLDocumentTimeline, jobStatus: AiAsyncJobStatus): Promise<void>;
+    abstract updateExistingItem(jobId: string, fields: Record<string, any>): Promise<void>;
+    abstract storeNewItem(jobId: string, fields: Record<string, any>): Promise<void>;
+    abstract getItem(jobId: string): Promise<any>;
 }
 
 function getCloudService(): CloudServices {

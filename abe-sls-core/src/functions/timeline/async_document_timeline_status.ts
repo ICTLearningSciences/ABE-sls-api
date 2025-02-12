@@ -7,12 +7,11 @@ The full terms of this copyright and license should always be found in the root 
 
 // Note: had to add .js to find this file in serverless
 import requireEnv, { createResponseJson } from '../../helpers.js';
-import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { APIGatewayEvent } from 'aws-lambda';
 import { GQLDocumentTimeline } from './functions/types.js';
 import { wrapHandler } from '../../sentry-helpers.js';
+import { getDocumentDBManager } from 'cloud_services/generic_classes/document_db_manager.js';
 
-const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
@@ -22,17 +21,12 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
       response: { error: 'jobId query string parameter is required' },
     });
   }
-  const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
+  const documentDBManager = getDocumentDBManager();
   try {
-    const data = await dynamoDbClient.getItem({
-      TableName: jobsTableName,
-      Key: { id: { S: jobId } },
-    });
-    if (!data.Item) {
-      return createResponseJson(404, { response: { error: 'Job not found' } });
-    }
-    const jobStatus = data.Item.job_status.S;
-    const documentTimelineData = data.Item.documentTimeline.S;
+    const data = await documentDBManager.getItem(jobId);
+
+    const jobStatus = data.job_status;
+    const documentTimelineData = data.documentTimeline;
     const documentTimeline: GQLDocumentTimeline = documentTimelineData
       ? JSON.parse(documentTimelineData)
       : null;

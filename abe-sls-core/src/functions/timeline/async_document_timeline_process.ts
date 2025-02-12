@@ -15,7 +15,7 @@ import { useWithGoogleApi } from '../../hooks/google_api.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { DocumentTimelineGenerator } from './functions/document-timeline-generator.js';
 import { DocServiceFactory } from '../../doc_services/doc-service-factory.js';
-import { getCloudService } from '../../helpers.js';
+import { extractErrorMessageFromError, getCloudService } from '../../helpers.js';
 import { getDocumentDBManager } from '../../cloud_services/generic_classes/document_db_manager.js';
 interface ExtractedDocumentTimelineRequestData {
   docId: string;
@@ -63,7 +63,10 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         docServiceInstance
       );
     } catch (err) {
-      await documentDBManager.updateJobStatus(jobId, AiAsyncJobStatus.FAILED);
+      await documentDBManager.updateExistingItem(jobId, {
+        job_status: AiAsyncJobStatus.FAILED,
+        api_error: extractErrorMessageFromError(err),
+      });
       throw err;
     }
   }

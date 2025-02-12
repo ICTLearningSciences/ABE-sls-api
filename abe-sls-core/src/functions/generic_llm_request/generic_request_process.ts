@@ -7,13 +7,12 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import { DynamoDBStreamEvent } from 'aws-lambda';
 import { AiAsyncJobStatus } from '../../types.js';
-import { DynamoDB, UpdateItemCommandInput } from '@aws-sdk/client-dynamodb';
 import requireEnv, { extractErrorMessageFromError } from '../../helpers.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
 import { GenericLlmRequestData } from './helpers.js';
+import { getDocumentDBManager } from 'cloud_services/generic_classes/document_db_manager.js';
 
-const jobsTableName = requireEnv('JOBS_TABLE_NAME');
 
 // modern module syntax
 export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
@@ -32,62 +31,21 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
     }
     const { llmRequest } = requestData;
     const aiServiceHandler = new AiServiceHandler();
-    const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
+    const documentDBManager = getDocumentDBManager();
     try {
       const aiServiceResponse =
         await aiServiceHandler.executeGenericLlmRequest(llmRequest);
       // Update the job in dynamo db
-      const tableRequest: UpdateItemCommandInput = {
-        TableName: jobsTableName,
-        Key: {
-          id: {
-            S: jobId,
-          },
-        },
-        UpdateExpression:
-          'set aiServiceResponse = :aiServiceResponse, job_status = :job_status, answer = :answer',
-        ExpressionAttributeValues: {
-          ':aiServiceResponse': {
-            S: JSON.stringify(aiServiceResponse),
-          },
-          ':job_status': {
-            S: AiAsyncJobStatus.COMPLETE,
-          },
-          ':answer': {
-            S: aiServiceResponse.answer,
-          },
-        },
-      };
-      await dynamoDbClient
-        .updateItem(tableRequest)
-        .catch((err) => {
-          console.error(err);
-        })
-        .then(() => {
-          console.log('Updated dynamo db record');
-        });
+      await documentDBManager.updateExistingItem(jobId, {
+        aiServiceResponse: JSON.stringify(aiServiceResponse),
+        job_status: AiAsyncJobStatus.COMPLETE,
+        answer: aiServiceResponse.answer,
+      });
+
     } catch (err) {
-      const failedRequest: UpdateItemCommandInput = {
-        TableName: jobsTableName,
-        Key: {
-          id: {
-            S: jobId,
-          },
-        },
-        UpdateExpression:
-          'set job_status = :job_status, api_error = :api_error',
-        ExpressionAttributeValues: {
-          ':job_status': {
-            S: AiAsyncJobStatus.FAILED,
-          },
-          ':api_error': {
-            S: extractErrorMessageFromError(err),
-          },
-        },
-      };
-      await dynamoDbClient.updateItem(failedRequest).catch((err) => {
-        console.error(err);
-        throw err;
+      await documentDBManager.updateExistingItem(jobId, {
+        job_status: AiAsyncJobStatus.FAILED,
+        api_error: extractErrorMessageFromError(err),
       });
       throw err;
     }

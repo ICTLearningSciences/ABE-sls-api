@@ -6,13 +6,10 @@ The full terms of this copyright and license should always be found in the root 
 */
 
 // Note: had to add .js to find this file in serverless
-import requireEnv, { createResponseJson } from '../../helpers.js';
-import { DynamoDB } from '@aws-sdk/client-dynamodb';
+import  { createResponseJson } from '../../helpers.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { AiServiceFinalResponseType } from '../../ai_services/ai-service-factory.js';
-
-const jobsTableName = requireEnv('JOBS_TABLE_NAME');
+import { getDocumentDBManager } from 'cloud_services/generic_classes/document_db_manager.js';
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
@@ -24,24 +21,17 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   }
   // Queue the job
   // Store the job in dynamo db, triggers async lambda
-  const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
+  const documentDBManager = getDocumentDBManager();
   try {
-    const data = await dynamoDbClient.getItem({
-      TableName: jobsTableName,
-      Key: { id: { S: jobId } },
-    });
-    if (!data.Item) {
-      return createResponseJson(404, { response: { error: 'Job not found' } });
-    }
-    const jobStatus = data.Item.job_status.S;
-    const _aiServiceResponse = data.Item.aiServiceResponse.S;
-    const apiError = data?.Item?.api_error?.S || '';
-    const aiServiceResponse: AiServiceFinalResponseType | null =
-      _aiServiceResponse ? JSON.parse(_aiServiceResponse) : null;
+    const data = await documentDBManager.getItem(jobId);
+    const jobStatus = data.job_status;
+    const answer = data.answer;
+    const aiServiceResponse = data.aiServiceResponse ? JSON.parse(data.aiServiceResponse) : null;
+    const apiError = data.api_error;
     return createResponseJson(200, {
       response: {
         aiServiceResponse,
-        answer: aiServiceResponse?.answer || '',
+        answer,
         jobStatus,
         apiError,
       },

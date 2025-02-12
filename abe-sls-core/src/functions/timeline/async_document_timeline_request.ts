@@ -9,7 +9,7 @@ import requireEnv, {
   createResponseJson,
   getFieldFromEventBody,
 } from '../../helpers.js';
-import { DynamoDB } from '@aws-sdk/client-dynamodb';
+
 import {
   AiAsyncJobStatus,
   DocServices,
@@ -18,9 +18,7 @@ import {
 import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
 import { wrapHandler } from '../../sentry-helpers.js';
-
-const jobsTableName = requireEnv('JOBS_TABLE_NAME');
-
+import { getDocumentDBManager } from 'cloud_services/generic_classes/document_db_manager.js';
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const documentId = event.queryStringParameters?.['docId'];
@@ -39,31 +37,19 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   // Queue the job
   const newUuid = uuid();
   // Store the job in dynamo db, triggers async lambda
-  const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
-  const tableRequest = {
-    TableName: jobsTableName,
-    Item: {
-      id: {
-        S: newUuid,
-      },
-      job_status: {
-        S: AiAsyncJobStatus.IN_PROGRESS,
-      },
-      documentTimeline: {
-        S: '',
-      },
-      timelineRequestData: {
-        S: JSON.stringify({
-          docId: documentId,
-          userId,
-          targetAiService,
-          docService,
-        }),
-      },
-    },
-  };
+  const documentDBManager = getDocumentDBManager();
   try {
-    await dynamoDbClient.putItem(tableRequest);
+    await documentDBManager.storeNewItem(newUuid, {
+      id: newUuid,
+      job_status: AiAsyncJobStatus.IN_PROGRESS,
+      documentTimeline: '',
+      timelineRequestData: JSON.stringify({
+        docId: documentId,
+        userId,
+        targetAiService,
+        docService,
+      }),
+    });
     return createResponseJson(200, { response: { jobId: newUuid } });
   } catch (err) {
     console.error(err);

@@ -1,8 +1,5 @@
-import { UpdateItemCommandInput } from "@aws-sdk/client-dynamodb";
-import { AiAsyncJobStatus } from "../../types.js";
+import { UpdateItemCommandInput, DynamoDB } from "@aws-sdk/client-dynamodb";
 import { DocumentDBManager } from "../generic_classes/document_db_manager.js";
-import { GQLDocumentTimeline } from "../../functions/timeline/functions/types.js";
-import { DynamoDB } from "@aws-sdk/client-dynamodb";
 import requireEnv from "../../helpers.js";
 
 export class DynamoDBManager extends DocumentDBManager {
@@ -13,59 +10,59 @@ export class DynamoDBManager extends DocumentDBManager {
         super();
     }
 
-    async updateJobStatus(jobId: string, jobStatus: AiAsyncJobStatus): Promise<void> {
-        const tableRequest: UpdateItemCommandInput = {
+    async storeNewItem(jobId: string,
+        fields: Record<string, any>    
+    ): Promise<void> {
+        const tableRequest: any = {
             TableName: this.jobsTableName,
-            Key: {
+            Item: {
               id: {
                 S: jobId,
               },
             },
-            UpdateExpression: 'set job_status = :job_status',
-            ExpressionAttributeValues: {
-              ':job_status': {
-                S: jobStatus,
-              },
-            },
           };
-          await this.dynamoDbClient
-            .updateItem(tableRequest)
-            .catch((err) => {
-              console.error(err);
-              throw err;
-            })
-            .then(() => {
-              console.log('Updated dynamo db record status');
-            });
+          Object.entries(fields).forEach(([key, value]) => {
+            tableRequest.Item[key] = {
+              S: value,
+            };
+          });
+          await this.dynamoDbClient.putItem(tableRequest);
     }
 
-    async storeDoctimeline(jobId: string, docTimeline: GQLDocumentTimeline, jobStatus: AiAsyncJobStatus): Promise<void> {
+    async updateExistingItem(jobId: string,
+        fields: Record<string, any>    
+    ): Promise<void> {
         const tableRequest: UpdateItemCommandInput = {
             TableName: this.jobsTableName,
             Key: {
-              id: {
-                S: jobId,
-              },
+                id: {
+                    S: jobId,
+                },
             },
-            UpdateExpression:
-              'set documentTimeline = :documentTimeline, job_status = :job_status',
-            ExpressionAttributeValues: {
-              ':documentTimeline': {
-                S: JSON.stringify(docTimeline),
-              },
-              ':job_status': {
-                S: jobStatus,
-              },
-            },
-          };
-          await this.dynamoDbClient
-            .updateItem(tableRequest)
-            .catch((err) => {
-              console.error(err);
-              throw err;
-            })
-            .then(() => {
-              console.log('Updated dynamo db record');
-            });
+            UpdateExpression: 'set',
+            ExpressionAttributeValues: {},
+        };
+        Object.entries(fields).forEach(([key, value]) => {
+            tableRequest.UpdateExpression += `, ${key} = :${key}`;
+            tableRequest.ExpressionAttributeValues![`:${key}`] = {
+                S: value,
+            };
+        });
+        await this.dynamoDbClient.updateItem(tableRequest);
     }
+
+    async getItem(jobId: string): Promise<any> {
+        const data = await this.dynamoDbClient.getItem({
+            TableName: this.jobsTableName,
+            Key: { id: { S: jobId } },
+          });
+          if (!data.Item) {
+            throw new Error(`Job not found: ${jobId}`);
+          }
+            const items = Object.entries(data.Item).map(([key, value]) => ({
+                [key]: value.S,
+            }));
+          return items;
+    }
+
 }

@@ -6,14 +6,12 @@ The full terms of this copyright and license should always be found in the root 
 */
 // Note: had to add .js to find this file in serverless
 import requireEnv, { createResponseJson } from '../../helpers.js';
-import { DynamoDB } from '@aws-sdk/client-dynamodb';
 import { AiAsyncJobStatus } from '../../types.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { extractGenericRequestData } from './helpers.js';
-
-const jobsTableName = requireEnv('JOBS_TABLE_NAME');
+import { getDocumentDBManager } from '../../cloud_services/generic_classes/document_db_manager.js';
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
@@ -21,31 +19,15 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   // Queue the job
   const newUuid = uuid();
   // Store the job in dynamo db, triggers async lambda
-  const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
-  const tableRequest = {
-    TableName: jobsTableName,
-    Item: {
-      id: {
-        S: newUuid,
-      },
-      job_status: {
-        S: AiAsyncJobStatus.IN_PROGRESS,
-      },
-      answer: {
-        S: '',
-      },
-      aiServiceResponse: {
-        S: '',
-      },
-      requestData: {
-        S: JSON.stringify({
-          llmRequest,
-        }),
-      },
-    },
-  };
+  const documentDBManager = getDocumentDBManager();
   try {
-    await dynamoDbClient.putItem(tableRequest);
+    await documentDBManager.storeNewItem(newUuid, {
+      id: newUuid,
+      requestData: JSON.stringify(llmRequest),
+      job_status: AiAsyncJobStatus.IN_PROGRESS,
+      answer: '',
+      aiServiceResponse: '',
+    });
     return createResponseJson(200, { response: { jobId: newUuid } });
   } catch (err) {
     console.error(err);

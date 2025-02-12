@@ -387,10 +387,12 @@ export class DocumentTimelineGenerator {
           user: userId,
           timelinePoints: sortDocumentTimelinePoints(timelinePoints),
         };
-        await documentDBManager.storeDoctimeline(
+        await documentDBManager.updateExistingItem(
           jobId,  
-          documentTimeline,
-          AiAsyncJobStatus.IN_PROGRESS
+          {
+            documentTimeline: documentTimeline,
+            job_status: AiAsyncJobStatus.IN_PROGRESS
+          }
         );
       }
     }
@@ -399,10 +401,12 @@ export class DocumentTimelineGenerator {
       user: userId,
       timelinePoints: sortDocumentTimelinePoints(timelinePoints),
     };
-    await documentDBManager.storeDoctimeline(
+    await documentDBManager.updateExistingItem(
       jobId,
-      documentTimeline,
-      AiAsyncJobStatus.COMPLETE
+      {
+        documentTimeline: documentTimeline,
+        job_status: AiAsyncJobStatus.COMPLETE
+      }
     );
 
     // store timeline in gql
