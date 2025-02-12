@@ -29,7 +29,7 @@ import {
 } from '../../../ai_services/ai-service-factory.js';
 import { KeyframeGenerator } from './keyframe-generator.js';
 import { DocService } from '../../../doc_services/abstract-doc-service.js';
-import { getDocumentDBManager } from '../../../cloud_services/generic_classes/document_db_manager.js';
+import { getDocumentDBManager } from '../../../cloud_services/generic_classes/helpers.js';
 
 export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,
@@ -354,9 +354,7 @@ export class DocumentTimelineGenerator {
       timelinePoints,
       existingDocumentTimeline?.timelinePoints
     );
-
     let timelinePointsToGenerate = getTimelinePointsToGenerate(timelinePoints);
-
     const keyframeGenerator = new KeyframeGenerator(
       timelinePoints,
       this.targetAiService
@@ -364,7 +362,6 @@ export class DocumentTimelineGenerator {
     if (timelinePointsToGenerate.length > 0) {
       await keyframeGenerator.generateKeyframes();
     }
-
     let numLoops = 0;
     const maxLoopsNeeded =
       timelinePoints.length / NUM_GENERATED_PER_REQUEST + 1;
@@ -388,7 +385,7 @@ export class DocumentTimelineGenerator {
           timelinePoints: sortDocumentTimelinePoints(timelinePoints),
         };
         await documentDBManager.updateExistingItem(jobId, {
-          documentTimeline: documentTimeline,
+          documentTimeline: JSON.stringify(documentTimeline),
           job_status: AiAsyncJobStatus.IN_PROGRESS,
         });
       }
@@ -399,10 +396,9 @@ export class DocumentTimelineGenerator {
       timelinePoints: sortDocumentTimelinePoints(timelinePoints),
     };
     await documentDBManager.updateExistingItem(jobId, {
-      documentTimeline: documentTimeline,
+      documentTimeline: JSON.stringify(documentTimeline),
       job_status: AiAsyncJobStatus.COMPLETE,
     });
-
     // store timeline in gql
     await storeDocTimeline(documentTimeline).catch((e) => {
       Sentry.captureException(e, {

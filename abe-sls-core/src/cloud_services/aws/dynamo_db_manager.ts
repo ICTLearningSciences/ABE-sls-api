@@ -8,12 +8,22 @@ import { UpdateItemCommandInput, DynamoDB } from '@aws-sdk/client-dynamodb';
 import { DocumentDBManager } from '../generic_classes/document_db_manager.js';
 import requireEnv from '../../helpers.js';
 
+let dynamoDbClientInstance: DynamoDB | null = null;
+
+export const getDynamoDbClient = () => {
+  if (!dynamoDbClientInstance) {
+    dynamoDbClientInstance = new DynamoDB({ region: 'us-east-1' });
+  }
+  return dynamoDbClientInstance;
+};
+
 export class DynamoDBManager extends DocumentDBManager {
   private readonly jobsTableName = requireEnv('JOBS_TABLE_NAME');
-  private readonly dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
+  private readonly dynamoDbClient: DynamoDB;
 
   constructor() {
     super();
+    this.dynamoDbClient = getDynamoDbClient();
   }
 
   async storeNewItem(

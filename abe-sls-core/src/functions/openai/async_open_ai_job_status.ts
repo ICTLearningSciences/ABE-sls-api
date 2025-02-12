@@ -10,7 +10,7 @@ import requireEnv, { createResponseJson } from '../../helpers.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { AiServiceFinalResponseType } from '../../ai_services/ai-service-factory.js';
-import { getDocumentDBManager } from '../../cloud_services/generic_classes/document_db_manager.js';
+import { getDocumentDBManager } from '../../cloud_services/generic_classes/helpers.js';
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {

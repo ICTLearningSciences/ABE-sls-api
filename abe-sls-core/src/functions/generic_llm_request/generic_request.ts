@@ -11,7 +11,7 @@ import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { extractGenericRequestData } from './helpers.js';
-import { getDocumentDBManager } from '../../cloud_services/generic_classes/document_db_manager.js';
+import { getDocumentDBManager } from '../../cloud_services/generic_classes/helpers.js';
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {

@@ -11,7 +11,7 @@ import requireEnv, { extractErrorMessageFromError } from '../../helpers.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
 import { GenericLlmRequestData } from './helpers.js';
-import { getDocumentDBManager } from 'cloud_services/generic_classes/document_db_manager.js';
+import { getDocumentDBManager } from '../../cloud_services/generic_classes/helpers.js';
 
 // modern module syntax
 export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {

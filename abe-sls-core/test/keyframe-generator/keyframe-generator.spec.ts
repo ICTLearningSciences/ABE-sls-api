@@ -10,6 +10,7 @@ import { IGDocVersion, TimelinePointType } from "../../src/functions/timeline/fu
 import { assertRequestIncludesMessage, defaultChangeSummaryRes, defaultReverseOutlineRes, mockGraphqlQuery, mockOpenAiCall, mockOpenAiChangeSummaryResponse, mockOpenAiReverseOutlineResponse } from "../helpers";
 import { DocumentTimelineGenerator } from "../../src/functions/timeline/functions/document-timeline-generator";
 import { docTimeline } from "../fixtures/documents/2-sessions-inbetween-outside-ABE/doc-timeline";
+import { GoogleDocService } from "../../src/doc_services/google-doc-services";
 
 describe("Keyframe Generator class unit tests", ()=>{
     describe("detect text major change", ()=>{
@@ -278,12 +279,12 @@ describe("Keyframe Generator class unit tests", ()=>{
                     model: DefaultGptModels.OPEN_AI_GPT_3_5
                   })
     
-                const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
+                const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], new GoogleDocService({}))
     
                 assert(keyframeOneGeneration.isDone() === true)
                 assert(keyframeOneRequestData.calls === 1)
 
-                  assert(res.timelinePoints[0].reverseOutline ===  JSON.stringify(firstKeyframe))
+                assert(res.timelinePoints[0].reverseOutline ===  JSON.stringify(firstKeyframe))
 
                 assertRequestIncludesMessage("Use this previous reverse outline", firstReqData.requestBodies[0].messages)
                 assertRequestIncludesMessage("first keyframe", firstReqData.requestBodies[0].messages)

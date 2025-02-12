@@ -223,8 +223,10 @@ describe("Document Timeline Unit Tests", () => {
       assert.equal(updateDynamoDbCalls.length, 2);
       const firstUpdate = updateDynamoDbCalls[0];
       const secondUpdate = updateDynamoDbCalls[1];
+
       const firstStoredDocumentTimeline: GQLDocumentTimeline = JSON.parse(firstUpdate.args[0].input.ExpressionAttributeValues?.[":documentTimeline"]["S"] || "{}");
       const firstStoredJobStatus = firstUpdate.args[0].input.ExpressionAttributeValues?.[":job_status"]["S"]
+
       const secondStoredDocumentTimeline: GQLDocumentTimeline = JSON.parse(secondUpdate.args[0].input.ExpressionAttributeValues?.[":documentTimeline"]["S"] || "{}");
       const secondStoredJobStatus = secondUpdate.args[0].input.ExpressionAttributeValues?.[":job_status"]["S"]
       assert.equal(firstStoredDocumentTimeline.timelinePoints.length, 16);

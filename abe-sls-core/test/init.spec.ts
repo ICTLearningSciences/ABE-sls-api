@@ -9,11 +9,10 @@ import { fixturePath } from "./helpers.js";
 import { before, after } from "mocha";
 import { mockClient } from "aws-sdk-client-mock";
 import nock from "nock";
-import { DynamoDB } from "@aws-sdk/client-dynamodb";
+import { DynamoDBManager, getDynamoDbClient } from "../src/cloud_services/aws/dynamo_db_manager";
 
-export const dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
-
-export const ddbMock = mockClient(dynamoDbClient)
+export const dynamoDbClient = getDynamoDbClient();
+export const ddbMock = mockClient(dynamoDbClient);
 
 before(() => {
   dotenv.config({ path: fixturePath(".env") });
@@ -29,3 +28,6 @@ afterEach(() => {
     nock.cleanAll();
     ddbMock.reset();
 })
+
+// When creating DynamoDBManager in tests, no need to pass client:
+const dbManager = new DynamoDBManager();
