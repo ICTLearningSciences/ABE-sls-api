@@ -12,7 +12,6 @@ import { GQLDocumentTimeline } from './functions/types.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { getDocumentDBManager } from 'cloud_services/generic_classes/document_db_manager.js';
 
-
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const jobId = event.queryStringParameters?.jobId;

@@ -29,7 +29,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
     const apiError = data.api_error;
     const answer = data.answer;
     const aiServiceResponse: AiServiceFinalResponseType | null =
-    data.aiServiceResponse ? JSON.parse(data.aiServiceResponse) : null;
+      data.aiServiceResponse ? JSON.parse(data.aiServiceResponse) : null;
     return createResponseJson(200, {
       response: {
         aiServiceResponse,

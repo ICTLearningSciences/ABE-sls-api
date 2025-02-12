@@ -46,7 +46,6 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         job_status: AiAsyncJobStatus.COMPLETE,
         answer: aiServiceResponse.answer,
       });
-
     } catch (err) {
       await documentDBManager.updateExistingItem(jobId, {
         job_status: AiAsyncJobStatus.FAILED,

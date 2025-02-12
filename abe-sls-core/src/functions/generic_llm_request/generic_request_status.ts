@@ -6,7 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 
 // Note: had to add .js to find this file in serverless
-import  { createResponseJson } from '../../helpers.js';
+import { createResponseJson } from '../../helpers.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { getDocumentDBManager } from 'cloud_services/generic_classes/document_db_manager.js';
@@ -26,7 +26,9 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
     const data = await documentDBManager.getItem(jobId);
     const jobStatus = data.job_status;
     const answer = data.answer;
-    const aiServiceResponse = data.aiServiceResponse ? JSON.parse(data.aiServiceResponse) : null;
+    const aiServiceResponse = data.aiServiceResponse
+      ? JSON.parse(data.aiServiceResponse)
+      : null;
     const apiError = data.api_error;
     return createResponseJson(200, {
       response: {

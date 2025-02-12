@@ -8,10 +8,7 @@ import { DocServiceFactory } from '../doc_services/doc-service-factory.js';
 import { DocServices } from '../types.js';
 
 // modern module syntax
-export const getDocData = async (
-  docsId?: string,
-  docService?: DocServices
-) => {
+export const getDocData = async (docsId?: string, docService?: DocServices) => {
   if (!docsId || !docService) {
     throw new Error('Google Doc ID or Doc Service is empty');
   }

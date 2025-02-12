@@ -13,7 +13,6 @@ import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
 import { GenericLlmRequestData } from './helpers.js';
 import { getDocumentDBManager } from 'cloud_services/generic_classes/document_db_manager.js';
 
-
 // modern module syntax
 export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
   const records = event.Records.filter(
@@ -41,7 +40,6 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
         job_status: AiAsyncJobStatus.COMPLETE,
         answer: aiServiceResponse.answer,
       });
-
     } catch (err) {
       await documentDBManager.updateExistingItem(jobId, {
         job_status: AiAsyncJobStatus.FAILED,

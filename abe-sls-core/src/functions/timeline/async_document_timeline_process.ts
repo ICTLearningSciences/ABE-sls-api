@@ -15,7 +15,10 @@ import { useWithGoogleApi } from '../../hooks/google_api.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { DocumentTimelineGenerator } from './functions/document-timeline-generator.js';
 import { DocServiceFactory } from '../../doc_services/doc-service-factory.js';
-import { extractErrorMessageFromError, getCloudService } from '../../helpers.js';
+import {
+  extractErrorMessageFromError,
+  getCloudService,
+} from '../../helpers.js';
 import { getDocumentDBManager } from '../../cloud_services/generic_classes/document_db_manager.js';
 interface ExtractedDocumentTimelineRequestData {
   docId: string;

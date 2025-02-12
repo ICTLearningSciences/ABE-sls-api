@@ -19,7 +19,14 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   try {
     const newUuid = uuid();
     const documentDBManager = getDocumentDBManager();
-    await documentDBManager.storeNewItem(newUuid, { docsId, userId, aiPromptSteps, authHeaders, docService, job_status: AiAsyncJobStatus.IN_PROGRESS });
+    await documentDBManager.storeNewItem(newUuid, {
+      docsId,
+      userId,
+      aiPromptSteps,
+      authHeaders,
+      docService,
+      job_status: AiAsyncJobStatus.IN_PROGRESS,
+    });
     return createResponseJson(200, { response: { jobId: newUuid } });
   } catch (err) {
     console.error(err);

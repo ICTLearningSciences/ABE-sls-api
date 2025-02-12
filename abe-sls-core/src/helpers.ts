@@ -101,7 +101,7 @@ export function getCloudService(): CloudServices {
   if (val) {
     if (Object.values(CloudServices).includes(val as CloudServices)) {
       return val as CloudServices;
-    }else{
+    } else {
       throw new Error(`Invalid CLOUD_SERVICE: ${val}`);
     }
   }
