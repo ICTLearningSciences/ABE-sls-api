@@ -4,7 +4,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { AiService } from '../../ai_services/abstract-classes/abstract-ai-service.js';
+import { AiService } from '../abstract-classes/abstract-ai-service.js';
 import {
   AiRequestContext,
   DefaultGptModels,
@@ -26,7 +26,7 @@ import {
   AiServiceResponse,
   AiStepData,
   AvailableAiServiceNames,
-} from '../../ai_services/ai-service-factory.js';
+} from '../ai-service-factory.js';
 import { Schema } from 'jsonschema';
 import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
 import { v4 as uuid } from 'uuid';

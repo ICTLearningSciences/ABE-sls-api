@@ -21,7 +21,7 @@ import {
   AiStepData,
   AiServiceResponse,
   AvailableAiServiceNames,
-} from '../../ai_services/ai-service-factory.js';
+} from '../ai-service-factory.js';
 
 export const DefaultOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:

@@ -2,7 +2,8 @@
   "name": "serverless-api",
   "version": "1.0.0",
   "description": "",
-  "main": "handler.js",
+  "main": "dist/shared_functions/exported-functions.js",
+  "types": "dist/shared_functions/exported-functions.d.ts",
   "scripts": {
     "test": "export $(cat ./test/fixtures/.env) && ts-mocha -p ./tsconfig.json test/**/*.spec.ts test/init.spec.ts -r tsx",
     "test:lint": "eslint src --max-warnings 0",

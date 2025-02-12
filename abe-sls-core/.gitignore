@@ -9,3 +9,4 @@ jspm_packages
 /src/.env
 google_service_creds.json
 credentials.json
+dist
