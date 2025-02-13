@@ -2,10 +2,9 @@ service: serverless-api
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: "3"
+frameworkVersion: "4"
 
 plugins:
-  - serverless-plugin-typescript
   - serverless-domain-manager
   - serverless-prune-plugin
 
@@ -75,7 +74,6 @@ package:
       - '!./node_modules/aws-sdk/**'
       - '!./node_modules/@aws-sdk/**'
       - '!./node_modules/@types/**'
-      - './node_modules/abe-sls-core/**'
 
 provider:
   name: aws
@@ -208,7 +206,7 @@ functions:
             type: token
   open_ai_async_request:
     handler: src/functions/ai_steps_request/ai_steps_request.handler
-    timeout: 30
+    timeout: 29
     environment:
       JOBS_TABLE_NAME: open-ai-jobs-${self:provider.stage}
     events:
@@ -244,7 +242,7 @@ functions:
             - eventName: [INSERT]
   open_ai_async_status:
     handler: src/functions/ai_steps_request/ai_steps_job_status.handler
-    timeout: 30
+    timeout: 29
     environment:
       JOBS_TABLE_NAME: open-ai-jobs-${self:provider.stage}
     events:
@@ -264,7 +262,7 @@ functions:
             type: token
   async_document_timeline_request:
     handler: src/functions/timeline/async_document_timeline_request.handler
-    timeout: 30
+    timeout: 29
     environment:
       JOBS_TABLE_NAME: document-timeline-jobs-${self:provider.stage}
     events:
@@ -301,7 +299,7 @@ functions:
             - eventName: [INSERT]
   async_document_timeline_status:
     handler: src/functions/timeline/async_document_timeline_status.handler
-    timeout: 30
+    timeout: 29
     environment:
       JOBS_TABLE_NAME: document-timeline-jobs-${self:provider.stage}
     events:
@@ -321,7 +319,7 @@ functions:
             type: token
   generic_llm_request:
     handler: src/functions/generic_llm_request/generic_request.handler
-    timeout: 30
+    timeout: 29
     environment:
       JOBS_TABLE_NAME: generic-llm-request-${self:provider.stage}
     events:
@@ -348,7 +346,7 @@ functions:
             - eventName: [INSERT]
   generic_llm_status:
     handler: src/functions/generic_llm_request/generic_request_status.handler
-    timeout: 30
+    timeout: 29
     environment:
       JOBS_TABLE_NAME: generic-llm-request-${self:provider.stage}
     events:

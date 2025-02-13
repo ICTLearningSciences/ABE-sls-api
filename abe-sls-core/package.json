@@ -1,9 +1,10 @@
 {
-  "name": "serverless-api",
+  "name": "abe-sls-core",
   "version": "1.0.0",
   "description": "",
   "main": "dist/shared_functions/exported-functions.js",
   "types": "dist/shared_functions/exported-functions.d.ts",
+  "private": false,
   "scripts": {
     "test": "export $(cat ./test/fixtures/.env) && ts-mocha -p ./tsconfig.json test/**/*.spec.ts test/init.spec.ts -r tsx",
     "test:lint": "eslint src --max-warnings 0",
@@ -23,7 +24,6 @@
     "@aws-sdk/client-dynamodb": "^3.515.0",
     "@azure/openai": "^1.0.0-beta.12",
     "@google/generative-ai": "^0.11.2",
-    "aws-lambda": "^1.0.7",
     "axios": "^1.4.0",
     "diff": "^5.2.0",
     "dotenv": "^16.4.5",
@@ -37,6 +37,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "aws-lambda": "^1.0.7",
     "@types/aws-lambda": "^8.10.133",
     "@types/chai": "^4.3.14",
     "@types/diff": "^5.2.1",

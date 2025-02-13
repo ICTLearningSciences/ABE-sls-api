@@ -12,3 +12,7 @@ test-core:
 deploy-dev: build-core
 	npm ci
 	npm run deploy:dev
+
+.PHONY: package
+package:
+	npx sls package -s dev --aws-profile abe
