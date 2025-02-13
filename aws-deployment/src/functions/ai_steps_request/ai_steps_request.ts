@@ -14,6 +14,13 @@ import { extractOpenAiRequestData } from '../../helpers.js';
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const { docsId, userId, aiPromptSteps, authHeaders, docService } =
     extractOpenAiRequestData(event);
-  const { jobId } = await aiStepsRequest(docsId, userId, aiPromptSteps, authHeaders, docService);
-  return createResponseJson(200, { response: { jobId } });
+  
+  try {
+    const { jobId } = await aiStepsRequest(docsId, userId, aiPromptSteps, authHeaders, docService);
+    return createResponseJson(200, { response: { jobId } });
+  } catch (err) {
+    console.error(err);
+    return createResponseJson(500, { error: JSON.stringify(err) });
+  }
+
 });

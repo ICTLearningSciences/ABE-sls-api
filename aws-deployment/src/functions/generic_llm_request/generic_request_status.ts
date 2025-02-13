@@ -20,7 +20,12 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   }
   try { 
     const status = await genericRequestStatus(jobId);
-    return createResponseJson(200, { response: status });
+    return createResponseJson(200, { response: {
+      aiServiceResponse: status.aiServiceResponse,
+      answer: status.answer,
+      jobStatus: status.jobStatus,
+      apiError: status.apiError,
+    } });
   } catch (err) {
     console.error(err);
     return createResponseJson(500, {

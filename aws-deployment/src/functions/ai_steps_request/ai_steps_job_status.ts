@@ -18,8 +18,19 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
       response: { error: 'jobId query string parameter is required' },
     });
   }
-  const _aiStepsJobStatus = await aiStepsJobStatus(jobId);
-  return createResponseJson(200, {
-    response: _aiStepsJobStatus,
-  });
+  try {
+    const _aiStepsJobStatus = await aiStepsJobStatus(jobId);
+    return createResponseJson(200, {
+      response: {
+      aiServiceResponse: _aiStepsJobStatus.aiServiceResponse,
+      jobStatus: _aiStepsJobStatus.jobStatus,
+      answer: _aiStepsJobStatus.answer,
+        apiError: _aiStepsJobStatus.apiError,
+      },
+    });
+  } catch (error) {
+    return createResponseJson(500, {
+      response: { error: `failed to get job status for jobId: ${jobId}` },
+    });
+  }
 });
