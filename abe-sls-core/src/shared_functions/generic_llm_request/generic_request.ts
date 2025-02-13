@@ -5,7 +5,6 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 // Note: had to add .js to find this file in serverless
-import { createResponseJson } from '../../helpers.js';
 import { AiAsyncJobStatus } from '../../types.js';
 import { v4 as uuid } from 'uuid';
 import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';

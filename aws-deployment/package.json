@@ -4,17 +4,18 @@
   "description": "",
   "main": "handler.js",
   "scripts": {
-    "deploy:dev": "sls deploy -s dev",
-    "deploy:qa": "sls deploy -s qa",
-    "deploy:prod": "sls deploy -s prod"
+    "deploy:dev": "npx sls deploy -s dev --aws-profile abe",
+    "deploy:qa": "npx sls deploy -s qa --aws-profile abe",
+    "deploy:prod": "npx sls deploy -s prod --aws-profile abe"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@sentry/serverless": "^7.111.0",
-    "abe-sls-core": "file:../abe-sls-core",
+    "jsonschema": "^1.5.0",
     "jsonwebtoken": "^9.0.2",
-    "serverless-domain-manager": "^7.1.2"
+    "serverless-domain-manager": "^7.1.2",
+    "abe-sls-core": "file:../abe-sls-core"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.8",

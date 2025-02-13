@@ -11,7 +11,7 @@ import {
   PromptOutputTypes,
   PromptRoles,
   TargetAiModelServiceType,
-} from 'types';
+} from 'abe-sls-core/src/types.js';
 
 export interface PromptConfiguration {
   promptText: string;

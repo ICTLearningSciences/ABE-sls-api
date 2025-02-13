@@ -1,8 +1,10 @@
-import Sentry from "sentry-helpers";
+import Sentry from "./sentry-helpers.js";
 import axios from "axios";
 import { APIGatewayEvent } from "aws-lambda";
-import { ExtractedOpenAiRequestData, getAuthHeaders } from "abe-sls-core/src/shared_functions/ai_steps_request/helpers.js";
-import { AiPromptStep, DocServices } from "abe-sls-core/src/types.js";
+import {types, aiStepHelpers} from "abe-sls-core";
+
+
+export type AuthHeaders = Record<string, string>;
 
 export function createResponseJson(statusCode: number, body: any) {
     if (statusCode >= 400) {
@@ -62,15 +64,15 @@ export function createResponseJson(statusCode: number, body: any) {
 
   export function extractOpenAiRequestData(
     event: APIGatewayEvent
-  ): ExtractedOpenAiRequestData {
+  ): aiStepHelpers.ExtractedOpenAiRequestData {
     const docsId = event.queryStringParameters?.['docId'];
     const userId = event.queryStringParameters?.['userId'];
     const docService = event.queryStringParameters?.['docService'];
-    const aiPromptSteps: AiPromptStep[] = getFieldFromEventBody<AiPromptStep[]>(
+    const aiPromptSteps: types.AiPromptStep[] = getFieldFromEventBody<types.AiPromptStep[]>(
       event,
       'aiPromptSteps'
     );
-    const authHeaders = getAuthHeaders(event);
+    const authHeaders = aiStepHelpers.getAuthHeaders(event);
     if (!docsId) {
       throw new Error('Google Doc ID is empty');
     }
@@ -86,7 +88,7 @@ export function createResponseJson(statusCode: number, body: any) {
       aiPromptSteps,
       authHeaders,
       docService: docService
-        ? (docService as DocServices)
-        : DocServices.GOOGLE_DOCS,
+        ? (docService as types.DocServices)
+        : types.DocServices.GOOGLE_DOCS,
     };
   }

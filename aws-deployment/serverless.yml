@@ -75,6 +75,7 @@ package:
       - '!./node_modules/aws-sdk/**'
       - '!./node_modules/@aws-sdk/**'
       - '!./node_modules/@types/**'
+      - './node_modules/abe-sls-core/**'
 
 provider:
   name: aws
@@ -205,26 +206,8 @@ functions:
             resultTtlInSeconds: 300
             identitySource: method.request.header.Authorization
             type: token
-  open_ai_doc_question:
-    handler: src/functions/openai/open_ai.handler
-    timeout: 30
-    events:
-      - http:
-          path: /open_ai_doc_question/
-          method: any
-          request:
-            parameters:
-              querystrings:
-                docId: true
-          cors:
-            origin: '*'
-          authorizer:
-            name: authorizer_func
-            resultTtlInSeconds: 300
-            identitySource: method.request.header.Authorization
-            type: token
   open_ai_async_request:
-    handler: src/functions/openai/async_open_ai_request.handler
+    handler: src/functions/ai_steps_request/ai_steps_request.handler
     timeout: 30
     environment:
       JOBS_TABLE_NAME: open-ai-jobs-${self:provider.stage}
@@ -245,7 +228,7 @@ functions:
             type: token
   open_ai_async_process:
     description: Triggered by new records in dynamo, implements async processing of openai requests
-    handler: src/functions/openai/async_open_ai_process.handler
+    handler: src/functions/ai_steps_request/ai_steps_process.handler
     memorySize: 2048
     timeout: 900 # max
     environment:
@@ -260,7 +243,7 @@ functions:
           filterPatterns:
             - eventName: [INSERT]
   open_ai_async_status:
-    handler: src/functions/openai/async_open_ai_job_status.handler
+    handler: src/functions/ai_steps_request/ai_steps_job_status.handler
     timeout: 30
     environment:
       JOBS_TABLE_NAME: open-ai-jobs-${self:provider.stage}

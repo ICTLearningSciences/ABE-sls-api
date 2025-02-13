@@ -20,6 +20,7 @@ function extract_token_from_header(request: any) {
   if (!tokenAuthentication || tokenSplit.length == 1) {
     throw new Error('no authentication token provided');
   }
+  console.log('tokenSplit', tokenSplit);
   const token = tokenSplit[1];
   try {
     const payload = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
