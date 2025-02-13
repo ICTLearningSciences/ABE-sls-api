@@ -18,7 +18,7 @@ import {
 import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { getDocumentDBManager } from 'cloud_services/generic_classes/helpers.js';
+import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const documentId = event.queryStringParameters?.['docId'];
@@ -37,7 +37,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   // Queue the job
   const newUuid = uuid();
   // Store the job in dynamo db, triggers async lambda
-  const documentDBManager = getDocumentDBManager();
+  const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
     await documentDBManager.storeNewItem(newUuid, {
       id: newUuid,

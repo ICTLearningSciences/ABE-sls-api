@@ -9,8 +9,7 @@ The full terms of this copyright and license should always be found in the root 
 import { createResponseJson } from '../../helpers.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { getDocumentDBManager } from '../../cloud_services/generic_classes/helpers.js';
-
+import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const jobId = event.queryStringParameters?.jobId;
@@ -21,7 +20,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   }
   // Queue the job
   // Store the job in dynamo db, triggers async lambda
-  const documentDBManager = getDocumentDBManager();
+  const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
     const data = await documentDBManager.getItem(jobId);
     const jobStatus = data.job_status;

@@ -5,25 +5,17 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { UpdateItemCommandInput, DynamoDB } from '@aws-sdk/client-dynamodb';
-import { DocumentDBManager } from '../generic_classes/document_db_manager.js';
+import { DocumentDBManager } from '../generic_classes/document_db/document_db.js';
 import requireEnv from '../../helpers.js';
-
-let dynamoDbClientInstance: DynamoDB | null = null;
-
-export const getDynamoDbClient = () => {
-  if (!dynamoDbClientInstance) {
-    dynamoDbClientInstance = new DynamoDB({ region: 'us-east-1' });
-  }
-  return dynamoDbClientInstance;
-};
-
+import { CloudServices } from '../generic_classes/types.js';
 export class DynamoDBManager extends DocumentDBManager {
   private readonly jobsTableName = requireEnv('JOBS_TABLE_NAME');
-  private readonly dynamoDbClient: DynamoDB;
+  dynamoDbClient: DynamoDB;
+  cloudService: CloudServices = CloudServices.AWS;
 
   constructor() {
     super();
-    this.dynamoDbClient = getDynamoDbClient();
+    this.dynamoDbClient = new DynamoDB({ region: 'us-east-1' });
   }
 
   async storeNewItem(

@@ -11,7 +11,7 @@ import requireEnv, { extractErrorMessageFromError } from '../../helpers.js';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { ExtractedOpenAiRequestData } from './helpers.js';
 import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
-import { getDocumentDBManager } from 'cloud_services/generic_classes/helpers.js';
+import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
 
 // modern module syntax
 export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
@@ -31,7 +31,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
     const { docsId, userId, aiPromptSteps, authHeaders, docService } =
       openAiRequestData;
     const aiServiceHandler = new AiServiceHandler();
-    const documentDBManager = getDocumentDBManager();
+    const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
     try {
       const aiServiceResponse = await aiServiceHandler.executeAiSteps(
         aiPromptSteps,

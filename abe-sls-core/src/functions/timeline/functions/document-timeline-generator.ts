@@ -29,7 +29,7 @@ import {
 } from '../../../ai_services/ai-service-factory.js';
 import { KeyframeGenerator } from './keyframe-generator.js';
 import { DocService } from '../../../doc_services/abstract-doc-service.js';
-import { getDocumentDBManager } from '../../../cloud_services/generic_classes/helpers.js';
+import { DocumentDBFactory } from '../../../cloud_services/generic_classes/document_db/document_db_factory.js';
 
 export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,
@@ -324,7 +324,7 @@ export class DocumentTimelineGenerator {
     externalDocVersions: any[],
     docService: DocService<any>
   ): Promise<GQLDocumentTimeline> {
-    const documentDBManager = getDocumentDBManager();
+    const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
     const docVersions = await fetchGoogleDocVersion(docId);
     const docTimelineSlices = await createSlices(
       docVersions,

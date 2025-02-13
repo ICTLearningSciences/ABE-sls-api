@@ -10,7 +10,7 @@ import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { extractOpenAiRequestData } from './helpers.js';
-import { getDocumentDBManager } from 'cloud_services/generic_classes/helpers.js';
+import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
 import { AiAsyncJobStatus } from '../../types.js';
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
@@ -18,7 +18,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
     extractOpenAiRequestData(event);
   try {
     const newUuid = uuid();
-    const documentDBManager = getDocumentDBManager();
+    const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
     await documentDBManager.storeNewItem(newUuid, {
       docsId,
       userId,

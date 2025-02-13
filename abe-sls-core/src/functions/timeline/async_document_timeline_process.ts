@@ -19,7 +19,7 @@ import {
   extractErrorMessageFromError,
   getCloudService,
 } from '../../helpers.js';
-import { getDocumentDBManager } from '../../cloud_services/generic_classes/document_db_manager.js';
+import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
 interface ExtractedDocumentTimelineRequestData {
   docId: string;
   userId: string;
@@ -32,7 +32,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
   const records = event.Records.filter(
     (record) => record.eventName === 'INSERT' && record.dynamodb?.NewImage
   );
-  const documentDBManager = getDocumentDBManager();
+  const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   for (let record of records) {
     const newImage = record.dynamodb?.NewImage;
     const requestData = newImage?.timelineRequestData.S;

@@ -377,7 +377,7 @@ describe("Keyframe Generator class unit tests", ()=>{
                 model: DefaultGptModels.OPEN_AI_GPT_3_5
               })
 
-            const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], "fake-key")
+            const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], new GoogleDocService({}))
 
 
             assert(keyframeOneGeneration.isDone() === true)

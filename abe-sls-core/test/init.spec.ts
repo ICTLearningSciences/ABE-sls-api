@@ -9,10 +9,11 @@ import { fixturePath } from "./helpers.js";
 import { before, after } from "mocha";
 import { mockClient } from "aws-sdk-client-mock";
 import nock from "nock";
-import { DynamoDBManager, getDynamoDbClient } from "../src/cloud_services/aws/dynamo_db_manager";
+import { DynamoDBManager } from "../src/cloud_services/aws/dynamo_db_manager";
+import { DocumentDBFactory } from "../src/cloud_services/generic_classes/document_db/document_db_factory.js";
 
-export const dynamoDbClient = getDynamoDbClient();
-export const ddbMock = mockClient(dynamoDbClient);
+const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance() as unknown as DynamoDBManager;
+export const ddbMock = mockClient(documentDBManager.dynamoDbClient);
 
 before(() => {
   dotenv.config({ path: fixturePath(".env") });

@@ -4,12 +4,11 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { AiAsyncJobStatus } from '../../types.js';
-import { DocumentDBManager } from '../generic_classes/document_db_manager.js';
-import { GQLDocumentTimeline } from '../../functions/timeline/functions/types.js';
-import { ExtractedOpenAiRequestData } from '../../functions/openai/helpers.js';
-
+import { DocumentDBManager } from '../generic_classes/document_db/document_db.js';
+import { CloudServices } from '../generic_classes/types.js';
 export class CosmosDBManager extends DocumentDBManager {
+  cloudService: CloudServices = CloudServices.AZURE;
+
   constructor() {
     super();
   }
