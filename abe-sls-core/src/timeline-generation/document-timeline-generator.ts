@@ -20,7 +20,6 @@ import {
 import { collectGoogleDocSlicesOutsideOfSessions } from './google-doc-version-handlers.js';
 import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import { changeSummaryPromptRequest } from './change-summary.js';
-import Sentry from '../sentry-helpers.js';
 import { AiAsyncJobStatus, TargetAiModelServiceType } from '../types.js';
 import {
   AiServiceFactory,
@@ -401,11 +400,7 @@ export class DocumentTimelineGenerator {
     });
     // store timeline in gql
     await storeDocTimeline(documentTimeline).catch((e) => {
-      Sentry.captureException(e, {
-        extra: {
-          message: 'Failed to store document timeline',
-        },
-      });
+      console.error(e);
     });
     return documentTimeline;
   }
