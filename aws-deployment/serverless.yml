@@ -5,11 +5,16 @@ service: serverless-api
 frameworkVersion: "3"
 
 plugins:
-  - serverless-plugin-typescript
+  # - serverless-plugin-typescript
   - serverless-domain-manager
   - serverless-prune-plugin
+  - serverless-webpack
 
 custom:
+  webpack:
+    webpackConfig: './webpack.config.js'
+    includeModules: true
+    packager: 'npm'
   prune:
     automatic: true
     number: 10
@@ -75,7 +80,6 @@ package:
       - '!./node_modules/aws-sdk/**'
       - '!./node_modules/@aws-sdk/**'
       - '!./node_modules/@types/**'
-      - './node_modules/abe-sls-core/**'
 
 provider:
   name: aws

@@ -6,7 +6,6 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { APIGatewayEvent } from 'aws-lambda';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import Sentry from './sentry-helpers.js';
 import Validator from 'jsonschema';
 import { diffWords } from 'diff';
 import { CloudServices } from './cloud_services/generic_classes/types.js';
@@ -53,22 +52,6 @@ export function numberChangesUsingDiffWords(
   });
 
   return totalChanges;
-}
-
-export function createResponseJson(statusCode: number, body: any) {
-  if (statusCode >= 400) {
-    Sentry.captureException(`Error response: ${JSON.stringify(body)}`);
-  }
-  return {
-    statusCode: statusCode,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true,
-    },
-    body: JSON.stringify({
-      data: body,
-    }),
-  };
 }
 
 export function extractErrorMessageFromError(err: any | unknown): string {
