@@ -1,14 +1,14 @@
 import { assert, expect } from "chai";
 
-import {KeyframeGenerator} from "../../src/functions/timeline/functions/keyframe-generator";
+import {KeyframeGenerator} from "../../src/timeline-generation/keyframe-generator";
 import { AvailableAiServiceNames } from "../../src/ai_services/ai-service-factory";
 import { DefaultGptModels } from "../../src/types";
 import { documentBigUpdate, documentStart } from "../fixtures/plain-text/doc-with-changes";
 import { gqlTimelinePointGenerator } from "../fixtures/documents/helpers/gql-timeline-points-generator";
 import { gqlDocVersionGenerator, isoStringMinsFromNow } from "../fixtures/documents/helpers/document-generator";
-import { IGDocVersion, TimelinePointType } from "../../src/functions/timeline/functions/types";
+import { IGDocVersion, TimelinePointType } from "../../src/timeline-generation/types";
 import { assertRequestIncludesMessage, defaultChangeSummaryRes, defaultReverseOutlineRes, mockGraphqlQuery, mockOpenAiCall, mockOpenAiChangeSummaryResponse, mockOpenAiReverseOutlineResponse } from "../helpers";
-import { DocumentTimelineGenerator } from "../../src/functions/timeline/functions/document-timeline-generator";
+import { DocumentTimelineGenerator } from "../../src/timeline-generation/document-timeline-generator";
 import { docTimeline } from "../fixtures/documents/2-sessions-inbetween-outside-ABE/doc-timeline";
 import { GoogleDocService } from "../../src/doc_services/google-doc-services";
 

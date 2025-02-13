@@ -7,14 +7,14 @@ The full terms of this copyright and license should always be found in the root 
 import { MAX_OPEN_AI_CHAIN_REQUESTS } from '../constants.js';
 import { AiPromptStep, DocServices } from '../types.js';
 import { storePromptRun } from './graphql_api.js';
-import { AuthHeaders } from '../functions/openai/helpers.js';
+import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import {
   AiServiceFactory,
   AiServiceFinalResponseType,
   AiServiceStepDataTypes,
   AvailableAiServiceNames,
 } from '../ai_services/ai-service-factory.js';
-import { GenericLlmRequest } from '../functions/generic_llm_request/helpers.js';
+import { GenericLlmRequest } from '../generic_llm_request/helpers.js';
 import { DocServiceFactory } from '../doc_services/doc-service-factory.js';
 
 export class AiServiceHandler {

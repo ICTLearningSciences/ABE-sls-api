@@ -42,3 +42,7 @@ format: LICENSE LICENSE_HEADER
 .PHONY: license
 license: LICENSE LICENSE_HEADER
 	npm run license:fix 
+
+.PHONY: build
+build:
+	npm run build

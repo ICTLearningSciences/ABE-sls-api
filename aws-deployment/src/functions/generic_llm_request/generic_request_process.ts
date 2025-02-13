@@ -4,20 +4,26 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { DocServices } from '../types.js';
-import { GoogleDocService } from './google-doc-services.js';
-import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
-import { MicrosoftDocService } from './microsoft-doc-service.js';
-
-export class DocServiceFactory {
-  static getDocService(targetDocService: DocServices, authHeader: AuthHeaders) {
-    switch (targetDocService) {
-      case DocServices.GOOGLE_DOCS:
-        return GoogleDocService.getInstance(authHeader);
-      case DocServices.MICROSOFT_WORD:
-        return MicrosoftDocService.getInstance(authHeader);
-      default:
-        throw new Error(`DocService ${targetDocService} not found`);
+// Note: had to add .js to find this file in serverless
+import { DynamoDBStreamEvent } from 'aws-lambda';
+import { wrapHandler } from '../../sentry-helpers.js';
+import { GenericLlmRequestData } from './helpers.js';
+import { genericRequestProcess } from 'abe-sls-core';
+// modern module syntax
+export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
+  const records = event.Records.filter(
+    (record) => record.eventName === 'INSERT' && record.dynamodb?.NewImage
+  );
+  for (let record of records) {
+    const newImage = record.dynamodb?.NewImage;
+    const requestData: GenericLlmRequestData = JSON.parse(
+      newImage?.requestData.S || ''
+    );
+    const jobId = newImage?.id?.S;
+    if (!requestData || !jobId) {
+      console.error('requestData/jobId not found in dynamo db record');
+      continue;
     }
+    await genericRequestProcess(jobId, requestData);
   }
-}
+});

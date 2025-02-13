@@ -8,7 +8,7 @@ import {
   fetchDocTimeline,
   fetchGoogleDocVersion,
   storeDocTimeline,
-} from '../../../hooks/graphql_api.js';
+} from '../hooks/graphql_api.js';
 import {
   GQLDocumentTimeline,
   GQLTimelinePoint,
@@ -20,16 +20,16 @@ import {
 import { collectGoogleDocSlicesOutsideOfSessions } from './google-doc-version-handlers.js';
 import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import { changeSummaryPromptRequest } from './change-summary.js';
-import Sentry from '../../../sentry-helpers.js';
-import { AiAsyncJobStatus, TargetAiModelServiceType } from '../../../types.js';
+import Sentry from '../sentry-helpers.js';
+import { AiAsyncJobStatus, TargetAiModelServiceType } from '../types.js';
 import {
   AiServiceFactory,
   AvailableAiServiceNames,
   AvailableAiServices,
-} from '../../../ai_services/ai-service-factory.js';
+} from '../ai_services/ai-service-factory.js';
 import { KeyframeGenerator } from './keyframe-generator.js';
-import { DocService } from '../../../doc_services/abstract-doc-service.js';
-import { DocumentDBFactory } from '../../../cloud_services/generic_classes/document_db/document_db_factory.js';
+import { DocService } from '../doc_services/abstract-doc-service.js';
+import { DocumentDBFactory } from '../cloud_services/generic_classes/document_db/document_db_factory.js';
 
 export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,

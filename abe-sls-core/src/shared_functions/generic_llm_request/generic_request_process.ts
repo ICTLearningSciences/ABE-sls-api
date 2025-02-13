@@ -4,44 +4,34 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-
 // Note: had to add .js to find this file in serverless
-import requireEnv, { createResponseJson } from '../../helpers.js';
-import { APIGatewayEvent } from 'aws-lambda';
-import { wrapHandler } from '../../sentry-helpers.js';
-import { AiServiceFinalResponseType } from '../../ai_services/ai-service-factory.js';
+import { AiAsyncJobStatus } from '../../types.js';
+import { extractErrorMessageFromError } from '../../helpers.js';
+import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
 import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
-
+import { GenericLlmRequestData } from '../../generic_llm_request/helpers.js';
 // modern module syntax
-export const handler = wrapHandler(async (event: APIGatewayEvent) => {
-  const jobId = event.queryStringParameters?.jobId;
-  if (!jobId) {
-    return createResponseJson(400, {
-      response: { error: 'jobId query string parameter is required' },
-    });
-  }
-  // Queue the job
-  // Store the job in dynamo db, triggers async lambda
+export const genericRequestProcess = async (
+  jobId: string,
+  requestData: GenericLlmRequestData
+) => {
+  const { llmRequest } = requestData;
+  const aiServiceHandler = new AiServiceHandler();
   const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
-    const data = await documentDBManager.getItem(jobId);
-    const jobStatus = data.job_status;
-    const apiError = data.api_error;
-    const answer = data.answer;
-    const aiServiceResponse: AiServiceFinalResponseType | null =
-      data.aiServiceResponse ? JSON.parse(data.aiServiceResponse) : null;
-    return createResponseJson(200, {
-      response: {
-        aiServiceResponse,
-        answer,
-        jobStatus,
-        apiError,
-      },
+    const aiServiceResponse =
+      await aiServiceHandler.executeGenericLlmRequest(llmRequest);
+    // Update the job in dynamo db
+    await documentDBManager.updateExistingItem(jobId, {
+      aiServiceResponse: JSON.stringify(aiServiceResponse),
+      job_status: AiAsyncJobStatus.COMPLETE,
+      answer: aiServiceResponse.answer,
     });
   } catch (err) {
-    console.error(err);
-    return createResponseJson(500, {
-      response: { error: `failed to get item from db for jobId: ${jobId}` },
+    await documentDBManager.updateExistingItem(jobId, {
+      job_status: AiAsyncJobStatus.FAILED,
+      api_error: extractErrorMessageFromError(err),
     });
+    throw err;
   }
-});
+};

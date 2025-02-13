@@ -6,12 +6,11 @@ The full terms of this copyright and license should always be found in the root 
 */
 // Note: had to add .js to find this file in serverless
 import { DynamoDBStreamEvent } from 'aws-lambda';
-import { AiAsyncJobStatus } from '../../types.js';
-import requireEnv, { extractErrorMessageFromError } from '../../helpers.js';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
-import { GenericLlmRequestData } from './helpers.js';
-import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
+import { aiStepsProcess } from 'abe-sls-core';
+import { ExtractedOpenAiRequestData } from 'abe-sls-core/src/shared_functions/ai_steps_request/helpers.js';
+
+
 // modern module syntax
 export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
   const records = event.Records.filter(
@@ -19,32 +18,14 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
   );
   for (let record of records) {
     const newImage = record.dynamodb?.NewImage;
-    const requestData: GenericLlmRequestData = JSON.parse(
-      newImage?.requestData.S || ''
+    const openAiRequestData: ExtractedOpenAiRequestData = JSON.parse(
+      newImage?.openAiRequestData.S || ''
     );
     const jobId = newImage?.id?.S;
-    if (!requestData || !jobId) {
-      console.error('requestData/jobId not found in dynamo db record');
+    if (!openAiRequestData || !jobId) {
+      console.error('openAiRequestData/jobId not found in dynamo db record');
       continue;
     }
-    const { llmRequest } = requestData;
-    const aiServiceHandler = new AiServiceHandler();
-    const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
-    try {
-      const aiServiceResponse =
-        await aiServiceHandler.executeGenericLlmRequest(llmRequest);
-      // Update the job in dynamo db
-      await documentDBManager.updateExistingItem(jobId, {
-        aiServiceResponse: JSON.stringify(aiServiceResponse),
-        job_status: AiAsyncJobStatus.COMPLETE,
-        answer: aiServiceResponse.answer,
-      });
-    } catch (err) {
-      await documentDBManager.updateExistingItem(jobId, {
-        job_status: AiAsyncJobStatus.FAILED,
-        api_error: extractErrorMessageFromError(err),
-      });
-      throw err;
-    }
+    await aiStepsProcess(jobId, openAiRequestData);
   }
 });

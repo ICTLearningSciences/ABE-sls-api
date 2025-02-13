@@ -14,7 +14,8 @@
     "test:license": "license-check-and-add check -f license-config.json",
     "deploy:dev": "sls deploy -s dev",
     "deploy:qa": "sls deploy -s qa",
-    "deploy:prod": "sls deploy -s prod"
+    "deploy:prod": "sls deploy -s prod",
+    "build": "tsc"
   },
   "author": "",
   "license": "ISC",
@@ -22,7 +23,6 @@
     "@aws-sdk/client-dynamodb": "^3.515.0",
     "@azure/openai": "^1.0.0-beta.12",
     "@google/generative-ai": "^0.11.2",
-    "@sentry/serverless": "^7.111.0",
     "aws-lambda": "^1.0.7",
     "axios": "^1.4.0",
     "diff": "^5.2.0",

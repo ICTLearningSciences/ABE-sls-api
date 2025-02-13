@@ -1,4 +1,4 @@
-import { IGDocVersion } from "../../../../src/functions/timeline/functions/types";
+import { IGDocVersion } from "../../../../src/timeline-generation/types";
 
 export const docVersions: IGDocVersion[] = [
     {

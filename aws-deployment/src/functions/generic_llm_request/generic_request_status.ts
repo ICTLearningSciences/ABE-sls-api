@@ -4,20 +4,27 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { DocServices } from '../types.js';
-import { GoogleDocService } from './google-doc-services.js';
-import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
-import { MicrosoftDocService } from './microsoft-doc-service.js';
 
-export class DocServiceFactory {
-  static getDocService(targetDocService: DocServices, authHeader: AuthHeaders) {
-    switch (targetDocService) {
-      case DocServices.GOOGLE_DOCS:
-        return GoogleDocService.getInstance(authHeader);
-      case DocServices.MICROSOFT_WORD:
-        return MicrosoftDocService.getInstance(authHeader);
-      default:
-        throw new Error(`DocService ${targetDocService} not found`);
-    }
+// Note: had to add .js to find this file in serverless
+import { createResponseJson } from '../../helpers.js';
+import { APIGatewayEvent } from 'aws-lambda';
+import { wrapHandler } from '../../sentry-helpers.js';
+import { genericRequestStatus } from 'abe-sls-core';
+// modern module syntax
+export const handler = wrapHandler(async (event: APIGatewayEvent) => {
+  const jobId = event.queryStringParameters?.jobId;
+  if (!jobId) {
+    return createResponseJson(400, {
+      response: { error: 'jobId query string parameter is required' },
+    });
   }
-}
+  try { 
+    const status = await genericRequestStatus(jobId);
+    return createResponseJson(200, { response: status });
+  } catch (err) {
+    console.error(err);
+    return createResponseJson(500, {
+      response: { error: `failed to get status for jobId: ${jobId}` },
+    });
+  }
+});

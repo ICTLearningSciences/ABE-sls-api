@@ -7,9 +7,9 @@ The full terms of this copyright and license should always be found in the root 
 import { DocData } from '../types.js';
 import { DocService } from './abstract-doc-service.js';
 import { getDocData as _getDocData } from '../api.js';
-import { AuthHeaders } from '../functions/openai/helpers.js';
+import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import { fetchMostRecentVersion } from '../hooks/graphql_api.js';
-import { IGDocVersion } from '../functions/timeline/functions/types.js';
+import { IGDocVersion } from '../timeline-generation/types.js';
 
 type MicrosoftDocVersion = {
   id: string;

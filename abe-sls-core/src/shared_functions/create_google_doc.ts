@@ -4,20 +4,34 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { DocServices } from '../types.js';
-import { GoogleDocService } from './google-doc-services.js';
-import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
-import { MicrosoftDocService } from './microsoft-doc-service.js';
+// Note: had to add .js to find this file in serverless
+import { useWithGoogleApi } from '../hooks/google_api.js';
+import { storeGoogleDoc } from '../hooks/graphql_api.js';
 
-export class DocServiceFactory {
-  static getDocService(targetDocService: DocServices, authHeader: AuthHeaders) {
-    switch (targetDocService) {
-      case DocServices.GOOGLE_DOCS:
-        return GoogleDocService.getInstance(authHeader);
-      case DocServices.MICROSOFT_WORD:
-        return MicrosoftDocService.getInstance(authHeader);
-      default:
-        throw new Error(`DocService ${targetDocService} not found`);
-    }
+export const createGoogleDoc = async (
+  adminEmails: string[],
+  userEmails: string[],
+  copyFromDocId: string,
+  newDocTitle: string,
+  isAdminDoc: string,
+  userId: string
+) => {
+  const { getGoogleAPIs, createGoogleDoc } = useWithGoogleApi();
+  const { drive, docs } = await getGoogleAPIs();
+  if (!userId) {
+    throw new Error('userId is required');
   }
-}
+  const { docId, webViewLink, createdTime } = await createGoogleDoc(
+    drive,
+    [...adminEmails, ...userEmails],
+    copyFromDocId || '',
+    newDocTitle || ''
+  );
+  await storeGoogleDoc(docId, userId, isAdminDoc === 'true', newDocTitle);
+  return {
+    docId: docId,
+    userId: userId,
+    docUrl: webViewLink,
+    createdTime: createdTime,
+  };
+};

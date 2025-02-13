@@ -6,12 +6,15 @@ The full terms of this copyright and license should always be found in the root 
 */
 // Note: had to add .js to find this file in serverless
 import { DynamoDBStreamEvent } from 'aws-lambda';
-import { AiAsyncJobStatus } from '../../types.js';
-import requireEnv, { extractErrorMessageFromError } from '../../helpers.js';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { ExtractedOpenAiRequestData } from './helpers.js';
-import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
-import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
+import { asyncDocumentTimelineProcess } from 'abe-sls-core';
+import { DocServices, TargetAiModelServiceType } from 'abe-sls-core/dist/types.js';
+interface ExtractedDocumentTimelineRequestData {
+  docId: string;
+  userId: string;
+  targetAiService: TargetAiModelServiceType;
+  docService: DocServices;
+}
 
 // modern module syntax
 export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
@@ -20,37 +23,20 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
   );
   for (let record of records) {
     const newImage = record.dynamodb?.NewImage;
-    const openAiRequestData: ExtractedOpenAiRequestData = JSON.parse(
-      newImage?.openAiRequestData.S || ''
-    );
+    const requestData = newImage?.timelineRequestData.S;
+    const docTimelineRequestData:
+      | ExtractedDocumentTimelineRequestData
+      | undefined = requestData ? JSON.parse(requestData) : undefined;
     const jobId = newImage?.id?.S;
-    if (!openAiRequestData || !jobId) {
-      console.error('openAiRequestData/jobId not found in dynamo db record');
+    if (!docTimelineRequestData || !jobId) {
+      console.error(
+        'docTimelineRequestData/jobId not found in dynamo db record'
+      );
       continue;
     }
-    const { docsId, userId, aiPromptSteps, authHeaders, docService } =
-      openAiRequestData;
-    const aiServiceHandler = new AiServiceHandler();
-    const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
     try {
-      const aiServiceResponse = await aiServiceHandler.executeAiSteps(
-        aiPromptSteps,
-        docsId,
-        userId,
-        authHeaders,
-        docService
-      );
-      // Update the job in dynamo db
-      await documentDBManager.updateExistingItem(jobId, {
-        aiServiceResponse: JSON.stringify(aiServiceResponse),
-        job_status: AiAsyncJobStatus.COMPLETE,
-        answer: aiServiceResponse.answer,
-      });
+      await asyncDocumentTimelineProcess(jobId, docTimelineRequestData);
     } catch (err) {
-      await documentDBManager.updateExistingItem(jobId, {
-        job_status: AiAsyncJobStatus.FAILED,
-        api_error: extractErrorMessageFromError(err),
-      });
       throw err;
     }
   }

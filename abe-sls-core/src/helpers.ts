@@ -9,7 +9,7 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import Sentry from './sentry-helpers.js';
 import Validator from 'jsonschema';
 import { diffWords } from 'diff';
-import { CloudServices } from 'cloud_services/generic_classes/types.js';
+import { CloudServices } from './cloud_services/generic_classes/types.js';
 
 export function numWordsInString(text: string): number {
   return text.trim().split(' ').length;

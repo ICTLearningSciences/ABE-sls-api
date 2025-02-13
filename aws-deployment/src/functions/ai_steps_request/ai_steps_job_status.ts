@@ -4,37 +4,22 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-// Note: had to add .js to find this file in serverless
-import { APIGatewayEvent } from 'aws-lambda';
-import { wrapHandler } from '../sentry-helpers.js';
-import { DocServiceFactory } from '../doc_services/doc-service-factory.js';
-import { DocServices } from '../types.js';
 
+// Note: had to add .js to find this file in serverless
+import requireEnv, { createResponseJson } from '../../helpers.js';
+import { APIGatewayEvent } from 'aws-lambda';
+import { wrapHandler } from '../../sentry-helpers.js';
+import { aiStepsJobStatus } from 'abe-sls-core'
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
-  const docsId = event.pathParameters?.['docs_id'];
-  const docService = event.pathParameters?.['doc_service'];
-  if (!docsId || !docService) {
-    throw new Error('Google Doc ID or Doc Service is empty');
+  const jobId = event.queryStringParameters?.jobId;
+  if (!jobId) {
+    return createResponseJson(400, {
+      response: { error: 'jobId query string parameter is required' },
+    });
   }
-
-  if (Object.values(DocServices).indexOf(docService as DocServices) === -1) {
-    throw new Error('Invalid Doc Service');
-  }
-
-  const docHandler = DocServiceFactory.getDocService(
-    docService as DocServices,
-    {}
-  );
-  const docData = await docHandler.getDocData(docsId);
-
-  const response = {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true,
-    },
-    body: JSON.stringify(docData),
-  };
-  return response;
+  const _aiStepsJobStatus = await aiStepsJobStatus(jobId);
+  return createResponseJson(200, {
+    response: _aiStepsJobStatus,
+  });
 });

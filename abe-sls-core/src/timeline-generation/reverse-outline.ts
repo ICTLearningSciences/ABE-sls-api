@@ -11,8 +11,8 @@ import {
   AiPromptStep,
   PromptOutputTypes,
   PromptRoles,
-} from '../../../types.js';
-import { AvailableAiServices } from '../../../ai_services/ai-service-factory.js';
+} from '../types.js';
+import { AvailableAiServices } from '../ai_services/ai-service-factory.js';
 
 export interface ReverseOutline {
   'Thesis Statement': string;

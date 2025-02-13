@@ -5,34 +5,26 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 // Note: had to add .js to find this file in serverless
-import requireEnv, { createResponseJson } from '../../helpers.js';
-import { AiAsyncJobStatus } from '../../types.js';
 import { APIGatewayEvent } from 'aws-lambda';
-import { v4 as uuid } from 'uuid';
-import { wrapHandler } from '../../sentry-helpers.js';
-import { extractGenericRequestData } from './helpers.js';
-import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
-
+import { wrapHandler } from '../sentry-helpers.js';
+import { getDocRevisions } from 'abe-sls-core';
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
-  const { llmRequest } = extractGenericRequestData(event);
-  // Queue the job
-  const newUuid = uuid();
-  // Store the job in dynamo db, triggers async lambda
-  const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
-  try {
-    await documentDBManager.storeNewItem(newUuid, {
-      id: newUuid,
-      requestData: JSON.stringify(llmRequest),
-      job_status: AiAsyncJobStatus.IN_PROGRESS,
-      answer: '',
-      aiServiceResponse: '',
-    });
-    return createResponseJson(200, { response: { jobId: newUuid } });
-  } catch (err) {
-    console.error(err);
-    return createResponseJson(500, {
-      response: { error: 'Failed to add job to dynamo db' },
-    });
+  const docsId = event.pathParameters?.['docs_id'];
+  if (!docsId) {
+    throw new Error('Google Doc ID is empty');
   }
+  const revisions = await getDocRevisions(docsId);
+
+  const response = {
+    statusCode: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true,
+    },
+    body: JSON.stringify({
+      revisions: revisions,
+    }),
+  };
+  return response;
 });

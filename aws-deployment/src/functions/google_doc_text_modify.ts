@@ -7,9 +7,8 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import { APIGatewayEvent } from 'aws-lambda';
 import { createResponseJson } from '../helpers.js';
-import { useWithGoogleApi } from '../hooks/google_api.js';
 import { wrapHandler } from '../sentry-helpers.js';
-
+import { googleDocTextModify } from 'abe-sls-core';
 export enum GoogleDocTextModifyActions {
   HIGHLIGHT = 'HIGHLIGHT',
   INSERT = 'INSERT',
@@ -18,13 +17,6 @@ export enum GoogleDocTextModifyActions {
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
-  const {
-    getGoogleAPIs,
-    highlightGoogleDocText,
-    removeGoogleDocText,
-    insertGoogleDocText,
-  } = useWithGoogleApi();
-  const { drive, docs } = await getGoogleAPIs();
   const queryParams = event['queryStringParameters'];
   const action =
     queryParams && 'action' in queryParams ? queryParams['action'] : '';
@@ -54,24 +46,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   }
   console.log(`action: ${action}, targetText: ${targetText}, docId: ${docId}`);
   try {
-    if (action === GoogleDocTextModifyActions.HIGHLIGHT) {
-      await highlightGoogleDocText(docs, docId, targetText);
-    } else if (action === GoogleDocTextModifyActions.REMOVE) {
-      await removeGoogleDocText(docs, docId, targetText);
-    } else if (action === GoogleDocTextModifyActions.INSERT) {
-      if (!insertAfterText) {
-        return createResponseJson(400, {
-          error: 'insertAfterText is required query parameter for inserting',
-        });
-      }
-      await insertGoogleDocText(docs, docId, targetText, insertAfterText);
-    } else {
-      return createResponseJson(400, {
-        error:
-          'action must be one of: ' +
-          Object.values(GoogleDocTextModifyActions).join(', '),
-      });
-    }
+    await googleDocTextModify(action as any, targetText, docId, insertAfterText || '');
   } catch (e) {
     console.error(e);
     return createResponseJson(500, { error: JSON.stringify(e) });

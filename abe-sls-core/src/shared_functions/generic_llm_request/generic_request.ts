@@ -5,37 +5,29 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 // Note: had to add .js to find this file in serverless
-import OpenAI from 'openai';
-import {
-  createResponseJson,
-  extractErrorMessageFromError,
-} from '../../helpers.js';
-import { APIGatewayEvent } from 'aws-lambda';
-import { extractOpenAiRequestData } from './helpers.js';
-import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
+import { createResponseJson } from '../../helpers.js';
+import { AiAsyncJobStatus } from '../../types.js';
+import { v4 as uuid } from 'uuid';
+import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
+import { GenericLlmRequest } from '../../generic_llm_request/helpers.js';
 
 // modern module syntax
-export const handler = async (event: APIGatewayEvent) => {
-  const { docsId, userId, aiPromptSteps, authHeaders, docService } =
-    extractOpenAiRequestData(event);
-  const aiServiceHandler = new AiServiceHandler();
+export const genericRequest = async (llmRequest: GenericLlmRequest) => {
+  // Queue the job
+  const newUuid = uuid();
+  // Store the job in dynamo db, triggers async lambda
+  const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
-    const aiServiceResponse = await aiServiceHandler.executeAiSteps(
-      aiPromptSteps,
-      docsId,
-      userId,
-      authHeaders,
-      docService
-    );
-    return createResponseJson(200, { response: aiServiceResponse });
-  } catch (err) {
-    if (err instanceof OpenAI.APIError) {
-      return createResponseJson(500, {
-        message: `OpenAI API Error: ${err.message}`,
-      });
-    }
-    return createResponseJson(500, {
-      message: extractErrorMessageFromError(err),
+    await documentDBManager.storeNewItem(newUuid, {
+      id: newUuid,
+      requestData: JSON.stringify(llmRequest),
+      job_status: AiAsyncJobStatus.IN_PROGRESS,
+      answer: '',
+      aiServiceResponse: '',
     });
+    return { jobId: newUuid };
+  } catch (err) {
+    console.error(err);
+    throw err;
   }
 };

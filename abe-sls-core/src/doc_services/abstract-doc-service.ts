@@ -4,9 +4,9 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { AuthHeaders } from '../functions/openai/helpers.js';
+import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import { DocData } from '../types.js';
-import { IGDocVersion } from '../functions/timeline/functions/types.js';
+import { IGDocVersion } from '../timeline-generation/types.js';
 
 export abstract class DocService<T> {
   abstract authHeaders: AuthHeaders;

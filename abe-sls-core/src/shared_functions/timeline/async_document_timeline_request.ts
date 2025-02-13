@@ -15,25 +15,15 @@ import {
   DocServices,
   TargetAiModelServiceType,
 } from '../../types.js';
-import { APIGatewayEvent } from 'aws-lambda';
 import { v4 as uuid } from 'uuid';
-import { wrapHandler } from '../../sentry-helpers.js';
 import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
 // modern module syntax
-export const handler = wrapHandler(async (event: APIGatewayEvent) => {
-  const documentId = event.queryStringParameters?.['docId'];
-  const userId = event.queryStringParameters?.['userId'];
-  const docService =
-    event.queryStringParameters?.['docService'] || DocServices.GOOGLE_DOCS;
-  const targetAiService: TargetAiModelServiceType = getFieldFromEventBody(
-    event,
-    'targetAiService'
-  );
-  if (!documentId || !userId || !targetAiService) {
-    throw new Error(
-      'Missing required query parameters [docId, userId, targetAiService]'
-    );
-  }
+export const asyncDocumentTimelineRequest = async (
+  documentId: string,
+  userId: string,
+  targetAiService: TargetAiModelServiceType,
+  docService: DocServices
+) => {
   // Queue the job
   const newUuid = uuid();
   // Store the job in dynamo db, triggers async lambda
@@ -50,11 +40,9 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
         docService,
       }),
     });
-    return createResponseJson(200, { response: { jobId: newUuid } });
+    return { jobId: newUuid };
   } catch (err) {
     console.error(err);
-    return createResponseJson(500, {
-      response: { error: 'Failed to add job to dynamo db' },
-    });
+    throw err;
   }
-});
+};

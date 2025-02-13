@@ -4,15 +4,11 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-// Note: had to add .js to find this file in serverless
 import { APIGatewayEvent } from 'aws-lambda';
 import { createResponseJson } from '../helpers.js';
-import { useWithGoogleApi } from '../hooks/google_api.js';
-import { storeGoogleDoc } from '../hooks/graphql_api.js';
 import { wrapHandler } from '../sentry-helpers.js';
+import { createGoogleDoc } from 'abe-sls-core';
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
-  const { getGoogleAPIs, createGoogleDoc } = useWithGoogleApi();
-  const { drive, docs } = await getGoogleAPIs();
   const queryParams = event['queryStringParameters'];
   const adminEmails: string[] = process.env.ADMIN_EMAILS
     ? process.env.ADMIN_EMAILS.split(',')
@@ -36,17 +32,18 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   if (!userId) {
     return createResponseJson(400, { error: 'userId is required' });
   }
-  const { docId, webViewLink, createdTime } = await createGoogleDoc(
-    drive,
-    [...adminEmails, ...userEmails],
+  const { docId, docUrl, createdTime } = await createGoogleDoc(
+    adminEmails,
+    userEmails,
     copyFromDocId || '',
-    newDocTitle || ''
+    newDocTitle || '',
+    isAdminDoc || '',
+    userId
   );
-  await storeGoogleDoc(docId, userId, isAdminDoc === 'true', newDocTitle);
   return createResponseJson(200, {
     docId: docId,
     userId: userId,
-    docUrl: webViewLink,
+    docUrl: docUrl,
     createdTime: createdTime,
   });
 });

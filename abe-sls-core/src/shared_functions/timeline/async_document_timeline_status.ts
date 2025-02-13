@@ -4,20 +4,28 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { DocServices } from '../types.js';
-import { GoogleDocService } from './google-doc-services.js';
-import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
-import { MicrosoftDocService } from './microsoft-doc-service.js';
 
-export class DocServiceFactory {
-  static getDocService(targetDocService: DocServices, authHeader: AuthHeaders) {
-    switch (targetDocService) {
-      case DocServices.GOOGLE_DOCS:
-        return GoogleDocService.getInstance(authHeader);
-      case DocServices.MICROSOFT_WORD:
-        return MicrosoftDocService.getInstance(authHeader);
-      default:
-        throw new Error(`DocService ${targetDocService} not found`);
-    }
+// Note: had to add .js to find this file in serverless
+import { GQLDocumentTimeline } from '../../timeline-generation/types.js';
+import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
+
+// modern module syntax
+export const asyncDocumentTimelineStatus = async (jobId: string) => {
+  const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
+  try {
+    const data = await documentDBManager.getItem(jobId);
+
+    const jobStatus = data.job_status;
+    const documentTimelineData = data.documentTimeline;
+    const documentTimeline: GQLDocumentTimeline = documentTimelineData
+      ? JSON.parse(documentTimelineData)
+      : null;
+    return {
+      documentTimeline,
+      jobStatus,
+    };
+  } catch (err) {
+    console.error(err);
+    throw err;
   }
-}
+};

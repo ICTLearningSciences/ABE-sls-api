@@ -1,4 +1,4 @@
-import { AiGenerationStatus, GQLTimelinePoint, TimelinePointType } from "../../../../src/functions/timeline/functions/types";
+import { AiGenerationStatus, GQLTimelinePoint, TimelinePointType } from "../../../../src/timeline-generation/types";
 
 interface GQLTimelinePointRequest{
     versionTime: string;

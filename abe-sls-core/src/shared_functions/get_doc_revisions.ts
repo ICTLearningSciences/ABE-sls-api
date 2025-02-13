@@ -4,20 +4,20 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { DocServices } from '../types.js';
-import { GoogleDocService } from './google-doc-services.js';
-import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
-import { MicrosoftDocService } from './microsoft-doc-service.js';
+import { useWithGoogleApi } from '../hooks/google_api.js';
 
-export class DocServiceFactory {
-  static getDocService(targetDocService: DocServices, authHeader: AuthHeaders) {
-    switch (targetDocService) {
-      case DocServices.GOOGLE_DOCS:
-        return GoogleDocService.getInstance(authHeader);
-      case DocServices.MICROSOFT_WORD:
-        return MicrosoftDocService.getInstance(authHeader);
-      default:
-        throw new Error(`DocService ${targetDocService} not found`);
-    }
+// modern module syntax
+export const getDocRevisions = async (docsId: string) => {
+  if (!docsId) {
+    throw new Error('Google Doc ID is empty');
   }
-}
+  const { getGoogleAPIs, getGoogleDocVersions } = useWithGoogleApi();
+  const { drive, docs, accessToken } = await getGoogleAPIs();
+  const revisions = await getGoogleDocVersions(
+    drive,
+    docsId,
+    accessToken || ''
+  );
+
+  return revisions;
+};

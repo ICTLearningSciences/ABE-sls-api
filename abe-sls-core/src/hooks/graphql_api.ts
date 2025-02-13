@@ -9,7 +9,7 @@ import { GQLPromptRunResponse, AiPromptStep } from '../types.js';
 import {
   GQLDocumentTimeline,
   IGDocVersion,
-} from '../functions/timeline/functions/types.js';
+} from '../timeline-generation/types.js';
 import { execGql } from '../api.js';
 import pkg from 'lodash';
 import { GQLAiStep } from '../gql_types.js';

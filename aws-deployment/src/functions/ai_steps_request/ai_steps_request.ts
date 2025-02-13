@@ -4,41 +4,16 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-
 // Note: had to add .js to find this file in serverless
-import requireEnv, { createResponseJson } from '../../helpers.js';
 import { APIGatewayEvent } from 'aws-lambda';
-import { GQLDocumentTimeline } from './functions/types.js';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
-
+import { aiStepsRequest } from 'abe-sls-core';
+import { createResponseJson } from '../../helpers.js';
+import { extractOpenAiRequestData } from '../../helpers.js';
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
-  const jobId = event.queryStringParameters?.jobId;
-  if (!jobId) {
-    return createResponseJson(400, {
-      response: { error: 'jobId query string parameter is required' },
-    });
-  }
-  const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
-  try {
-    const data = await documentDBManager.getItem(jobId);
-
-    const jobStatus = data.job_status;
-    const documentTimelineData = data.documentTimeline;
-    const documentTimeline: GQLDocumentTimeline = documentTimelineData
-      ? JSON.parse(documentTimelineData)
-      : null;
-    return createResponseJson(200, {
-      response: {
-        documentTimeline,
-        jobStatus,
-      },
-    });
-  } catch (err) {
-    console.error(err);
-    return createResponseJson(500, {
-      response: { error: `failed to get item from db for jobId: ${jobId}` },
-    });
-  }
+  const { docsId, userId, aiPromptSteps, authHeaders, docService } =
+    extractOpenAiRequestData(event);
+  const { jobId } = await aiStepsRequest(docsId, userId, aiPromptSteps, authHeaders, docService);
+  return createResponseJson(200, { response: { jobId } });
 });

@@ -12,10 +12,12 @@
   "license": "ISC",
   "dependencies": {
     "@sentry/serverless": "^7.111.0",
-    "serverless-domain-manager": "^7.1.2",
-    "abe-sls-core": "file:../abe-sls-core"
+    "abe-sls-core": "file:../abe-sls-core",
+    "jsonwebtoken": "^9.0.2",
+    "serverless-domain-manager": "^7.1.2"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.8",
     "@types/node": "^11.13.0",
     "serverless-plugin-typescript": "^2.1.5",
     "serverless-prune-plugin": "^2.0.2",

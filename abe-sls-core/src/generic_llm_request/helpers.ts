@@ -4,34 +4,40 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-// Note: had to add .js to find this file in serverless
 import { APIGatewayEvent } from 'aws-lambda';
-import { useWithGoogleApi } from '../hooks/google_api.js';
-import { wrapHandler } from '../sentry-helpers.js';
+import { Schema } from 'jsonschema';
+import { getFieldFromEventBody } from '../helpers.js';
+import {
+  PromptOutputTypes,
+  PromptRoles,
+  TargetAiModelServiceType,
+} from 'types';
 
-// modern module syntax
-export const handler = wrapHandler(async (event: APIGatewayEvent) => {
-  const docsId = event.pathParameters?.['docs_id'];
-  if (!docsId) {
-    throw new Error('Google Doc ID is empty');
-  }
-  const { getGoogleAPIs, getGoogleDocVersions } = useWithGoogleApi();
-  const { drive, docs, accessToken } = await getGoogleAPIs();
-  const revisions = await getGoogleDocVersions(
-    drive,
-    docsId,
-    accessToken || ''
-  );
+export interface PromptConfiguration {
+  promptText: string;
+  promptRole?: PromptRoles;
+}
 
-  const response = {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true,
-    },
-    body: JSON.stringify({
-      revisions: revisions,
-    }),
+export interface GenericLlmRequest {
+  prompts: PromptConfiguration[];
+  targetAiServiceModel: TargetAiModelServiceType;
+  outputDataType: PromptOutputTypes;
+  systemRole?: string;
+  responseSchema?: Schema;
+  responseFormat?: string;
+}
+
+export interface GenericLlmRequestData {
+  llmRequest: GenericLlmRequest;
+}
+
+export function extractGenericRequestData(
+  event: APIGatewayEvent
+): GenericLlmRequestData {
+  const llmRequest: GenericLlmRequest =
+    getFieldFromEventBody<GenericLlmRequest>(event, 'llmRequest');
+
+  return {
+    llmRequest,
   };
-  return response;
-});
+}
