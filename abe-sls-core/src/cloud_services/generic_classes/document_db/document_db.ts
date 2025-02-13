@@ -28,15 +28,3 @@ export abstract class DocumentDBManager {
   ): Promise<void>;
   abstract getItem(jobId: string): Promise<any>;
 }
-
-function getCloudService(): CloudServices {
-  const val = process.env['CLOUD_SERVICE'];
-  if (val) {
-    if (Object.values(CloudServices).includes(val as CloudServices)) {
-      return val as CloudServices;
-    } else {
-      throw new Error(`Invalid CLOUD_SERVICE: ${val}`);
-    }
-  }
-  throw new Error('CLOUD_SERVICE is not defined');
-}

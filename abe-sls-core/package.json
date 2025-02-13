@@ -34,7 +34,6 @@
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "openai": "^4.33.0",
-    "serverless-domain-manager": "^7.1.2",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
@@ -54,8 +53,6 @@
     "mocha": "^10.4.0",
     "nock": "^13.5.4",
     "prettier": "^3.2.5",
-    "serverless-plugin-typescript": "^2.1.5",
-    "serverless-prune-plugin": "^2.0.2",
     "supertest": "^6.3.4",
     "ts-mocha": "^10.0.0",
     "tsx": "^4.7.2",
