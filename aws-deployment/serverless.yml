@@ -2,11 +2,25 @@ service: serverless-api
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: "4"
+frameworkVersion: "3"
 
 plugins:
+  - serverless-plugin-typescript
   - serverless-domain-manager
   - serverless-prune-plugin
+
+# build:
+#   esbuild:
+#     bundle: true
+#     minify: true
+#     sourcemap: false
+#     exclude: 
+#       - '@aws-sdk/*' # AWS SDK v3 is modular
+#       - 'aws-sdk' # AWS SDK v2
+#       - 'sentry/*' # Already included in Lambda layer
+#     target: "node18"
+#     platform: "node"
+#     treeShaking: true
 
 custom:
   prune:
@@ -359,8 +373,6 @@ functions:
                 jobId: true
           cors:
             origin: '*'
-  
-
 
 resources:
   Resources:

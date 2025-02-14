@@ -7,8 +7,8 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import { DynamoDBStreamEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { asyncDocumentTimelineProcess } from 'abe-sls-core';
-import { DocServices, TargetAiModelServiceType } from 'abe-sls-core/dist/types.js';
+import { asyncDocumentTimelineProcess } from 'abe-sls-core-2';
+import { DocServices, TargetAiModelServiceType } from 'abe-sls-core-2/dist/types.js';
 interface ExtractedDocumentTimelineRequestData {
   docId: string;
   userId: string;
@@ -23,7 +23,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
   );
   for (let record of records) {
     const newImage = record.dynamodb?.NewImage;
-    const requestData = newImage?.timelineRequestData.S;
+    const requestData = newImage?.timelineRequestData?.S;
     const docTimelineRequestData:
       | ExtractedDocumentTimelineRequestData
       | undefined = requestData ? JSON.parse(requestData) : undefined;

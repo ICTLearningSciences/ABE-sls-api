@@ -22,16 +22,12 @@ export const genericRequestProcess = async (
     const aiServiceResponse =
       await aiServiceHandler.executeGenericLlmRequest(llmRequest);
     // Update the job in dynamo db
-    await documentDBManager.updateExistingItem(jobId, {
-      aiServiceResponse: JSON.stringify(aiServiceResponse),
-      job_status: AiAsyncJobStatus.COMPLETE,
-      answer: aiServiceResponse.answer,
-    });
+    await documentDBManager.genericProcessFinished(jobId, aiServiceResponse);
   } catch (err) {
-    await documentDBManager.updateExistingItem(jobId, {
-      job_status: AiAsyncJobStatus.FAILED,
-      api_error: extractErrorMessageFromError(err),
-    });
+    await documentDBManager.genericProcessFailed(
+      jobId,
+      extractErrorMessageFromError(err)
+    );
     throw err;
   }
 };

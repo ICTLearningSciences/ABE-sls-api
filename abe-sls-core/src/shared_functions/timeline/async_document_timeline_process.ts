@@ -50,10 +50,10 @@ export const asyncDocumentTimelineProcess = async (
       docServiceInstance
     );
   } catch (err) {
-    await documentDBManager.updateExistingItem(jobId, {
-      job_status: AiAsyncJobStatus.FAILED,
-      api_error: extractErrorMessageFromError(err),
-    });
+    await documentDBManager.timelineProcessFailed(
+      jobId,
+      extractErrorMessageFromError(err)
+    );
     throw err;
   }
 };

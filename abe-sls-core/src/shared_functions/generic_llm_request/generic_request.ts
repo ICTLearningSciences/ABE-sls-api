@@ -17,13 +17,7 @@ export const genericRequest = async (llmRequest: GenericLlmRequest) => {
   // Store the job in dynamo db, triggers async lambda
   const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
-    await documentDBManager.storeNewItem(newUuid, {
-      id: newUuid,
-      requestData: JSON.stringify(llmRequest),
-      job_status: AiAsyncJobStatus.IN_PROGRESS,
-      answer: '',
-      aiServiceResponse: '',
-    });
+    await documentDBManager.newGenericRequest(newUuid, llmRequest);
     return { jobId: newUuid };
   } catch (err) {
     console.error(err);

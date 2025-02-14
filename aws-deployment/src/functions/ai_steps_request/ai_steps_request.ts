@@ -7,7 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import { APIGatewayEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { aiStepsRequest } from 'abe-sls-core';
+import { aiStepsRequest } from 'abe-sls-core-2';
 import { createResponseJson } from '../../helpers.js';
 import { extractOpenAiRequestData } from '../../helpers.js';
 // modern module syntax

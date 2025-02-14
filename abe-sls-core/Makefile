@@ -46,3 +46,9 @@ license: LICENSE LICENSE_HEADER
 .PHONY: build
 build:
 	npm run build
+
+
+.PHONY: publish
+publish:
+	npm run build
+	npm publish

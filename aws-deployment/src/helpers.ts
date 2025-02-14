@@ -1,7 +1,7 @@
 import Sentry from "./sentry-helpers.js";
 import axios from "axios";
 import { APIGatewayEvent } from "aws-lambda";
-import {types, aiStepHelpers} from "abe-sls-core";
+import {types, aiStepHelpers} from "abe-sls-core-2";
 
 
 export type AuthHeaders = Record<string, string>;

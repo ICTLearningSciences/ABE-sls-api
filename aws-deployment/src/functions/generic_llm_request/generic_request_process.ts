@@ -8,7 +8,7 @@ The full terms of this copyright and license should always be found in the root 
 import { DynamoDBStreamEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { GenericLlmRequestData } from './helpers.js';
-import { genericRequestProcess } from 'abe-sls-core';
+import { genericRequestProcess } from 'abe-sls-core-2';
 // modern module syntax
 export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
   const records = event.Records.filter(
@@ -17,7 +17,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
   for (let record of records) {
     const newImage = record.dynamodb?.NewImage;
     const requestData: GenericLlmRequestData = JSON.parse(
-      newImage?.requestData.S || ''
+      newImage?.requestData?.S || ''
     );
     const jobId = newImage?.id?.S;
     if (!requestData || !jobId) {

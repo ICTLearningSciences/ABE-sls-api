@@ -20,13 +20,12 @@ export const aiStepsRequest = async (
   try {
     const newUuid = uuid();
     const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
-    await documentDBManager.storeNewItem(newUuid, {
+    await documentDBManager.newStepsRequest(newUuid, {
       docsId,
       userId,
       aiPromptSteps,
       authHeaders,
       docService,
-      job_status: AiAsyncJobStatus.IN_PROGRESS,
     });
     return { jobId: newUuid };
   } catch (err) {

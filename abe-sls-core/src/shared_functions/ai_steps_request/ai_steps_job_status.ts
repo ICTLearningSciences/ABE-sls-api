@@ -16,12 +16,13 @@ export const aiStepsJobStatus = async (jobId: string) => {
   }
   const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
-    const data = await documentDBManager.getItem(jobId);
-    const jobStatus = data.job_status;
-    const apiError = data.api_error;
+    const data = await documentDBManager.stepsStatusRequest(jobId);
+    console.log(data);
+    const jobStatus = data.jobStatus;
+    const apiError = data.apiError;
     const answer = data.answer;
     const aiServiceResponse: AiServiceFinalResponseType | null =
-      data.aiServiceResponse ? JSON.parse(data.aiServiceResponse) : null;
+      data.aiServiceResponse || null;
     return {
       aiServiceResponse,
       answer,

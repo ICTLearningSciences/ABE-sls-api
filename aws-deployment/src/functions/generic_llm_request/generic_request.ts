@@ -8,7 +8,7 @@ The full terms of this copyright and license should always be found in the root 
 import { APIGatewayEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { extractGenericRequestData } from './helpers.js';
-import { genericRequest } from 'abe-sls-core';
+import { genericRequest } from 'abe-sls-core-2';
 import { createResponseJson } from '../../helpers.js';
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {

@@ -9,7 +9,7 @@ The full terms of this copyright and license should always be found in the root 
 import requireEnv, { createResponseJson } from '../../helpers.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { aiStepsJobStatus } from 'abe-sls-core'
+import { aiStepsJobStatus } from 'abe-sls-core-2'
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const jobId = event.queryStringParameters?.jobId;
@@ -20,6 +20,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   }
   try {
     const _aiStepsJobStatus = await aiStepsJobStatus(jobId);
+    console.log(_aiStepsJobStatus);
     return createResponseJson(200, {
       response: {
       aiServiceResponse: _aiStepsJobStatus.aiServiceResponse,

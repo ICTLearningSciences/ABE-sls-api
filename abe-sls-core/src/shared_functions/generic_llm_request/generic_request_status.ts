@@ -14,13 +14,11 @@ export const genericRequestStatus = async (jobId: string) => {
   }
   const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
-    const data = await documentDBManager.getItem(jobId);
-    const jobStatus = data.job_status;
+    const data = await documentDBManager.genericStatusRequest(jobId);
+    const jobStatus = data.jobStatus;
     const answer = data.answer;
-    const aiServiceResponse = data.aiServiceResponse
-      ? JSON.parse(data.aiServiceResponse)
-      : null;
-    const apiError = data.api_error;
+    const aiServiceResponse = data.aiServiceResponse;
+    const apiError = data.apiError;
     return {
       aiServiceResponse,
       answer,

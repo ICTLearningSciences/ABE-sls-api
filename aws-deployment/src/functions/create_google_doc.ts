@@ -7,7 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 import { APIGatewayEvent } from 'aws-lambda';
 import { createResponseJson } from '../helpers.js';
 import { wrapHandler } from '../sentry-helpers.js';
-import { createGoogleDoc } from 'abe-sls-core';
+import { createGoogleDoc } from 'abe-sls-core-2';
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const queryParams = event['queryStringParameters'];
   const adminEmails: string[] = process.env.ADMIN_EMAILS

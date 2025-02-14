@@ -383,10 +383,10 @@ export class DocumentTimelineGenerator {
           user: userId,
           timelinePoints: sortDocumentTimelinePoints(timelinePoints),
         };
-        await documentDBManager.updateExistingItem(jobId, {
-          documentTimeline: JSON.stringify(documentTimeline),
-          job_status: AiAsyncJobStatus.IN_PROGRESS,
-        });
+        await documentDBManager.timelineProcessProgress(
+          jobId,
+          documentTimeline
+        );
       }
     }
     const documentTimeline: GQLDocumentTimeline = {
@@ -394,10 +394,7 @@ export class DocumentTimelineGenerator {
       user: userId,
       timelinePoints: sortDocumentTimelinePoints(timelinePoints),
     };
-    await documentDBManager.updateExistingItem(jobId, {
-      documentTimeline: JSON.stringify(documentTimeline),
-      job_status: AiAsyncJobStatus.COMPLETE,
-    });
+    await documentDBManager.timelineProcessFinished(jobId, documentTimeline);
     // store timeline in gql
     await storeDocTimeline(documentTimeline).catch((e) => {
       console.error(e);

@@ -28,16 +28,12 @@ export const aiStepsProcess = async (
       authHeaders,
       docService
     );
-    await documentDBManager.updateExistingItem(jobId, {
-      aiServiceResponse: JSON.stringify(aiServiceResponse),
-      job_status: AiAsyncJobStatus.COMPLETE,
-      answer: aiServiceResponse.answer,
-    });
+    await documentDBManager.stepsProcessFinished(jobId, aiServiceResponse);
   } catch (err) {
-    await documentDBManager.updateExistingItem(jobId, {
-      job_status: AiAsyncJobStatus.FAILED,
-      api_error: extractErrorMessageFromError(err),
-    });
+    await documentDBManager.stepsProcessFailed(
+      jobId,
+      extractErrorMessageFromError(err)
+    );
     throw err;
   }
 };

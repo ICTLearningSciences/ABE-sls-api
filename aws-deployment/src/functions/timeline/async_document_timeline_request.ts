@@ -13,10 +13,10 @@ import {
 import {
   DocServices,
   TargetAiModelServiceType,
-} from 'abe-sls-core/dist/types.js';
+} from 'abe-sls-core-2/dist/types.js';
 import { APIGatewayEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { asyncDocumentTimelineRequest } from 'abe-sls-core';
+import { asyncDocumentTimelineRequest } from 'abe-sls-core-2';
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const documentId = event.queryStringParameters?.['docId'];

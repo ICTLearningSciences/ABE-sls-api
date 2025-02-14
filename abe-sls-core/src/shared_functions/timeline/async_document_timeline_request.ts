@@ -13,6 +13,14 @@ import {
 } from '../../types.js';
 import { v4 as uuid } from 'uuid';
 import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
+
+export interface TimelineRequestData {
+  docId: string;
+  userId: string;
+  targetAiService: TargetAiModelServiceType;
+  docService: DocServices;
+}
+
 // modern module syntax
 export const asyncDocumentTimelineRequest = async (
   documentId: string,
@@ -25,16 +33,11 @@ export const asyncDocumentTimelineRequest = async (
   // Store the job in dynamo db, triggers async lambda
   const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
-    await documentDBManager.storeNewItem(newUuid, {
-      id: newUuid,
-      job_status: AiAsyncJobStatus.IN_PROGRESS,
-      documentTimeline: '',
-      timelineRequestData: JSON.stringify({
-        docId: documentId,
-        userId,
-        targetAiService,
-        docService,
-      }),
+    await documentDBManager.newTimelineRequest(newUuid, {
+      docId: documentId,
+      userId,
+      targetAiService,
+      docService,
     });
     return { jobId: newUuid };
   } catch (err) {

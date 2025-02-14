@@ -4,8 +4,13 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
+import { TimelineRequestData } from '../../../shared_functions/timeline/async_document_timeline_request.js';
+import { GenericLlmRequest } from '../../../generic_llm_request/helpers.js';
+import { ExtractedOpenAiRequestData } from '../../../shared_functions/ai_steps_request/helpers.js';
 import { AiAsyncJobStatus } from '../../../types.js';
 import { CloudServices } from '../types.js';
+import { AiServiceFinalResponseType } from '../../../ai_services/ai-service-factory.js';
+import { GQLDocumentTimeline } from '../../../timeline-generation/types.js';
 
 export interface JobStatusRes {
   aiServiceResponse: string;
@@ -14,17 +19,63 @@ export interface JobStatusRes {
   apiError: string;
 }
 
+export interface StepStatusRes {
+  aiServiceResponse?: AiServiceFinalResponseType;
+  answer: string;
+  jobStatus: AiAsyncJobStatus;
+  apiError: string;
+}
+
+export interface GenericStatusRes {
+  aiServiceResponse?: AiServiceFinalResponseType;
+  answer: string;
+  jobStatus: AiAsyncJobStatus;
+  apiError: string;
+}
+
+export interface TimelineStatusRes {
+  documentTimeline: GQLDocumentTimeline;
+  jobStatus: AiAsyncJobStatus;
+}
+
 export abstract class DocumentDBManager {
   protected static clientInstance: any = null;
   abstract cloudService: CloudServices;
 
-  abstract updateExistingItem(
+  abstract newStepsRequest(
     jobId: string,
-    fields: Record<string, any>
+    openAiRequestData: ExtractedOpenAiRequestData
   ): Promise<void>;
-  abstract storeNewItem(
+  abstract stepsStatusRequest(jobId: string): Promise<StepStatusRes>;
+  abstract stepsProcessFinished(
     jobId: string,
-    fields: Record<string, any>
+    aiServiceResponse: AiServiceFinalResponseType
   ): Promise<void>;
-  abstract getItem(jobId: string): Promise<any>;
+  abstract stepsProcessFailed(jobId: string, error: string): Promise<void>;
+
+  abstract newGenericRequest(
+    jobId: string,
+    llmRequest: GenericLlmRequest
+  ): Promise<void>;
+  abstract genericStatusRequest(jobId: string): Promise<GenericStatusRes>;
+  abstract genericProcessFinished(
+    jobId: string,
+    aiServiceResponse: AiServiceFinalResponseType
+  ): Promise<void>;
+  abstract genericProcessFailed(jobId: string, error: string): Promise<void>;
+
+  abstract newTimelineRequest(
+    jobId: string,
+    timelineRequestData: TimelineRequestData
+  ): Promise<void>;
+  abstract timelineStatusRequest(jobId: string): Promise<TimelineStatusRes>;
+  abstract timelineProcessProgress(
+    jobId: string,
+    documentTimeline: GQLDocumentTimeline
+  ): Promise<void>;
+  abstract timelineProcessFinished(
+    jobId: string,
+    documentTimeline: GQLDocumentTimeline
+  ): Promise<void>;
+  abstract timelineProcessFailed(jobId: string, error: string): Promise<void>;
 }

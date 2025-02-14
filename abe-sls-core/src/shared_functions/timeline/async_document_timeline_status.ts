@@ -13,13 +13,11 @@ import { DocumentDBFactory } from '../../cloud_services/generic_classes/document
 export const asyncDocumentTimelineStatus = async (jobId: string) => {
   const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
-    const data = await documentDBManager.getItem(jobId);
+    const data = await documentDBManager.timelineStatusRequest(jobId);
 
-    const jobStatus = data.job_status;
+    const jobStatus = data.jobStatus;
     const documentTimelineData = data.documentTimeline;
-    const documentTimeline: GQLDocumentTimeline = documentTimelineData
-      ? JSON.parse(documentTimelineData)
-      : null;
+    const documentTimeline: GQLDocumentTimeline = documentTimelineData;
     return {
       documentTimeline,
       jobStatus,

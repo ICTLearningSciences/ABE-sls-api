@@ -16,3 +16,7 @@ deploy-dev: build-core
 .PHONY: package
 package:
 	npx sls package -s dev --aws-profile abe
+
+.PHONY: publish-core
+publish-core:
+	cd ../abe-sls-core && make publish

@@ -7,7 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import { APIGatewayEvent } from 'aws-lambda';
 import { wrapHandler } from '../sentry-helpers.js';
-import { getDocData } from 'abe-sls-core';
+import { getDocData } from 'abe-sls-core-2';
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {

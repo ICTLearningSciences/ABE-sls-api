@@ -4,8 +4,18 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { DocumentDBManager } from '../generic_classes/document_db/document_db.js';
+import { TimelineRequestData } from '../../shared_functions/timeline/async_document_timeline_request.js';
+import { GenericLlmRequest } from '../../generic_llm_request/helpers.js';
+import { ExtractedOpenAiRequestData } from '../../shared_functions/ai_steps_request/helpers.js';
+import {
+  DocumentDBManager,
+  GenericStatusRes,
+  StepStatusRes,
+  TimelineStatusRes,
+} from '../generic_classes/document_db/document_db.js';
 import { CloudServices } from '../generic_classes/types.js';
+import { AiServiceFinalResponseType } from '../../ai_services/ai-service-factory.js';
+import { GQLDocumentTimeline } from '../../timeline-generation/types.js';
 export class CosmosDBManager extends DocumentDBManager {
   cloudService: CloudServices = CloudServices.AZURE;
 
@@ -13,21 +23,76 @@ export class CosmosDBManager extends DocumentDBManager {
     super();
   }
 
-  async updateExistingItem(
+  async newStepsRequest(
     jobId: string,
-    fields: Record<string, any>
+    openAiRequestData: ExtractedOpenAiRequestData
   ): Promise<void> {
     throw new Error('Not implemented');
   }
 
-  async storeNewItem(
+  async stepsStatusRequest(jobId: string): Promise<StepStatusRes> {
+    throw new Error('Not implemented');
+  }
+
+  async stepsProcessFinished(
     jobId: string,
-    fields: Record<string, any>
+    aiServiceResponse: AiServiceFinalResponseType
   ): Promise<void> {
     throw new Error('Not implemented');
   }
 
-  async getItem(jobId: string): Promise<any> {
+  async stepsProcessFailed(jobId: string, error: string): Promise<void> {
+    throw new Error('Not implemented');
+  }
+
+  async newGenericRequest(
+    jobId: string,
+    llmRequest: GenericLlmRequest
+  ): Promise<void> {
+    throw new Error('Not implemented');
+  }
+
+  async genericStatusRequest(jobId: string): Promise<GenericStatusRes> {
+    throw new Error('Not implemented');
+  }
+
+  async genericProcessFinished(
+    jobId: string,
+    aiServiceResponse: AiServiceFinalResponseType
+  ): Promise<void> {
+    throw new Error('Not implemented');
+  }
+
+  async genericProcessFailed(jobId: string, error: string): Promise<void> {
+    throw new Error('Not implemented');
+  }
+
+  async newTimelineRequest(
+    jobId: string,
+    timelineRequestData: TimelineRequestData
+  ): Promise<void> {
+    throw new Error('Not implemented');
+  }
+
+  async timelineStatusRequest(jobId: string): Promise<TimelineStatusRes> {
+    throw new Error('Not implemented');
+  }
+
+  async timelineProcessProgress(
+    jobId: string,
+    documentTimeline: GQLDocumentTimeline
+  ): Promise<void> {
+    throw new Error('Not implemented');
+  }
+
+  async timelineProcessFinished(
+    jobId: string,
+    documentTimeline: GQLDocumentTimeline
+  ): Promise<void> {
+    throw new Error('Not implemented');
+  }
+
+  async timelineProcessFailed(jobId: string, error: string): Promise<void> {
     throw new Error('Not implemented');
   }
 }

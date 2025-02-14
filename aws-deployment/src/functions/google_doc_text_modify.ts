@@ -8,7 +8,7 @@ The full terms of this copyright and license should always be found in the root 
 import { APIGatewayEvent } from 'aws-lambda';
 import { createResponseJson } from '../helpers.js';
 import { wrapHandler } from '../sentry-helpers.js';
-import { googleDocTextModify } from 'abe-sls-core';
+import { googleDocTextModify } from 'abe-sls-core-2';
 export enum GoogleDocTextModifyActions {
   HIGHLIGHT = 'HIGHLIGHT',
   INSERT = 'INSERT',

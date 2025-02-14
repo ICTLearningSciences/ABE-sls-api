@@ -7,8 +7,8 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import { DynamoDBStreamEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
-import { aiStepsProcess } from 'abe-sls-core';
-import { ExtractedOpenAiRequestData } from 'abe-sls-core/src/shared_functions/ai_steps_request/helpers.js';
+import { aiStepsProcess } from 'abe-sls-core-2';
+import { ExtractedOpenAiRequestData } from 'abe-sls-core-2/dist/shared_functions/ai_steps_request/helpers.js';
 
 
 // modern module syntax
@@ -19,7 +19,7 @@ export const handler = wrapHandler(async (event: DynamoDBStreamEvent) => {
   for (let record of records) {
     const newImage = record.dynamodb?.NewImage;
     const openAiRequestData: ExtractedOpenAiRequestData = JSON.parse(
-      newImage?.openAiRequestData.S || ''
+      newImage?.openAiRequestData?.S || ''
     );
     const jobId = newImage?.id?.S;
     if (!openAiRequestData || !jobId) {
