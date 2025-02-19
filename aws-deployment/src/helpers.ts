@@ -6,6 +6,18 @@ import {types, aiStepHelpers} from "abe-sls-core-2";
 
 export type AuthHeaders = Record<string, string>;
 
+
+export function getAuthHeaders(event: APIGatewayEvent): AuthHeaders {
+  const authToken =
+    'headers' in event && 'Authorization' in event['headers']
+      ? event['headers']['Authorization']
+      : null;
+  if (!authToken) {
+    throw new Error('Auth headers are empty');
+  }
+  return { Authorization: authToken };
+}
+
 export function createResponseJson(statusCode: number, body: any) {
     if (statusCode >= 400) {
       Sentry.captureException(`Error response: ${JSON.stringify(body)}`);
@@ -72,7 +84,7 @@ export function createResponseJson(statusCode: number, body: any) {
       event,
       'aiPromptSteps'
     );
-    const authHeaders = aiStepHelpers.getAuthHeaders(event);
+    const authHeaders = getAuthHeaders(event);
     if (!docsId) {
       throw new Error('Google Doc ID is empty');
     }

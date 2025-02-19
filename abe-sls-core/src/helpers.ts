@@ -4,7 +4,6 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { APIGatewayEvent } from 'aws-lambda';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import Validator from 'jsonschema';
 import { diffWords } from 'diff';
@@ -102,21 +101,6 @@ export function isJsonString(str: string | undefined | null): boolean {
     return false;
   }
   return true;
-}
-
-export function getFieldFromEventBody<T>(
-  event: APIGatewayEvent,
-  field: string
-): T {
-  const body = event.body ? JSON.parse(event.body) : null;
-  if (!body) {
-    throw new Error('Body is empty');
-  }
-  try {
-    return body[field];
-  } catch (err) {
-    throw new Error(`No ${field} in body`);
-  }
 }
 
 export const exponentialBackoff = (

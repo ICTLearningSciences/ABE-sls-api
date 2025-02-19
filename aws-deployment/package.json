@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@sentry/serverless": "^7.120.3",
-    "abe-sls-core-2": "^1.0.11",
+    "abe-sls-core-2": "^1.0.13",
     "jsonschema": "^1.5.0",
     "jsonwebtoken": "^9.0.2",
     "serverless-domain-manager": "^7.1.2",

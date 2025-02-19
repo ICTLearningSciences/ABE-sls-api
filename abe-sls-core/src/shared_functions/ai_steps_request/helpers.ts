@@ -4,22 +4,9 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { APIGatewayEvent } from 'aws-lambda';
-import { getFieldFromEventBody } from '../../helpers.js';
 import { AiPromptStep, DocServices } from '../../types.js';
 
 export type AuthHeaders = Record<string, string>;
-
-export function getAuthHeaders(event: APIGatewayEvent): AuthHeaders {
-  const authToken =
-    'headers' in event && 'Authorization' in event['headers']
-      ? event['headers']['Authorization']
-      : null;
-  if (!authToken) {
-    throw new Error('Auth headers are empty');
-  }
-  return { Authorization: authToken };
-}
 
 export enum OpenAiActions {
   ASK_QUESTION = 'ASK_QUESTION',
@@ -47,35 +34,4 @@ export interface ExtractedOpenAiRequestData {
   aiPromptSteps: AiPromptStep[];
   authHeaders: AuthHeaders;
   docService: DocServices;
-}
-
-export function extractOpenAiRequestData(
-  event: APIGatewayEvent
-): ExtractedOpenAiRequestData {
-  const docsId = event.queryStringParameters?.['docId'];
-  const userId = event.queryStringParameters?.['userId'];
-  const docService = event.queryStringParameters?.['docService'];
-  const aiPromptSteps: AiPromptStep[] = getFieldFromEventBody<AiPromptStep[]>(
-    event,
-    'aiPromptSteps'
-  );
-  const authHeaders = getAuthHeaders(event);
-  if (!docsId) {
-    throw new Error('Google Doc ID is empty');
-  }
-  if (!userId) {
-    throw new Error('User ID is empty');
-  }
-  if (!aiPromptSteps) {
-    throw new Error('OpenAI Prompt Steps are empty');
-  }
-  return {
-    docsId,
-    userId,
-    aiPromptSteps,
-    authHeaders,
-    docService: docService
-      ? (docService as DocServices)
-      : DocServices.GOOGLE_DOCS,
-  };
 }

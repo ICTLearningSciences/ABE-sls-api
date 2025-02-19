@@ -7,8 +7,8 @@ The full terms of this copyright and license should always be found in the root 
 // Note: had to add .js to find this file in serverless
 import { v4 as uuid } from 'uuid';
 import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
-import { AiAsyncJobStatus, AiPromptStep, DocServices } from '../../types.js';
-import { AuthHeaders } from 'shared_functions/ai_steps_request/helpers.js';
+import { AiPromptStep, DocServices } from '../../types.js';
+import { AuthHeaders } from './helpers.js';
 // modern module syntax
 export const aiStepsRequest = async (
   docsId: string,

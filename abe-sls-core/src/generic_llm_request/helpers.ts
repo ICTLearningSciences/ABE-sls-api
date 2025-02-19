@@ -4,14 +4,12 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { APIGatewayEvent } from 'aws-lambda';
 import { Schema } from 'jsonschema';
-import { getFieldFromEventBody } from '../helpers.js';
 import {
   PromptOutputTypes,
   PromptRoles,
   TargetAiModelServiceType,
-} from 'types';
+} from '../types.js';
 
 export interface PromptConfiguration {
   promptText: string;
@@ -29,15 +27,4 @@ export interface GenericLlmRequest {
 
 export interface GenericLlmRequestData {
   llmRequest: GenericLlmRequest;
-}
-
-export function extractGenericRequestData(
-  event: APIGatewayEvent
-): GenericLlmRequestData {
-  const llmRequest: GenericLlmRequest =
-    getFieldFromEventBody<GenericLlmRequest>(event, 'llmRequest');
-
-  return {
-    llmRequest,
-  };
 }

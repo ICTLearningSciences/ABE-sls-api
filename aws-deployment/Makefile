@@ -9,8 +9,7 @@ test-core:
 	cd ../abe-sls-core && make test
 
 .PHONY: deploy-dev
-deploy-dev: build-core
-	npm ci
+deploy-dev:
 	npm run deploy:dev
 
 .PHONY: package
