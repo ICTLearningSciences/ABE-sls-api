@@ -1,6 +1,8 @@
 import { HttpRequest, InvocationContext, HttpResponseInit, app } from "@azure/functions";
-import { aiStepsJobStatus, aiStepsRequest, getDocData } from "abe-sls-core-2";
+import { aiStepsJobStatus, aiStepsProcess, aiStepsRequest } from "abe-sls-core-2";
 import { createResponseJson, extractOpenAiRequestData } from "../helpers.js";
+import { ExtractedOpenAiRequestData } from "abe-sls-core-2/dist/shared_functions/ai_steps_request/helpers.js";
+import { AiAsyncJobStatus } from "abe-sls-core-2/dist/types.js";
 // modern module syntax
 export async function _aiStepsRequest(
   request: HttpRequest,
@@ -25,6 +27,18 @@ export async function processAiStepsJob(
   try {
     context.log('Processing new DB item');
     context.log(documents);
+    for (let document of documents) {
+      if(document.job_status !== AiAsyncJobStatus.QUEUED) {
+        // Only process queued jobs
+        continue;
+      }
+      const jobId = document.id;
+      if(!document.openAiRequestData) {
+        throw new Error('openAiRequestData not found for jobId: ' + jobId);
+      }
+      const openAiRequestData: ExtractedOpenAiRequestData = JSON.parse(document.openAiRequestData);
+      await aiStepsProcess(jobId, openAiRequestData);
+    }
   } catch (error) {
       console.error(error)
   }
@@ -34,7 +48,7 @@ export async function _aiStepsJobStatus(
   request: HttpRequest,
   context: InvocationContext,
 ): Promise<HttpResponseInit> {
-  const jobId = request.params.jobId;
+  const jobId = request.query.get('jobId');
   if (!jobId) {
     return createResponseJson(400, {
       response: { error: 'jobId query string parameter is required' },

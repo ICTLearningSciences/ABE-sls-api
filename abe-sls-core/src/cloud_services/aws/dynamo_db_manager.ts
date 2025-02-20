@@ -43,7 +43,7 @@ export class DynamoDBManager extends DocumentDBManager {
           S: jobId,
         },
         job_status: {
-          S: AiAsyncJobStatus.IN_PROGRESS,
+          S: AiAsyncJobStatus.QUEUED,
         },
         answer: {
           S: '',
@@ -141,7 +141,7 @@ export class DynamoDBManager extends DocumentDBManager {
           S: jobId,
         },
         job_status: {
-          S: AiAsyncJobStatus.IN_PROGRESS,
+          S: AiAsyncJobStatus.QUEUED,
         },
         answer: {
           S: '',
@@ -240,7 +240,7 @@ export class DynamoDBManager extends DocumentDBManager {
           S: jobId,
         },
         job_status: {
-          S: AiAsyncJobStatus.IN_PROGRESS,
+          S: AiAsyncJobStatus.QUEUED,
         },
         documentTimeline: {
           S: '',
@@ -334,6 +334,20 @@ export class DynamoDBManager extends DocumentDBManager {
       ExpressionAttributeValues: {
         ':job_status': {
           S: AiAsyncJobStatus.FAILED,
+        },
+      },
+    };
+    await this.dynamoDbClient.updateItem(tableRequest);
+  }
+
+  async setJobInProgress(jobId: string): Promise<void> {
+    const tableRequest: UpdateItemCommandInput = {
+      TableName: this.jobsTableName,
+      Key: { id: { S: jobId } },
+      UpdateExpression: 'set job_status = :job_status',
+      ExpressionAttributeValues: {
+        ':job_status': {
+          S: AiAsyncJobStatus.IN_PROGRESS,
         },
       },
     };

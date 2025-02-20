@@ -19,6 +19,32 @@ export interface JobStatusRes {
   apiError: string;
 }
 
+export interface DocumentDBGenericRequestItem {
+  id: string;
+  job_status?: AiAsyncJobStatus;
+  answer?: string;
+  aiServiceResponse?: string;
+  requestData?: string;
+  api_error?: string;
+}
+
+export interface DocumentDBStepsRequestItem {
+  id: string;
+  job_status?: AiAsyncJobStatus;
+  answer?: string;
+  aiServiceResponse?: string;
+  openAiRequestData?: string;
+  api_error?: string;
+}
+
+export interface DocumentDBTimelineRequestItem {
+  id: string;
+  job_status?: AiAsyncJobStatus;
+  documentTimeline?: string;
+  timelineRequestData?: string;
+  api_error?: string;
+}
+
 export interface StepStatusRes {
   aiServiceResponse?: AiServiceFinalResponseType;
   answer: string;
@@ -41,6 +67,8 @@ export interface TimelineStatusRes {
 export abstract class DocumentDBManager {
   protected static clientInstance: any = null;
   abstract cloudService: CloudServices;
+
+  abstract setJobInProgress(jobId: string): Promise<void>;
 
   abstract newStepsRequest(
     jobId: string,
