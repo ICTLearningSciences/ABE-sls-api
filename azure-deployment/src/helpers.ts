@@ -1,4 +1,6 @@
 import { HttpRequest, HttpResponseInit } from "@azure/functions";
+import { GenericLlmRequest } from "abe-sls-core-2/dist/generic_llm_request/helpers.js";
+import { GenericLlmRequestData } from "abe-sls-core-2/dist/generic_llm_request/helpers.js";
 import { ExtractedOpenAiRequestData } from "abe-sls-core-2/dist/shared_functions/ai_steps_request/helpers.js";
 import { AiPromptStep, DocServices } from "abe-sls-core-2/dist/types.js";
 import * as axios from "axios";
@@ -17,6 +19,16 @@ export function createResponseJson(statusCode: number, body: any): HttpResponseI
     }),
   };
 }
+
+export async function extractGenericRequestData(
+  request: HttpRequest
+): Promise<GenericLlmRequestData> {
+  const llmRequest: GenericLlmRequest =
+    await getFieldFromEventBody<GenericLlmRequest>(request, 'llmRequest');
+
+  return { llmRequest }
+}
+
 
 export function getAuthHeaders(request: HttpRequest): AuthHeaders {
     console.log(request.headers)

@@ -28,13 +28,21 @@ export class CosmosDBManager extends DocumentDBManager {
   cosmosKey = requireEnv('COSMOS_KEY');
   cosmosEndpoint = requireEnv('CosmosDBEndpoint');
   cosmosDatabase = requireEnv('CosmosDBName');
-  cosmosContainer = requireEnv('CosmosDBContainerName');
+  cosmosAiStepContainerName = requireEnv('CosmosDBAiStepContainerName');
+  cosmosTimelineContainerName = requireEnv('CosmosDBTimelineContainerName');
+  cosmosGenericRequestContainerName = requireEnv('CosmosDBGenericRequestContainerName');
   client = new CosmosClient({
     endpoint: this.cosmosEndpoint,
     key: this.cosmosKey,
   });
   database = this.client.database(this.cosmosDatabase);
-  container = this.database.container(this.cosmosContainer);
+    /**
+   * Azure does not allow us to separate env vars for different functions,
+   * so we have to explicitly specify the container name for each function.
+   */
+  aiStepContainer = this.database.container(this.cosmosAiStepContainerName);
+  timelineContainer = this.database.container(this.cosmosTimelineContainerName);
+  genericRequestContainer = this.database.container(this.cosmosGenericRequestContainerName);
 
   constructor() {
     super();
@@ -44,7 +52,7 @@ export class CosmosDBManager extends DocumentDBManager {
     jobId: string,
     openAiRequestData: ExtractedOpenAiRequestData
   ): Promise<void> {
-    await this.container.items.upsert<DocumentDBStepsRequestItem>({
+    await this.aiStepContainer.items.upsert<DocumentDBStepsRequestItem>({
       id: jobId,
       job_status: AiAsyncJobStatus.QUEUED,
       answer: '',
@@ -54,7 +62,7 @@ export class CosmosDBManager extends DocumentDBManager {
   }
 
   async stepsStatusRequest(jobId: string): Promise<StepStatusRes> {
-    const item = await this.container
+    const item = await this.aiStepContainer
       .item(jobId, jobId)
       .read<DocumentDBStepsRequestItem>();
     if (!item.resource) {
@@ -78,7 +86,7 @@ export class CosmosDBManager extends DocumentDBManager {
     jobId: string,
     aiServiceResponse: AiServiceFinalResponseType
   ): Promise<void> {
-    await this.container
+    await this.aiStepContainer
       .item(jobId, jobId)
       .replace<DocumentDBStepsRequestItem>({
         id: jobId,
@@ -89,7 +97,7 @@ export class CosmosDBManager extends DocumentDBManager {
   }
 
   async stepsProcessFailed(jobId: string, error: string): Promise<void> {
-    await this.container
+    await this.aiStepContainer
       .item(jobId, jobId)
       .replace<DocumentDBStepsRequestItem>({
         id: jobId,
@@ -102,7 +110,7 @@ export class CosmosDBManager extends DocumentDBManager {
     jobId: string,
     llmRequest: GenericLlmRequest
   ): Promise<void> {
-    await this.container.items.upsert<DocumentDBGenericRequestItem>({
+    await this.genericRequestContainer.items.upsert<DocumentDBGenericRequestItem>({
       id: jobId,
       job_status: AiAsyncJobStatus.QUEUED,
       answer: '',
@@ -112,7 +120,7 @@ export class CosmosDBManager extends DocumentDBManager {
   }
 
   async genericStatusRequest(jobId: string): Promise<GenericStatusRes> {
-    const item = await this.container
+    const item = await this.genericRequestContainer
       .item(jobId, jobId)
       .read<DocumentDBGenericRequestItem>();
     if (!item.resource) {
@@ -137,7 +145,7 @@ export class CosmosDBManager extends DocumentDBManager {
     jobId: string,
     aiServiceResponse: AiServiceFinalResponseType
   ): Promise<void> {
-    await this.container
+    await this.genericRequestContainer
       .item(jobId, jobId)
       .replace<DocumentDBGenericRequestItem>({
         id: jobId,
@@ -148,7 +156,7 @@ export class CosmosDBManager extends DocumentDBManager {
   }
 
   async genericProcessFailed(jobId: string, error: string): Promise<void> {
-    await this.container
+    await this.genericRequestContainer
       .item(jobId, jobId)
       .replace<DocumentDBGenericRequestItem>({
         id: jobId,
@@ -160,7 +168,7 @@ export class CosmosDBManager extends DocumentDBManager {
     jobId: string,
     timelineRequestData: TimelineRequestData
   ): Promise<void> {
-    await this.container.items.upsert<DocumentDBTimelineRequestItem>({
+    await this.timelineContainer.items.upsert<DocumentDBTimelineRequestItem>({
       id: jobId,
       job_status: AiAsyncJobStatus.QUEUED,
       documentTimeline: '',
@@ -169,7 +177,7 @@ export class CosmosDBManager extends DocumentDBManager {
   }
 
   async timelineStatusRequest(jobId: string): Promise<TimelineStatusRes> {
-    const item = await this.container
+    const item = await this.timelineContainer
       .item(jobId, jobId)
       .read<DocumentDBTimelineRequestItem>();
     if (!item.resource) {
@@ -190,7 +198,7 @@ export class CosmosDBManager extends DocumentDBManager {
     jobId: string,
     documentTimeline: GQLDocumentTimeline
   ): Promise<void> {
-    await this.container
+    await this.timelineContainer
       .item(jobId, jobId)
       .replace<DocumentDBTimelineRequestItem>({
         id: jobId,
@@ -203,7 +211,7 @@ export class CosmosDBManager extends DocumentDBManager {
     jobId: string,
     documentTimeline: GQLDocumentTimeline
   ): Promise<void> {
-    await this.container
+    await this.timelineContainer
       .item(jobId, jobId)
       .replace<DocumentDBTimelineRequestItem>({
         id: jobId,
@@ -213,7 +221,7 @@ export class CosmosDBManager extends DocumentDBManager {
   }
 
   async timelineProcessFailed(jobId: string, error: string): Promise<void> {
-    await this.container
+    await this.timelineContainer
       .item(jobId, jobId)
       .replace<DocumentDBTimelineRequestItem>({
         id: jobId,
@@ -222,10 +230,32 @@ export class CosmosDBManager extends DocumentDBManager {
       });
   }
 
-  async setJobInProgress(jobId: string): Promise<void> {
-    await this.container
+  /**
+   * Azure does not allow us to separate env vars for different functions,
+   * so we have to explicitly specify the container name for each function.
+   */
+  async setStepsJobInProgress(jobId: string): Promise<void> {
+    await this.aiStepContainer
       .item(jobId, jobId)
       .replace<DocumentDBStepsRequestItem>({
+        id: jobId,
+        job_status: AiAsyncJobStatus.IN_PROGRESS,
+      });
+  }
+
+  async setGenericRequestJobInProgress(jobId: string): Promise<void> {
+    await this.genericRequestContainer
+      .item(jobId, jobId)
+      .replace<DocumentDBGenericRequestItem>({
+        id: jobId,
+        job_status: AiAsyncJobStatus.IN_PROGRESS,
+      });
+  }
+
+  async setTimelineJobInProgress(jobId: string): Promise<void> {
+    await this.timelineContainer
+      .item(jobId, jobId)
+      .replace<DocumentDBTimelineRequestItem>({
         id: jobId,
         job_status: AiAsyncJobStatus.IN_PROGRESS,
       });

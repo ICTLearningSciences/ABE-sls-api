@@ -340,6 +340,10 @@ export class DynamoDBManager extends DocumentDBManager {
     await this.dynamoDbClient.updateItem(tableRequest);
   }
 
+  /**
+   * AWS Allows us to specify different tables for different functions,
+   * so we can have a single function handle all three jobs.
+   */
   async setJobInProgress(jobId: string): Promise<void> {
     const tableRequest: UpdateItemCommandInput = {
       TableName: this.jobsTableName,
@@ -352,5 +356,17 @@ export class DynamoDBManager extends DocumentDBManager {
       },
     };
     await this.dynamoDbClient.updateItem(tableRequest);
+  }
+
+  async setStepsJobInProgress(jobId: string): Promise<void> {
+    this.setJobInProgress(jobId);
+  }
+
+  async setGenericRequestJobInProgress(jobId: string): Promise<void> {
+    this.setJobInProgress(jobId);
+  }
+
+  async setTimelineJobInProgress(jobId: string): Promise<void> {
+    this.setJobInProgress(jobId);
   }
 }

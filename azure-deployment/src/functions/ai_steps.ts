@@ -82,9 +82,9 @@ app.http('aiStepsRequest', {
 app.cosmosDB('aiStepsJobPro', {
   connection: 'CosmosDBConnectionString',
   databaseName: process.env.CosmosDBName,
-  containerName: process.env.CosmosDBContainerName,
+  containerName: process.env.CosmosDBAiStepContainerName,
   handler: processAiStepsJob,
-  leaseContainerName: process.env.CosmosDBLeaseContainerName,
+  leaseContainerName: process.env.CosmosDBAiStepLeaseContainerName,
 });
 
 

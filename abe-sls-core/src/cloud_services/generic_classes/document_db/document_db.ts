@@ -68,7 +68,9 @@ export abstract class DocumentDBManager {
   protected static clientInstance: any = null;
   abstract cloudService: CloudServices;
 
-  abstract setJobInProgress(jobId: string): Promise<void>;
+  abstract setStepsJobInProgress(jobId: string): Promise<void>;
+  abstract setGenericRequestJobInProgress(jobId: string): Promise<void>;
+  abstract setTimelineJobInProgress(jobId: string): Promise<void>;
 
   abstract newStepsRequest(
     jobId: string,

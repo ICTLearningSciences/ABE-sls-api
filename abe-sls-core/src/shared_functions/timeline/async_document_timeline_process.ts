@@ -36,7 +36,7 @@ export const asyncDocumentTimelineProcess = async (
     );
   }
   try {
-    await documentDBManager.setJobInProgress(jobId);
+    await documentDBManager.setTimelineJobInProgress(jobId);
     const { docId, userId, targetAiService, docService } =
       docTimelineRequestData;
     const docServiceInstance = DocServiceFactory.getDocService(docService, {});

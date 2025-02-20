@@ -21,7 +21,7 @@ export const aiStepsProcess = async (
   const aiServiceHandler = new AiServiceHandler();
   const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
-    await documentDBManager.setJobInProgress(jobId);
+    await documentDBManager.setStepsJobInProgress(jobId);
     const aiServiceResponse = await aiServiceHandler.executeAiSteps(
       aiPromptSteps,
       docsId,

@@ -19,7 +19,7 @@ export const genericRequestProcess = async (
   const aiServiceHandler = new AiServiceHandler();
   const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
-    await documentDBManager.setJobInProgress(jobId);
+    await documentDBManager.setGenericRequestJobInProgress(jobId);
     const aiServiceResponse =
       await aiServiceHandler.executeGenericLlmRequest(llmRequest);
     // Update the job in dynamo db

@@ -9,7 +9,7 @@ import { DynamoDBStreamEvent } from 'aws-lambda';
 import { wrapHandler } from '../../sentry-helpers.js';
 import { asyncDocumentTimelineProcess } from 'abe-sls-core-2';
 import { DocServices, TargetAiModelServiceType } from 'abe-sls-core-2/dist/types.js';
-interface ExtractedDocumentTimelineRequestData {
+export interface ExtractedDocumentTimelineRequestData {
   docId: string;
   userId: string;
   targetAiService: TargetAiModelServiceType;
