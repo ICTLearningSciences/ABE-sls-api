@@ -2,25 +2,36 @@ service: serverless-api
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: "3"
+frameworkVersion: "4"
 
 plugins:
-  - serverless-plugin-typescript
   - serverless-domain-manager
   - serverless-prune-plugin
 
+build:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: false
+    external:
+      - '@aws-sdk/*' # AWS SDK v3 is modular
+      - 'aws-sdk' # AWS SDK v2
+      - 'sentry/*' # Already included in Lambda layer
+    target: "node18"
+    platform: "node"
+    format: "esm"
+    treeShaking: true
+    # There is a bug in esbuild’s support for producing ESM modules,
+    # where external modules like Node.js built-in modules are loaded using require,
+    # even though the transpiled code is in ESM format.
+    # https://github.com/evanw/esbuild/pull/2067#issuecomment-1152399288
+    banner:
+      js: |
+        import {createRequire} from 'module';
+        const require = createRequire(import.meta.url);
+
 # build:
-#   esbuild:
-#     bundle: true
-#     minify: true
-#     sourcemap: false
-#     exclude: 
-#       - '@aws-sdk/*' # AWS SDK v3 is modular
-#       - 'aws-sdk' # AWS SDK v2
-#       - 'sentry/*' # Already included in Lambda layer
-#     target: "node18"
-#     platform: "node"
-#     treeShaking: true
+#   esbuild: false
 
 custom:
   prune:
@@ -88,6 +99,7 @@ package:
       - '!./node_modules/aws-sdk/**'
       - '!./node_modules/@aws-sdk/**'
       - '!./node_modules/@types/**'
+      - '!./node_modules/abe-sls-core/node_modules/@aws-sdk/**'
 
 provider:
   name: aws
