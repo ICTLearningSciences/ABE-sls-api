@@ -28,10 +28,12 @@ export async function _createGoogleDoc(
     userId
   );
   return createResponseJson(200, {
-    docId: docId,
-    userId: userId,
-    docUrl: docUrl,
-    createdTime: createdTime,
+    data: {
+      docId: docId,
+      userId: userId,
+      docUrl: docUrl,
+      createdTime: createdTime,
+    }
   });
 }
 

@@ -37,11 +37,11 @@ export async function documentTimelineRequest(
       targetAiService,
       docService as DocServices
     );
-    return createResponseJson(200, { response: { jobId } });
+    return createResponseJson(200, { data: { response: { jobId } } });
   } catch (err) {
     console.error(err);
     return createResponseJson(500, {
-      response: { error: 'Failed to add job to dynamo db' },
+      data: { response: { error: 'Failed to add job to dynamo db' } },
     });
   }
 }
@@ -83,9 +83,11 @@ export async function _documentTimelineJobStatus(
   try {
     const _documentTimelineJobStatus = await asyncDocumentTimelineStatus(jobId);
     return createResponseJson(200, {
-      response: {
-        documentTimeline: _documentTimelineJobStatus.documentTimeline,
-        jobStatus: _documentTimelineJobStatus.jobStatus,
+      data: {
+        response: {
+          documentTimeline: _documentTimelineJobStatus.documentTimeline,
+          jobStatus: _documentTimelineJobStatus.jobStatus,
+        },
       },
     });
   } catch (error) {

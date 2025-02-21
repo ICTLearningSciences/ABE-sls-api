@@ -13,7 +13,7 @@ export async function _genericRequest(
   context.log(llmRequest);
   try {
     const { jobId } = await genericRequest(llmRequest);
-    return createResponseJson(200, { response: { jobId } });
+    return createResponseJson(200, { data: { response: { jobId } } });
   } catch (err) {
     console.error(err);
     return createResponseJson(500, {
@@ -60,11 +60,13 @@ export async function _genericRequestStatus(
   try {
     const _genericRequestStatus = await genericRequestStatus(jobId);
     return createResponseJson(200, {
-      response: {
-        aiServiceResponse: _genericRequestStatus.aiServiceResponse,
-        jobStatus: _genericRequestStatus.jobStatus,
-        answer: _genericRequestStatus.answer,
-        apiError: _genericRequestStatus.apiError,
+      data: {
+        response: {
+          aiServiceResponse: _genericRequestStatus.aiServiceResponse,
+          jobStatus: _genericRequestStatus.jobStatus,
+          answer: _genericRequestStatus.answer,
+          apiError: _genericRequestStatus.apiError,
+        },
       },
     });
   } catch (error) {

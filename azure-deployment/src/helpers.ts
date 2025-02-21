@@ -14,9 +14,7 @@ export function createResponseJson(statusCode: number, body: any): HttpResponseI
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Credentials': 'true',
     },
-    jsonBody: JSON.stringify({
-      data: body,
-    }),
+    jsonBody: body,
   };
 }
 

@@ -16,14 +16,10 @@ import { createResponseJson } from '../helpers.js';
         const docService = request.params.doc_service;
         console.log(`docsId: ${docsId}, docService: ${docService}`);
         const docData = await getDocData(docsId, docService as any);
-        return createResponseJson(200, {
-            docData: docData,
-        });
+        return createResponseJson(200, docData);
     } catch (error) {
         context.error(error);
-        return createResponseJson(500, {
-            error: error.message,
-        });
+        return createResponseJson(500, error.message);
     }
 }
 

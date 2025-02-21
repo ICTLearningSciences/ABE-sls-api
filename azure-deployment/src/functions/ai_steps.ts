@@ -13,10 +13,10 @@ export async function _aiStepsRequest(
   
   try {
     const { jobId } = await aiStepsRequest(docsId, userId, aiPromptSteps, authHeaders, docService);
-    return createResponseJson(200, { response: { jobId } });
+    return createResponseJson(200, {data: { response: { jobId } }});
   } catch (err) {
     console.error(err);
-    return createResponseJson(500, { error: JSON.stringify(err) });
+    return createResponseJson(500, { data: { error: JSON.stringify(err) } });
   }
 }
 
@@ -57,12 +57,14 @@ export async function _aiStepsJobStatus(
   try {
     const _aiStepsJobStatus = await aiStepsJobStatus(jobId);
     return createResponseJson(200, {
-      response: {
-        aiServiceResponse: _aiStepsJobStatus.aiServiceResponse,
-        jobStatus: _aiStepsJobStatus.jobStatus,
-        answer: _aiStepsJobStatus.answer,
-        apiError: _aiStepsJobStatus.apiError,
-      },
+      data: {
+        response: {
+          aiServiceResponse: _aiStepsJobStatus.aiServiceResponse,
+          jobStatus: _aiStepsJobStatus.jobStatus,
+          answer: _aiStepsJobStatus.answer,
+          apiError: _aiStepsJobStatus.apiError,
+        },
+      }
     });
   } catch (error) {
     return createResponseJson(500, {
