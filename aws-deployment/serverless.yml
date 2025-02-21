@@ -25,6 +25,7 @@ build:
     # where external modules like Node.js built-in modules are loaded using require,
     # even though the transpiled code is in ESM format.
     # https://github.com/evanw/esbuild/pull/2067#issuecomment-1152399288
+    # https://bajtos.net/posts/2022-05-bundling-nodejs-for-aws-lambda/
     banner:
       js: |
         import {createRequire} from 'module';

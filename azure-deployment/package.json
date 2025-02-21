@@ -14,7 +14,8 @@
   "dependencies": {
     "@azure/cosmos": "^4.2.0",
     "@azure/functions": "^4.0.0",
-    "abe-sls-core-2": "^1.0.17"
+    "abe-sls-core-2": "file:../abe-sls-core",
+    "axios": "^1.7.7"
   },
   "devDependencies": {
     "@types/node": "18.x",
