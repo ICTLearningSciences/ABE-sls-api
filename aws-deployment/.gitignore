@@ -1,0 +1,10 @@
+node_modules
+jspm_packages
+
+# Serverless directories
+.serverless
+.build
+
+.env
+google_service_creds.json
+credentials.json

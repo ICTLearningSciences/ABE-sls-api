@@ -1,0 +1,30 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14
+    commands:
+      - n 18 # workaround https://github.com/aws/aws-codebuild-docker-images/issues/490
+
+  # build and test abe-sls-core
+  pre_build:
+    on-failure: ABORT # or CONTINUE
+    commands:
+      - cd abe-sls-core
+      - NODE_ENV=dev npm ci
+      - npm run build
+      - npm run test
+      - cd ..
+
+  build:
+    commands:
+      # this is just to compile ts; serverless will run its own build at deploy
+      - cd aws-deployment
+      - NODE_ENV=dev npm ci
+      - npm run build
+
+artifacts:
+  files:
+    - '**/*'
+  enable-symlinks: yes

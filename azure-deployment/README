@@ -1,0 +1,32 @@
+Resources Created in Azure Portal:
+- Subscription: abe-test-subscription
+  - Enable Resource Providers:
+    - Microsoft.Storage
+    - Microsoft.DocumentDB
+
+Resources Managed by Terraform:
+- Resource Group: abe-test-resource-group
+- Storage Account: abe1storage1test
+- Function App: abe-test-function
+- Cosmos DB: outdb
+- Cosmos DB Container: outcontainer
+- Cosmos DB Lease Container: leases
+  - this was created automatically when the process-new-db-item function was created, but will
+    need to be manually created if using Entra Auth
+
+Develop Locally:
+- `make develop`
+
+This first pulls all the app settings from the function app and saves them to the local.settings.json file.
+Most settings are set in the terraform file, under the azurerm_linux_function_app resource.
+Then it builds the project and starts the function app in debug mode.
+
+Deploy to Azure:
+- `make deploy`
+
+This builds the project and publishes it to the function app.
+
+
+
+
+

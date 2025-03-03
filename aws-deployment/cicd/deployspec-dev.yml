@@ -1,0 +1,20 @@
+version: 0.2
+
+env:
+  parameter-store:
+    SERVERLESS_ACCESS_KEY: "/shared/serverless-cicd-token"
+
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14
+
+  pre_build:
+    commands:
+      - cd aws-deployment
+      - n 18 # workaround https://github.com/aws/aws-codebuild-docker-images/issues/490
+  build:
+    commands:
+      - echo Deploying stack
+      - npm run deploy:dev
