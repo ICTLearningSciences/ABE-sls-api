@@ -30,19 +30,23 @@ export class CosmosDBManager extends DocumentDBManager {
   cosmosDatabase = requireEnv('CosmosDBName');
   cosmosAiStepContainerName = requireEnv('CosmosDBAiStepContainerName');
   cosmosTimelineContainerName = requireEnv('CosmosDBTimelineContainerName');
-  cosmosGenericRequestContainerName = requireEnv('CosmosDBGenericRequestContainerName');
+  cosmosGenericRequestContainerName = requireEnv(
+    'CosmosDBGenericRequestContainerName'
+  );
   client = new CosmosClient({
     endpoint: this.cosmosEndpoint,
     key: this.cosmosKey,
   });
   database = this.client.database(this.cosmosDatabase);
-    /**
+  /**
    * Azure does not allow us to separate env vars for different functions,
    * so we have to explicitly specify the container name for each function.
    */
   aiStepContainer = this.database.container(this.cosmosAiStepContainerName);
   timelineContainer = this.database.container(this.cosmosTimelineContainerName);
-  genericRequestContainer = this.database.container(this.cosmosGenericRequestContainerName);
+  genericRequestContainer = this.database.container(
+    this.cosmosGenericRequestContainerName
+  );
 
   constructor() {
     super();
@@ -110,13 +114,15 @@ export class CosmosDBManager extends DocumentDBManager {
     jobId: string,
     llmRequest: GenericLlmRequest
   ): Promise<void> {
-    await this.genericRequestContainer.items.upsert<DocumentDBGenericRequestItem>({
-      id: jobId,
-      job_status: AiAsyncJobStatus.QUEUED,
-      answer: '',
-      aiServiceResponse: '',
-      requestData: JSON.stringify(llmRequest),
-    });
+    await this.genericRequestContainer.items.upsert<DocumentDBGenericRequestItem>(
+      {
+        id: jobId,
+        job_status: AiAsyncJobStatus.QUEUED,
+        answer: '',
+        aiServiceResponse: '',
+        requestData: JSON.stringify(llmRequest),
+      }
+    );
   }
 
   async genericStatusRequest(jobId: string): Promise<GenericStatusRes> {

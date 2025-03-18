@@ -1,3 +1,4 @@
+ENV?=dev
 
 .PHONY: build-core
 build-core:
@@ -8,13 +9,19 @@ build-core:
 test-core:
 	cd ../abe-sls-core && make test
 
-.PHONY: deploy-dev
-deploy-dev:
-	npm run deploy:dev
+.PHONY: update-core
+update-core:
+	cd ../abe-sls-core && npm ci && npm run build
+
+.PHONY: deploy
+deploy:
+	make update-core
+	npm ci
+	npm run deploy:$(ENV)
 
 .PHONY: package
 package:
-	npx sls package -s dev --aws-profile abe
+	npx sls package -s $(ENV) --aws-profile abe
 
 .PHONY: publish-core
 publish-core:

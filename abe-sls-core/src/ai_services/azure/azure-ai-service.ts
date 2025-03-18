@@ -129,7 +129,7 @@ export class AzureOpenAiService extends AiService<
   async executeAzureOpenAi(params: AzureOpenAiReqType) {
     let id = uuid();
     console.log(
-      `Executing Azure OpenAI request ${id} starting at ${new Date().toISOString()}`
+      `Executing Azure OpenAI request ${id} starting at ${new Date().toISOString()} with params: ${JSON.stringify(params, null, 2)}`
     );
     const { deploymentName, messages, options } = params;
     const res = await this.aiServiceClient.getChatCompletions(

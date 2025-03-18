@@ -26,7 +26,7 @@ import {
 export const DefaultOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:
     'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture. Knowledge cutoff: 2021-09.',
-  DEFAULT_GPT_MODEL: DefaultGptModels.OPEN_AI_GPT_3_5,
+  DEFAULT_GPT_MODEL: DefaultGptModels.OPEN_AI_GPT_4,
 };
 
 export type OpenAiReqType = ChatCompletionCreateParamsNonStreaming;
@@ -43,7 +43,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   aiServiceClient: OpenAI;
 
   constructor() {
-    super(AvailableAiServiceNames.OPEN_AI, DefaultGptModels.OPEN_AI_GPT_3_5);
+    super(AvailableAiServiceNames.OPEN_AI, DefaultGptModels.OPEN_AI_GPT_4);
     this.aiServiceClient = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
       timeout: 30 * 1000, // 30 seconds (default is 10 minutes)

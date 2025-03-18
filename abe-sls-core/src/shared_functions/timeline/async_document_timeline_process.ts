@@ -51,6 +51,7 @@ export const asyncDocumentTimelineProcess = async (
       docServiceInstance
     );
   } catch (err) {
+    console.error('Error in asyncDocumentTimelineProcess', err);
     await documentDBManager.timelineProcessFailed(
       jobId,
       extractErrorMessageFromError(err)
