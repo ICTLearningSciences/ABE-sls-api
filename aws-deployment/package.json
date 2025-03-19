@@ -5,9 +5,9 @@
   "main": "handler.js",
   "scripts": {
     "build": "tsc",
-    "deploy:dev": "npx sls deploy -s dev --aws-profile abe",
-    "deploy:qa": "npx sls deploy -s qa --aws-profile abe",
-    "deploy:prod": "npx sls deploy -s prod --aws-profile abe"
+    "deploy:dev": "npx sls deploy -s dev",
+    "deploy:qa": "npx sls deploy -s qa",
+    "deploy:prod": "npx sls deploy -s prod"
   },
   "author": "",
   "license": "ISC",
