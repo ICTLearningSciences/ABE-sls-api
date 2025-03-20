@@ -22,6 +22,10 @@ import {
   AiServiceResponse,
   AvailableAiServiceNames,
 } from '../ai-service-factory.js';
+import {
+  ResponseCreateParamsNonStreaming,
+  Response,
+} from 'openai/resources/responses/responses.js';
 
 export const DefaultOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:
@@ -29,8 +33,8 @@ export const DefaultOpenAiConfig = {
   DEFAULT_GPT_MODEL: DefaultGptModels.OPEN_AI_GPT_4,
 };
 
-export type OpenAiReqType = ChatCompletionCreateParamsNonStreaming;
-export type OpenAiResType = OpenAI.Chat.Completions.ChatCompletion.Choice[];
+export type OpenAiReqType = ResponseCreateParamsNonStreaming;
+export type OpenAiResType = Response;
 
 export type OpenAiStepDataType = AiStepData<OpenAiReqType, OpenAiResType>;
 export type OpenAiPromptResponse = AiServiceResponse<
@@ -46,7 +50,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     super(AvailableAiServiceNames.OPEN_AI, DefaultGptModels.OPEN_AI_GPT_4);
     this.aiServiceClient = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-      timeout: 30 * 1000, // 30 seconds (default is 10 minutes)
+      timeout: 30 * 1000, // 30 seconds to be in line with lambda timeout (default is 10 minutes)
     });
   }
 
@@ -58,12 +62,12 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   }
 
   async executeAiUntilProperData(
-    params: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming,
+    params: OpenAiReqType,
     mustBeJson: boolean,
     jsonSchema?: Schema
-  ): Promise<[OpenAI.Chat.Completions.ChatCompletion, string]> {
+  ): Promise<[OpenAiResType, string]> {
     let result = await this.executeOpenAi(params);
-    let answer = result.choices[0].message.content || '';
+    let answer = result.output_text || '';
     if (mustBeJson) {
       const checkJson = (answer: string) => {
         if (jsonSchema) {
@@ -79,13 +83,12 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
           if (isJsonResponse) {
             break;
           }
-          const newParams: OpenAI.Chat.Completions.ChatCompletionCreateParams =
-            {
-              ...params,
-              temperature: AI_DEFAULT_TEMP + j * 0.1,
-            };
+          const newParams: OpenAiReqType = {
+            ...params,
+            temperature: AI_DEFAULT_TEMP + j * 0.1,
+          };
           result = await this.executeOpenAi(newParams);
-          answer = result.choices[0].message.content || '';
+          answer = result.output_text || '';
           if (!answer) {
             throw new Error('OpenAI API Error: No response message content.');
           }
@@ -101,16 +104,13 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     return [result, answer || ''];
   }
 
-  async executeOpenAi(params: ChatCompletionCreateParamsNonStreaming) {
+  async executeOpenAi(params: OpenAiReqType) {
     let id = uuid();
     console.log(
       `Executing OpenAI request ${id} starting at ${new Date().toISOString()}`
     );
-    const result = await this.aiServiceClient.chat.completions.create(params);
-    if (!result.choices.length) {
-      throw new Error('OpenAI API Error: No choices provided.');
-    }
-    const answer = result.choices[0].message.content;
+    const result = await this.aiServiceClient.responses.create(params);
+    const answer = result.output_text;
     if (!answer) {
       throw new Error('OpenAI API Error: No response message content.');
     }
@@ -122,56 +122,58 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
 
   convertContextDataToServiceParams(
     requestContext: AiRequestContext
-  ): ChatCompletionCreateParamsNonStreaming {
+  ): OpenAiReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
-    const request: ChatCompletionCreateParamsNonStreaming = {
-      messages: [],
+    const newReq: ResponseCreateParamsNonStreaming = {
       model: aiStep.targetAiServiceModel.model,
+      input: [],
     };
-    request.messages.push({
+    const inputMessages = [];
+    inputMessages.push({
       role: PromptRoles.SYSTEM,
       content: aiStep.systemRole || DefaultOpenAiConfig.DEFAULT_SYSTEM_ROLE,
     });
-
     if (aiStep.responseFormat) {
-      request.messages.push({
+      inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: `Please format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`,
       });
     }
-
     if (aiStep.outputDataType === PromptOutputTypes.JSON) {
-      request.messages.push({
+      inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: `\n\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA`,
       });
     }
-
     if (previousOutput) {
-      request.messages.push({
+      inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: `Here is the previous output: ---------- \n\n ${previousOutput}`,
       });
     }
-
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
-
     if (includeEssay) {
-      request.messages.push({
+      inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: `Here is the users essay: -----------\n\n${docsPlainText}`,
       });
     }
-
     aiStep.prompts.forEach((prompt) => {
-      let text = prompt.promptText;
-      request.messages.push({
+      inputMessages.push({
         role: prompt.promptRole || PromptRoles.USER,
-        content: text,
+        content: prompt.promptText,
       });
     });
 
-    return request;
+    if (aiStep.webSearch) {
+      newReq.tools = [{ type: 'web_search_preview' }];
+      // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
+      newReq.tool_choice = { type: 'web_search_preview' };
+    }
+    newReq.store = false;
+
+    newReq.input = inputMessages;
+    return newReq;
   }
 
   async completeChat(context: AiRequestContext): Promise<OpenAiPromptResponse> {
@@ -185,10 +187,10 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     return {
       aiStepData: {
         aiServiceRequestParams: params,
-        aiServiceResponse: chatCompleteResponse.choices,
+        aiServiceResponse: chatCompleteResponse,
         tokenUsage: {
-          promptUsage: chatCompleteResponse.usage?.prompt_tokens || -1,
-          completionUsage: chatCompleteResponse.usage?.completion_tokens || -1,
+          promptUsage: chatCompleteResponse.usage?.input_tokens || -1,
+          completionUsage: chatCompleteResponse.usage?.output_tokens || -1,
           totalUsage: chatCompleteResponse.usage?.total_tokens || -1,
         },
       },

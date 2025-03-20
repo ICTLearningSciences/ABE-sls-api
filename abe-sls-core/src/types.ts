@@ -47,6 +47,7 @@ export interface AiPromptStep {
   outputDataType: PromptOutputTypes;
   responseSchema?: Schema;
   responseFormat?: string;
+  webSearch?: boolean;
 }
 
 export type AiRequestContextPrompt = Omit<PromptConfiguration, 'includeEssay'>;

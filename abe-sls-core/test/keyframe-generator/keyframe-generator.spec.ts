@@ -75,7 +75,7 @@ describe("Keyframe Generator class unit tests", ()=>{
             const [reverseOutlineNock, reverseOutlineNockRequestData] = mockOpenAiReverseOutlineResponse(defaultReverseOutlineRes)
             const keyframeGenerator = new KeyframeGenerator(docs, {
                 serviceName:AvailableAiServiceNames.OPEN_AI,
-                model: DefaultGptModels.OPEN_AI_GPT_3_5
+                model: DefaultGptModels.OPEN_AI_GPT_4
             });
             await keyframeGenerator.generateKeyframes();
             assert.equal(reverseOutlineNock.isDone(), true);
@@ -285,17 +285,16 @@ describe("Keyframe Generator class unit tests", ()=>{
                 assert(keyframeOneRequestData.calls === 1)
 
                 assert(res.timelinePoints[0].reverseOutline ===  JSON.stringify(firstKeyframe))
-
-                assertRequestIncludesMessage("Use this previous reverse outline", firstReqData.requestBodies[0].messages)
-                assertRequestIncludesMessage("first keyframe", firstReqData.requestBodies[0].messages)
-                assertRequestIncludesMessage("Use this previous reverse outline", secondReqData.requestBodies[0].messages)
-                assertRequestIncludesMessage("first keyframe", secondReqData.requestBodies[0].messages)
-                assertRequestIncludesMessage("Use this previous reverse outline", thirdReqData.requestBodies[0].messages)
-                assertRequestIncludesMessage("first keyframe", thirdReqData.requestBodies[0].messages)
-                assertRequestIncludesMessage("Use this previous reverse outline", fourthReqData.requestBodies[0].messages)
-                assertRequestIncludesMessage("first keyframe", fourthReqData.requestBodies[0].messages)
-                assertRequestIncludesMessage("Use this previous reverse outline", fifthReqData.requestBodies[0].messages)
-                assertRequestIncludesMessage("first keyframe", fifthReqData.requestBodies[0].messages)
+                assertRequestIncludesMessage("Use this previous reverse outline", firstReqData.requestBodies[0].input)
+                assertRequestIncludesMessage("first keyframe", firstReqData.requestBodies[0].input)
+                assertRequestIncludesMessage("Use this previous reverse outline", secondReqData.requestBodies[0].input)
+                assertRequestIncludesMessage("first keyframe", secondReqData.requestBodies[0].input)
+                assertRequestIncludesMessage("Use this previous reverse outline", thirdReqData.requestBodies[0].input)
+                assertRequestIncludesMessage("first keyframe", thirdReqData.requestBodies[0].input)
+                assertRequestIncludesMessage("Use this previous reverse outline", fourthReqData.requestBodies[0].input)
+                assertRequestIncludesMessage("first keyframe", fourthReqData.requestBodies[0].input)
+                assertRequestIncludesMessage("Use this previous reverse outline", fifthReqData.requestBodies[0].input)
+                assertRequestIncludesMessage("first keyframe", fifthReqData.requestBodies[0].input)
             
         })
 
@@ -402,17 +401,17 @@ describe("Keyframe Generator class unit tests", ()=>{
 
             // docs without major changes should utilize the keyframes generated from the major changes
             // check that their requests included the keyframes
-            assertRequestIncludesMessage("Use this previous reverse outline", reverseOutlineNock1RequestData.requestBodies[0].messages)
-            assertRequestIncludesMessage("first keyframe", reverseOutlineNock1RequestData.requestBodies[0].messages)
+            assertRequestIncludesMessage("Use this previous reverse outline", reverseOutlineNock1RequestData.requestBodies[0].input)
+            assertRequestIncludesMessage("first keyframe", reverseOutlineNock1RequestData.requestBodies[0].input)
             
-            assertRequestIncludesMessage("Use this previous reverse outline", reverseOutlineNock2RequestData.requestBodies[0].messages)
-            assertRequestIncludesMessage("first keyframe", reverseOutlineNock2RequestData.requestBodies[0].messages)
+            assertRequestIncludesMessage("Use this previous reverse outline", reverseOutlineNock2RequestData.requestBodies[0].input)
+            assertRequestIncludesMessage("first keyframe", reverseOutlineNock2RequestData.requestBodies[0].input)
 
-            assertRequestIncludesMessage("Use this previous reverse outline", reverseOutlineNock3RequestData.requestBodies[0].messages)
-            assertRequestIncludesMessage("second keyframe", reverseOutlineNock3RequestData.requestBodies[0].messages)
+            assertRequestIncludesMessage("Use this previous reverse outline", reverseOutlineNock3RequestData.requestBodies[0].input)
+            assertRequestIncludesMessage("second keyframe", reverseOutlineNock3RequestData.requestBodies[0].input)
 
-            assertRequestIncludesMessage("Use this previous reverse outline", reverseOutlineNock4RequestData.requestBodies[0].messages)
-            assertRequestIncludesMessage("second keyframe", reverseOutlineNock4RequestData.requestBodies[0].messages)
+            assertRequestIncludesMessage("Use this previous reverse outline", reverseOutlineNock4RequestData.requestBodies[0].input)
+            assertRequestIncludesMessage("second keyframe", reverseOutlineNock4RequestData.requestBodies[0].input)
             
         })
     })

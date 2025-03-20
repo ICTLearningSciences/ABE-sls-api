@@ -5,16 +5,14 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { expect } from "chai";
-import { Express } from "express";
-import jwt from "jsonwebtoken";
 import path from "path";
-import request from "supertest";
 import requireEnv from "../src/helpers.js";
 import nock from "nock";
 import { textOpenAiResponse } from "./fixtures/documents/open-ai-responses.js";
-import { ReverseOutline } from "../src/functions/timeline/functions/reverse-outline.js";
+import { ReverseOutline } from "../src/timeline-generation/reverse-outline.js";
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { OpenAiReqType } from "../src/ai_services/openai/open-ai-service.js";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,51 +20,6 @@ const __dirname = dirname(__filename);
 
 export function fixturePath(p: string): string {
   return path.join(__dirname, "fixtures", p);
-}
-
-// duration of access token in seconds before it expires
-export function accessTokenDuration(): number {
-  return process.env.ACCESS_TOKEN_LENGTH
-    ? parseInt(process.env.ACCESS_TOKEN_LENGTH)
-    : 60 * 60 * 24 * 90;
-}
-
-export function getToken(userId: string, expiresIn?: number): string {
-  if (!expiresIn) {
-    expiresIn = accessTokenDuration();
-  }
-  const expirationDate = new Date(Date.now() + expiresIn * 1000);
-  const accessToken = jwt.sign(
-    { id: userId, expirationDate },
-    requireEnv("JWT_SECRET"),
-    { expiresIn: expirationDate.getTime() - new Date().getTime() }
-  );
-  return accessToken;
-}
-
-export interface GqlBody {
-  query: string;
-  variables?: Record<string, any>;
-}
-
-export interface AuthGqlArgs {
-  app: Express;
-  body: GqlBody;
-  disableExpect200Response?: boolean;
-  userId?: string;
-}
-
-const USER_ID_DEFAULT = "5f0cfea3395d762ca65405d3";
-export async function authGql(args: AuthGqlArgs): Promise<request.Response> {
-  const token = getToken(args.userId || USER_ID_DEFAULT);
-  const response = await request(args.app)
-    .post("/graphql")
-    .set("Authorization", `bearer ${token}`)
-    .send(args.body);
-  if (!args.disableExpect200Response) {
-    expect(response.status).to.equal(200);
-  }
-  return response;
 }
 
 export function mockExternalDocRevisionText(text: string){
@@ -160,8 +113,8 @@ export function mockOpenAiChangeSummaryResponse(response: string, options?: Mock
     requestBodies: [] as any[]
   }
   return [mockOpenAiCall(response, {...options, requestData: dataCollector},
-  (body) => {
-    return body.messages.find((m)=>{
+  (body: OpenAiReqType) => {
+    return (body.input as any[]).find((m)=>{
       return m.content.includes("Please summarize")
     })
   }), dataCollector]
@@ -190,8 +143,8 @@ export function mockOpenAiReverseOutlineResponse(response: ReverseOutline, optio
     requestBodies: [] as any[]
   }
   return [mockOpenAiCall(JSON.stringify(response), {...options, requestData: dataCollector},
-  (body) => {
-    return body.messages.find((m)=>{
+  (body: OpenAiReqType) => {
+    return (body.input as any[]).find((m)=>{
       return m.content.includes("Your task is to generate an outline for this writing.")
     })
   }), dataCollector]
