@@ -12,7 +12,6 @@ import {
   PromptRoles,
 } from '../../types.js';
 import { AiService } from '../abstract-classes/abstract-ai-service.js';
-import { ChatCompletionCreateParamsNonStreaming } from 'openai/resources/index.js';
 import { v4 as uuid } from 'uuid';
 import { Schema } from 'jsonschema';
 import { isJsonString, validateJsonResponse } from '../../helpers.js';
@@ -124,7 +123,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     requestContext: AiRequestContext
   ): OpenAiReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
-    const newReq: ResponseCreateParamsNonStreaming = {
+    const newReq: OpenAiReqType = {
       model: aiStep.targetAiServiceModel.model,
       input: [],
     };
