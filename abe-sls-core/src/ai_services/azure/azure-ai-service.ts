@@ -11,14 +11,8 @@ import {
   PromptOutputTypes,
   PromptRoles,
 } from '../../types.js';
+import { AzureOpenAI } from 'openai';
 import {
-  OpenAIClient,
-  AzureKeyCredential,
-  ChatRequestMessageUnion,
-  GetChatCompletionsOptions,
-  ChatCompletions,
-} from '@azure/openai';
-import requireEnv, {
   isJsonString,
   validateJsonResponse,
 } from '../../helpers.js';
@@ -30,13 +24,13 @@ import {
 import { Schema } from 'jsonschema';
 import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
 import { v4 as uuid } from 'uuid';
+import {
+  ResponseCreateParamsNonStreaming,
+  Response,
+} from 'openai/resources/responses/responses.js';
 
-export interface AzureOpenAiReqType {
-  deploymentName: string;
-  messages: ChatRequestMessageUnion[];
-  options?: GetChatCompletionsOptions;
-}
-export type AzureOpenAiResType = ChatCompletions;
+export type AzureOpenAiReqType = ResponseCreateParamsNonStreaming;
+export type AzureOpenAiResType = Response;
 
 export type AzureOpenAiStepDataType = AiStepData<
   AzureOpenAiReqType,
@@ -58,19 +52,16 @@ export class AzureOpenAiService extends AiService<
   AzureOpenAiResType
 > {
   private static instance: AzureOpenAiService;
-  aiServiceClient: OpenAIClient;
+  aiServiceClient: AzureOpenAI;
 
   constructor() {
     super(
       AvailableAiServiceNames.AZURE_OPEN_AI,
       DefaultGptModels.AZURE_GPT_3_5
     );
-    const azureApiEndpoint = requireEnv('AZURE_API_ENDPOINT');
-    const azureApiKey = requireEnv('AZURE_API_KEY');
-    this.aiServiceClient = new OpenAIClient(
-      azureApiEndpoint,
-      new AzureKeyCredential(azureApiKey)
-    );
+    this.aiServiceClient = new AzureOpenAI({
+      apiVersion: "2025-01-01-preview", // Latest GA release
+    });
   }
 
   static getInstance(): AzureOpenAiService {
@@ -86,7 +77,7 @@ export class AzureOpenAiService extends AiService<
     jsonSchema?: Schema
   ): Promise<[AzureOpenAiResType, string]> {
     let result = await this.executeAzureOpenAi(params);
-    let answer = result.choices[0].message?.content || '';
+    let answer = result.output_text || '';
     if (mustBeJson) {
       const checkJson = (answer: string) => {
         if (jsonSchema) {
@@ -104,22 +95,21 @@ export class AzureOpenAiService extends AiService<
           }
           const newParams = {
             ...params,
-            options: {
-              ...params.options,
-              temperature: AI_DEFAULT_TEMP + j * 0.1,
-            },
+            temperature: AI_DEFAULT_TEMP + j * 0.1,
           };
           result = await this.executeAzureOpenAi(newParams);
-          answer = result.choices[0].message?.content || '';
+          answer = result.output_text || '';
           if (!answer) {
-            throw new Error('OpenAI API Error: No response message content.');
+            throw new Error(
+              'Azure OpenAI API Error: No response message content.'
+            );
           }
           isJsonResponse = checkJson(answer);
         }
       }
       if (!isJsonResponse) {
         throw new Error(
-          `OpenAI API Error: No valid JSON response after ${RETRY_ATTEMPTS} attempts.`
+          `Azure OpenAI API Error: No valid JSON response after ${RETRY_ATTEMPTS} attempts.`
         );
       }
     }
@@ -131,16 +121,12 @@ export class AzureOpenAiService extends AiService<
     console.log(
       `Executing Azure OpenAI request ${id} starting at ${new Date().toISOString()} with params: ${JSON.stringify(params, null, 2)}`
     );
-    const { deploymentName, messages, options } = params;
-    const res = await this.aiServiceClient.getChatCompletions(
-      deploymentName,
-      messages,
-      options
-    );
-    if (!res.choices.length) {
-      throw new Error('Azure OpenAI API Error: No choices provided.');
-    }
-    const answer = res.choices[0].message?.content;
+    this.aiServiceClient.deploymentName = params.model;
+    const res = await this.aiServiceClient.responses.create({
+      ...params,
+      max_output_tokens: 100
+    });
+    const answer = res.output_text;
     if (!answer) {
       throw new Error('Azure OpenAI API Error: No response message content.');
     }
@@ -154,46 +140,42 @@ export class AzureOpenAiService extends AiService<
     requestContext: AiRequestContext
   ): AzureOpenAiReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
-
     const request: AzureOpenAiReqType = {
-      deploymentName:
-        aiStep.targetAiServiceModel.model ||
-        DefaultAzureOpenAiConfig.DEFAULT_GPT_MODEL,
-      messages: [],
-      options: {
-        temperature: AI_DEFAULT_TEMP,
-      },
+      model: aiStep.targetAiServiceModel.model,
+      input: [],
+      temperature: AI_DEFAULT_TEMP,
     };
-    request.messages.push({
+    const inputMessages = [];
+    inputMessages.push({
       role: PromptRoles.SYSTEM,
       content:
         aiStep.systemRole || DefaultAzureOpenAiConfig.DEFAULT_SYSTEM_ROLE,
     });
-    if (previousOutput) {
-      request.messages.push({
-        role: PromptRoles.SYSTEM,
-        content: `Here is the previous output: ---------- \n\n ${previousOutput}`,
-      });
-    }
-
     if (aiStep.responseFormat) {
-      request.messages.push({
+      inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: `Please format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`,
       });
     }
 
     if (aiStep.outputDataType === PromptOutputTypes.JSON) {
-      request.messages.push({
+      inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: `\n\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA`,
+      });
+    }
+
+    if (previousOutput) {
+      inputMessages.push({
+        role: PromptRoles.SYSTEM,
+        content: `Here is the previous output: ---------- \n\n ${previousOutput}`,
       });
     }
 
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
 
     if (includeEssay) {
-      request.messages.push({
+      inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: `Here is the users essay: -----------\n\n${docsPlainText}`,
       });
@@ -201,12 +183,21 @@ export class AzureOpenAiService extends AiService<
 
     aiStep.prompts.forEach((prompt) => {
       let text = prompt.promptText;
-      request.messages.push({
+      inputMessages.push({
         role: prompt.promptRole || PromptRoles.USER,
         content: text,
-      } as ChatRequestMessageUnion);
+      });
     });
 
+    if (aiStep.webSearch) {
+      // TODO: re-enable if web search tool is ever added for Azure OpenAI
+      // request.tools = [{ type: 'web_search_preview' }];
+      // // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
+      // request.tool_choice = { type: 'web_search_preview' };
+    }
+
+    request.input = inputMessages;
+    request.store = false;
     return request;
   }
 
@@ -224,9 +215,9 @@ export class AzureOpenAiService extends AiService<
         aiServiceRequestParams: azureAiRequestContext,
         aiServiceResponse: choices,
         tokenUsage: {
-          promptUsage: choices.usage?.promptTokens || -1,
-          completionUsage: choices.usage?.completionTokens || -1,
-          totalUsage: choices.usage?.totalTokens || -1,
+          promptUsage: choices.usage?.input_tokens || -1,
+          completionUsage: choices.usage?.output_tokens || -1,
+          totalUsage: choices.usage?.total_tokens || -1,
         },
       },
       answer: answer,
