@@ -12,10 +12,7 @@ import {
   PromptRoles,
 } from '../../types.js';
 import { AzureOpenAI } from 'openai';
-import {
-  isJsonString,
-  validateJsonResponse,
-} from '../../helpers.js';
+import { isJsonString, validateJsonResponse } from '../../helpers.js';
 import {
   AiServiceResponse,
   AiStepData,
@@ -60,7 +57,7 @@ export class AzureOpenAiService extends AiService<
       DefaultGptModels.AZURE_GPT_3_5
     );
     this.aiServiceClient = new AzureOpenAI({
-      apiVersion: "2025-01-01-preview", // Latest GA release
+      apiVersion: '2025-01-01-preview', // Latest GA release
     });
   }
 
@@ -124,7 +121,7 @@ export class AzureOpenAiService extends AiService<
     this.aiServiceClient.deploymentName = params.model;
     const res = await this.aiServiceClient.responses.create({
       ...params,
-      max_output_tokens: 100
+      max_output_tokens: 100,
     });
     const answer = res.output_text;
     if (!answer) {
