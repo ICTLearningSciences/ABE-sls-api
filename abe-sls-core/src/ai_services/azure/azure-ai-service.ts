@@ -121,7 +121,6 @@ export class AzureOpenAiService extends AiService<
     this.aiServiceClient.deploymentName = params.model;
     const res = await this.aiServiceClient.responses.create({
       ...params,
-      max_output_tokens: 100,
     });
     const answer = res.output_text;
     if (!answer) {
