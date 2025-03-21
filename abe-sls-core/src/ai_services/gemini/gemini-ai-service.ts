@@ -226,6 +226,16 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
             },
           },
         ];
+      } else if (
+        aiStep.targetAiServiceModel.model ===
+        DefaultGptModels.GEMINI_2_0_PREVIEW
+      ) {
+        chatParams.tools = [
+          {
+            googleSearch: {},
+            // gemini typescript types are not updated to include googleSearch, PR currently open: https://github.com/google-gemini/generative-ai-js/pull/370
+          } as any,
+        ];
       }
     }
     return {
