@@ -4,7 +4,11 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { GoogleGenerativeAI, StartChatParams } from '@google/generative-ai';
+import {
+  DynamicRetrievalMode,
+  GoogleGenerativeAI,
+  StartChatParams,
+} from '@google/generative-ai';
 import { AiService } from '../abstract-classes/abstract-ai-service.js';
 import {
   AiServiceResponse,
@@ -12,6 +16,8 @@ import {
   AvailableAiServiceNames,
 } from '../ai-service-factory.js';
 import requireEnv, {
+  convertMarkdownToJsonString,
+  isJsonMarkdown,
   isJsonString,
   validateJsonResponse,
 } from '../../helpers.js';
@@ -80,6 +86,9 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
     let result = await request(0);
     let answer = result.text();
     if (mustBeJson) {
+      if (isJsonMarkdown(answer)) {
+        answer = convertMarkdownToJsonString(answer);
+      }
       const checkJson = (answer: string) => {
         if (jsonSchema) {
           return validateJsonResponse(answer, jsonSchema);
@@ -200,6 +209,40 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
       });
     }
     const lastPromptStep = aiStep.prompts[aiStep.prompts.length - 1];
+
+    // search does not work for 1.0 models
+    if (
+      aiStep.webSearch &&
+      aiStep.targetAiServiceModel.model !== DefaultGptModels.GEMINI_1_PRO
+    ) {
+      // for 1.5 models, use Google Search Retrieval. For 2.0 models, use Search as a tool.
+      if (
+        aiStep.targetAiServiceModel.model ===
+        DefaultGptModels.GEMINI_1_5_PREVIEW
+      ) {
+        chatParams.tools = [
+          {
+            googleSearchRetrieval: {
+              dynamicRetrievalConfig: {
+                mode: DynamicRetrievalMode.MODE_DYNAMIC,
+                // 0 means always use retrieval
+                dynamicThreshold: 0,
+              },
+            },
+          },
+        ];
+      } else if (
+        aiStep.targetAiServiceModel.model ===
+        DefaultGptModels.GEMINI_2_0_PREVIEW
+      ) {
+        chatParams.tools = [
+          {
+            googleSearch: {},
+            // gemini typescript types are not updated to include googleSearch, PR currently open: https://github.com/google-gemini/generative-ai-js/pull/370
+          } as any,
+        ];
+      }
+    }
     return {
       startChatParams: chatParams,
       model: aiStep.targetAiServiceModel.model,
@@ -221,6 +264,7 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
   async completeChat(context: AiRequestContext): Promise<GeminiPromptResponse> {
     const requestData: GeminiReqType =
       this.convertContextDataToServiceParams(context);
+
     const model = this.aiServiceClient.getGenerativeModel({
       model: requestData.model,
     });

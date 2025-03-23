@@ -23,8 +23,9 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.515.0",
     "@azure/cosmos": "^4.2.0",
-    "@azure/openai": "^1.0.0-beta.12",
-    "@google/generative-ai": "^0.11.2",
+    "@azure/identity": "^4.8.0",
+    "@azure/openai": "^2.0.0",
+    "@google/generative-ai": "^0.24.0",
     "axios": "^1.4.0",
     "diff": "^5.2.0",
     "dotenv": "^16.4.5",
