@@ -16,6 +16,8 @@ import {
   AvailableAiServiceNames,
 } from '../ai-service-factory.js';
 import requireEnv, {
+  convertMarkdownToJsonString,
+  isJsonMarkdown,
   isJsonString,
   validateJsonResponse,
 } from '../../helpers.js';
@@ -84,6 +86,9 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
     let result = await request(0);
     let answer = result.text();
     if (mustBeJson) {
+      if (isJsonMarkdown(answer)) {
+        answer = convertMarkdownToJsonString(answer);
+      }
       const checkJson = (answer: string) => {
         if (jsonSchema) {
           return validateJsonResponse(answer, jsonSchema);
