@@ -25,6 +25,7 @@ import {
   AiStepData,
   AvailableAiServiceNames,
 } from '../ai-service-factory.js';
+import { SecretRuntimeFetchFactory } from '../../cloud_services/generic_classes/secret_runtime_fetch/secret_runtime_fetch_factory.js';
 
 dotenv.config();
 
@@ -57,8 +58,6 @@ export const DefaultCamoGptConfig = {
     'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture. Knowledge cutoff: 2021-09.',
 };
 
-const cert: string = requireEnv('CAMO_GPT_CERT');
-const key: string = requireEnv('CAMO_GPT_CERT');
 const apiKey: string = requireEnv('CAMO_GPT_API_KEY');
 
 export type CamoGptReqType = ApiRequestData;
@@ -70,7 +69,6 @@ export type CamoGptPromptResponse = AiServiceResponse<
 >;
 export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
   private static instance: CamoGptService;
-  // TODO: add type for aiServiceClient, maybe an axios instance?
   aiServiceClient: any;
 
   constructor() {
@@ -92,7 +90,11 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
     mustBeJson: boolean,
     jsonSchema?: Schema
   ): Promise<[CamoGptResType, string]> {
-    let result = await this.executeCamoGpt(params);
+    const cert =
+      await SecretRuntimeFetchFactory.getSecretRuntimeFetchInstance().fetchSecret(
+        '/ABE/CAMO_GPT_CERT'
+      );
+    let result = await this.executeCamoGpt(params, cert);
     let answer = result.choices[0].message.content;
     if (mustBeJson) {
       const checkJson = (answer: string) => {
@@ -113,7 +115,7 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
             ...params,
             temperature: AI_DEFAULT_TEMP + j * 0.1,
           };
-          result = await this.executeCamoGpt(newParams);
+          result = await this.executeCamoGpt(newParams, cert);
           answer = result.choices[0].message.content || '';
           if (!answer) {
             throw new Error('CamoGPT API Error: No response message content.');
@@ -130,10 +132,13 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
     return [result, answer || ''];
   }
 
-  async executeCamoGpt(params: CamoGptReqType): Promise<CamoGptResType> {
+  async executeCamoGpt(
+    params: CamoGptReqType,
+    cert: string
+  ): Promise<CamoGptResType> {
     const httpsAgent = new https.Agent({
       cert: cert,
-      key: key,
+      key: cert,
       rejectUnauthorized: false,
     });
 
