@@ -123,7 +123,8 @@ provider:
     SENTRY_DSN: ${ssm:/ABE/sentry_dsn_sls_api, ''}
     STAGE: ${self:provider.stage}
     CLOUD_SERVICE: "aws"
-
+    CAMO_GPT_CERT: ${ssm:/ABE/CAMO_GPT_CERT, ''}
+    CAMO_GPT_API_KEY: ${ssm:/ABE/CAMO_GPT_API_KEY, ''}
   # iam permissions for all lambda functions
   iam:
     role:

@@ -10,6 +10,11 @@ import {
   AzureOpenAiStepDataType,
 } from './azure/azure-ai-service.js';
 import {
+  CamoGptPromptResponse,
+  CamoGptService,
+  CamoGptStepDataType,
+} from './camo-gpt/camo-gpt-service.js';
+import {
   GeminiAiService,
   GeminiPromptResponse,
   GeminiStepDataType,
@@ -46,20 +51,24 @@ export interface AiServiceFinalResponseType {
 export type AiServiceStepDataTypes =
   | OpenAiStepDataType
   | AzureOpenAiStepDataType
-  | GeminiStepDataType;
+  | GeminiStepDataType
+  | CamoGptStepDataType;
 export type AiServicesPromptResponseTypes =
   | OpenAiPromptResponse
   | AzureOpenAiPromptResponse
-  | GeminiPromptResponse;
+  | GeminiPromptResponse
+  | CamoGptPromptResponse;
 export type AvailableAiServices =
   | OpenAiService
   | AzureOpenAiService
-  | GeminiAiService;
+  | GeminiAiService
+  | CamoGptService;
 
 export enum AvailableAiServiceNames {
   OPEN_AI = 'OPEN_AI',
   AZURE_OPEN_AI = 'AZURE_OPEN_AI',
   GEMINI = 'GEMINI',
+  CAMO_GPT = 'CAMO_GPT',
 }
 
 export class AiServiceFactory {
@@ -71,6 +80,8 @@ export class AiServiceFactory {
         return AzureOpenAiService.getInstance();
       case AvailableAiServiceNames.GEMINI:
         return GeminiAiService.getInstance();
+      case AvailableAiServiceNames.CAMO_GPT:
+        return CamoGptService.getInstance();
       default:
         throw new Error('Invalid AI service name');
     }
