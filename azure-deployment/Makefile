@@ -29,6 +29,8 @@ deploy:
 #Develop
 .PHONY: develop
 develop:
+	make update-core
+	npm ci
 	make fetch-app-settings
 	npm run build
 	func start --inspect-brk --build --verbose
