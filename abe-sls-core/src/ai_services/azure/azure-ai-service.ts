@@ -185,15 +185,16 @@ export class AzureOpenAiService extends AiService<
       });
     });
 
-    if (aiStep.webSearch) {
-      // TODO: re-enable if web search tool is ever added for Azure OpenAI
-      // request.tools = [{ type: 'web_search_preview' }];
-      // // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
-      // request.tool_choice = { type: 'web_search_preview' };
-    }
+    // //   TODO: re-enable if web search tool is ever added for Azure OpenAI
+    // if (aiStep.webSearch) {
+    //   request.tools = [{ type: 'web_search_preview' }];
+    //   // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
+    //   request.tool_choice = { type: 'web_search_preview' };
+    // }
 
     request.input = inputMessages;
     request.store = false;
+    request.max_output_tokens = 4096;
     return request;
   }
 

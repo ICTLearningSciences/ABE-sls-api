@@ -1,7 +1,8 @@
 import { SSMSecretRuntimeFetch } from '../../../cloud_services/aws/secrets_manager_fetch.js';
 import { SecretRuntimeFetch } from './secret_runtime_fetch.js';
-import { CloudServices } from '../types';
+import { CloudServices } from '../types.js';
 import { getCloudService } from '../../../helpers.js';
+import { AzureKeyVaultRuntimeFetch } from '../../../cloud_services/azure/key_vault_runtime_fetch.js';
 
 export class SecretRuntimeFetchFactory {
   private static secretRuntimeFetch: SecretRuntimeFetch;
@@ -17,9 +18,8 @@ export class SecretRuntimeFetchFactory {
     switch (cloudService) {
       case CloudServices.AWS:
         return new SSMSecretRuntimeFetch();
-      // TODO: Add Azure secret runtime fetch
-      //   case CloudServices.AZURE:
-      //     return new AzureSecretRuntimeFetch();
+      case CloudServices.AZURE:
+        return new AzureKeyVaultRuntimeFetch();
       default:
         throw new Error('Cloud service not supported');
     }

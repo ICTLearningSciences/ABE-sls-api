@@ -92,7 +92,7 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
   ): Promise<[CamoGptResType, string]> {
     const cert =
       await SecretRuntimeFetchFactory.getSecretRuntimeFetchInstance().fetchSecret(
-        '/ABE/CAMO_GPT_CERT'
+        'ABE-CAMO-GPT-CERT'
       );
     let result = await this.executeCamoGpt(params, cert);
     let answer = result.choices[0].message.content;
