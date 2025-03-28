@@ -57,7 +57,7 @@ export class AzureOpenAiService extends AiService<
       DefaultGptModels.AZURE_GPT_3_5
     );
     this.aiServiceClient = new AzureOpenAI({
-      apiVersion: '2025-01-01-preview', // Latest GA release
+      apiVersion: '2025-03-01-preview', // Latest GA release
     });
   }
 
@@ -194,6 +194,7 @@ export class AzureOpenAiService extends AiService<
 
     request.input = inputMessages;
     request.store = false;
+    request.max_output_tokens = 4096;
     return request;
   }
 
