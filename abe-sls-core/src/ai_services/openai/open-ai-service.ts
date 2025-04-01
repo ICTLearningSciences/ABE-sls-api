@@ -41,6 +41,9 @@ export type OpenAiPromptResponse = AiServiceResponse<
   OpenAiResType
 >;
 
+/**
+ * Required: OPENAI_API_KEY environment variable
+ */
 export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   private static instance: OpenAiService;
   aiServiceClient: OpenAI;

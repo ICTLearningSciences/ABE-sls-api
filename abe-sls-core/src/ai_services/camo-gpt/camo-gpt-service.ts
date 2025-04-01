@@ -6,10 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 import * as https from 'https';
 import dotenv from 'dotenv';
-import requireEnv, {
-  isJsonString,
-  validateJsonResponse,
-} from '../../helpers.js';
+import { isJsonString, validateJsonResponse } from '../../helpers.js';
 import axios from 'axios';
 import { PromptOutputTypes } from '../../types.js';
 import { AiService } from '../abstract-classes/abstract-ai-service.js';
@@ -58,7 +55,7 @@ export const DefaultCamoGptConfig = {
     'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture. Knowledge cutoff: 2021-09.',
 };
 
-const apiKey: string = requireEnv('CAMO_GPT_API_KEY');
+const apiKey: string = process.env.CAMO_GPT_API_KEY || '';
 
 export type CamoGptReqType = ApiRequestData;
 export type CamoGptResType = ChatResponse;
@@ -67,6 +64,10 @@ export type CamoGptPromptResponse = AiServiceResponse<
   CamoGptReqType,
   CamoGptResType
 >;
+
+/**
+ * Required: CAMO_GPT_API_KEY environment variable
+ */
 export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
   private static instance: CamoGptService;
   aiServiceClient: any;

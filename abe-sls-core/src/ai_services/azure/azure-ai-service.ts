@@ -44,6 +44,9 @@ export const DefaultAzureOpenAiConfig = {
   DEFAULT_GPT_MODEL: DefaultGptModels.AZURE_GPT_3_5,
 };
 
+/**
+ * Required: AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT environment variable
+ */
 export class AzureOpenAiService extends AiService<
   AzureOpenAiReqType,
   AzureOpenAiResType

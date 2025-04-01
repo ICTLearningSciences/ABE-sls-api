@@ -3,7 +3,7 @@ import { SecretRuntimeFetch } from './secret_runtime_fetch.js';
 import { CloudServices } from '../types.js';
 import { getCloudService } from '../../../helpers.js';
 import { AzureKeyVaultRuntimeFetch } from '../../../cloud_services/azure/key_vault_runtime_fetch.js';
-
+import { DefaultSecretRuntimeFetch } from '../../../cloud_services/default/default-secret-runtime-fetch.js';
 export class SecretRuntimeFetchFactory {
   private static secretRuntimeFetch: SecretRuntimeFetch;
 
@@ -21,7 +21,7 @@ export class SecretRuntimeFetchFactory {
       case CloudServices.AZURE:
         return new AzureKeyVaultRuntimeFetch();
       default:
-        throw new Error('Cloud service not supported');
+        return new DefaultSecretRuntimeFetch();
     }
   }
 }

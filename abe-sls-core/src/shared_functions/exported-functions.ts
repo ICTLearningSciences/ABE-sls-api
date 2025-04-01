@@ -18,5 +18,7 @@ export { genericRequest } from './generic_llm_request/generic_request.js';
 export { genericRequestProcess } from './generic_llm_request/generic_request_process.js';
 export { genericRequestStatus } from './generic_llm_request/generic_request_status.js';
 
+export { OpenAiService } from '../ai_services/openai/open-ai-service.js';
+
 export * as types from '../types.js';
 export * as aiStepHelpers from './ai_steps_request/helpers.js';
