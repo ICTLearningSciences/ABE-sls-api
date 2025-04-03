@@ -30,7 +30,10 @@ interface ApiRequestData {
   system_prompt: string;
   persona: string;
   message: string;
+  limit_references?: number;
+  live?: number;
   temperature?: number;
+  dataset?: string;
 }
 
 interface SageRes {
@@ -207,7 +210,12 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
   async completeChat(context: AiRequestContext): Promise<SagePromptResponse> {
     const reqData = this.convertContextDataToServiceParams(context);
     const [response, answer] = await this.executeAiUntilProperData(
-      reqData,
+      {
+        ...reqData,
+        limit_references: 0,
+        live: 0,
+        dataset: 'none',
+      },
       context.aiStep.outputDataType === PromptOutputTypes.JSON,
       context.aiStep.responseSchema
     );
