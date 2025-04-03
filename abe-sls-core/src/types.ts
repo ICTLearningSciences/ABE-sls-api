@@ -35,6 +35,10 @@ export enum DefaultGptModels {
   GEMINI_1_5_PREVIEW = 'gemini-1.5-pro-latest',
   GEMINI_2_0_PREVIEW = 'gemini-2.0-flash',
   CAMO_GPT_MISTRAL_7B = 'Mistral7B',
+  SAGE_GPT_4O_MINI = 'gpt-4o-mini',
+  SAGE_GPT_4 = 'gpt4',
+  SAGE_GPT_4_GOV = 'gpt4-gov',
+  SAGE_GPT_4O_GOV = 'gpt-4o-gov',
 }
 
 export interface TargetAiModelServiceType {
