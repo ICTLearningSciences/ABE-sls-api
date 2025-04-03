@@ -15,7 +15,7 @@ import {
   AiStepData,
   AvailableAiServiceNames,
 } from '../ai-service-factory.js';
-import requireEnv, {
+import {
   convertMarkdownToJsonString,
   isJsonMarkdown,
   isJsonString,
@@ -60,13 +60,16 @@ export interface GeminiJsonResponse {
   usageMetadata?: UsageMetadata;
 }
 
+/**
+ * Required: GEMINI_API_KEY environment variable
+ */
 export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
   private static instance: GeminiAiService;
   aiServiceClient: GoogleGenerativeAI;
 
   constructor() {
     super(AvailableAiServiceNames.GEMINI, DefaultGptModels.GEMINI_1_PRO);
-    const geminiApiKey = requireEnv('GEMINI_API_KEY');
+    const geminiApiKey = process.env.GEMINI_API_KEY || '';
     this.aiServiceClient = new GoogleGenerativeAI(geminiApiKey);
   }
 
