@@ -142,9 +142,8 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
       key: cert,
       rejectUnauthorized: false,
     });
-
     const response = await axios.post<ChatResponse>(
-      'https://omni.army.mil/camogptapi/v2/chat/completions',
+      process.env.CAMO_GPT_API_URL || '',
       params,
       {
         httpsAgent,
@@ -166,7 +165,7 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
     const requestData: CamoGptReqType = {
       api_key: apiKey,
-      model: aiStep.targetAiServiceModel.model,
+      model: '',
       messages: [],
     };
     const inputMessages: Message[] = [];
@@ -231,7 +230,6 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
       context.aiStep.responseSchema
     );
 
-    console.log(response.data.choices[0].message.content);
     return {
       aiStepData: {
         aiServiceRequestParams: reqData,
