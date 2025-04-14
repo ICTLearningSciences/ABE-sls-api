@@ -60,7 +60,7 @@ export class AzureOpenAiService extends AiService<
       DefaultGptModels.AZURE_GPT_3_5
     );
     this.aiServiceClient = new AzureOpenAI({
-      apiVersion: '2025-01-01-preview', // Latest GA release
+      apiVersion: '2025-03-01-preview', // Latest GA release
     });
   }
 

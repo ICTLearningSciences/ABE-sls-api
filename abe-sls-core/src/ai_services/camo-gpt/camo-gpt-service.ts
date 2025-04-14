@@ -6,7 +6,12 @@ The full terms of this copyright and license should always be found in the root 
 */
 import * as https from 'https';
 import dotenv from 'dotenv';
-import { isJsonString, validateJsonResponse } from '../../helpers.js';
+import {
+  convertMarkdownToJsonString,
+  isJsonMarkdown,
+  isJsonString,
+  validateJsonResponse,
+} from '../../helpers.js';
 import axios from 'axios';
 import { PromptOutputTypes } from '../../types.js';
 import { AiService } from '../abstract-classes/abstract-ai-service.js';
@@ -98,6 +103,10 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
     let result = await this.executeCamoGpt(params, cert);
     let answer = result.choices[0].message.content;
     if (mustBeJson) {
+      if (isJsonMarkdown(answer)) {
+        answer = convertMarkdownToJsonString(answer);
+        result.choices[0].message.content = answer;
+      }
       const checkJson = (answer: string) => {
         if (jsonSchema) {
           return validateJsonResponse(answer, jsonSchema);
@@ -118,6 +127,10 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
           };
           result = await this.executeCamoGpt(newParams, cert);
           answer = result.choices[0].message.content || '';
+          if (isJsonMarkdown(answer)) {
+            answer = convertMarkdownToJsonString(answer);
+            result.choices[0].message.content = answer;
+          }
           if (!answer) {
             throw new Error('CamoGPT API Error: No response message content.');
           }
@@ -233,7 +246,7 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
     return {
       aiStepData: {
         aiServiceRequestParams: reqData,
-        aiServiceResponse: response.data,
+        aiServiceResponse: response,
         tokenUsage: {
           promptUsage: 0,
           completionUsage: 0,
