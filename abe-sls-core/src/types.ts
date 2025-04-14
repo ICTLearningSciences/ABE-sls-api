@@ -29,8 +29,10 @@ export interface PromptConfiguration {
 export enum DefaultGptModels {
   OPEN_AI_GPT_4 = 'gpt-4',
   OPEN_AI_GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
-  AZURE_GPT_3_5 = 'ABE-gpt-35-turbo',
+  OPEN_AI_GPT_4o_MINI = 'gpt-4o-mini',
+  OPEN_AI_GPT_4o = 'gpt-4o',
   AZURE_GPT_4_TURBO_PREVIEW = 'ABE-gpt-4o',
+  AZURE_GPT_4_TURBO_PREVIEW_MINI = 'ABE-gpt-4o-mini',
   GEMINI_1_PRO = 'gemini-pro',
   GEMINI_1_5_PREVIEW = 'gemini-1.5-pro-latest',
   GEMINI_2_0_PREVIEW = 'gemini-2.0-flash',

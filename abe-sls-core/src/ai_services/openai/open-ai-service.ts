@@ -122,11 +122,25 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     return result;
   }
 
+  applyWebSearchTool(req: OpenAiReqType) {
+    const webSearchCompatibleModels = [
+      DefaultGptModels.OPEN_AI_GPT_4o,
+      DefaultGptModels.OPEN_AI_GPT_4o_MINI,
+    ];
+    if (!webSearchCompatibleModels.includes(req.model as DefaultGptModels)) {
+      req.model = DefaultGptModels.OPEN_AI_GPT_4o;
+    }
+    req.tools = [{ type: 'web_search_preview' }];
+    // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
+    req.tool_choice = { type: 'web_search_preview' };
+    return req;
+  }
+
   convertContextDataToServiceParams(
     requestContext: AiRequestContext
   ): OpenAiReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
-    const newReq: OpenAiReqType = {
+    let newReq: OpenAiReqType = {
       model: aiStep.targetAiServiceModel.model,
       input: [],
     };
@@ -156,7 +170,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
     if (includeEssay) {
       inputMessages.push({
-        role: PromptRoles.SYSTEM,
+        role: PromptRoles.USER,
         content: `Here is the users essay: -----------\n\n${docsPlainText}`,
       });
     }
@@ -168,9 +182,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     });
 
     if (aiStep.webSearch) {
-      newReq.tools = [{ type: 'web_search_preview' }];
-      // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
-      newReq.tool_choice = { type: 'web_search_preview' };
+      newReq = this.applyWebSearchTool(newReq);
     }
     newReq.store = false;
 

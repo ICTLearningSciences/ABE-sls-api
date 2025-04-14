@@ -41,7 +41,7 @@ export type AzureOpenAiPromptResponse = AiServiceResponse<
 export const DefaultAzureOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:
     'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture. Knowledge cutoff: 2021-09.',
-  DEFAULT_GPT_MODEL: DefaultGptModels.AZURE_GPT_3_5,
+  DEFAULT_GPT_MODEL: DefaultGptModels.AZURE_GPT_4_TURBO_PREVIEW,
 };
 
 /**
@@ -57,7 +57,7 @@ export class AzureOpenAiService extends AiService<
   constructor() {
     super(
       AvailableAiServiceNames.AZURE_OPEN_AI,
-      DefaultGptModels.AZURE_GPT_3_5
+      DefaultGptModels.AZURE_GPT_4_TURBO_PREVIEW
     );
     this.aiServiceClient = new AzureOpenAI({
       apiVersion: '2025-03-01-preview', // Latest GA release
@@ -135,12 +135,25 @@ export class AzureOpenAiService extends AiService<
     return res;
   }
 
+  getTargetModel(requestContext: AiRequestContext): DefaultGptModels {
+    const { aiStep } = requestContext;
+    if (
+      Object.values(DefaultGptModels).includes(
+        aiStep.targetAiServiceModel.model as DefaultGptModels
+      )
+    ) {
+      return aiStep.targetAiServiceModel.model as DefaultGptModels;
+    }
+    return DefaultGptModels.AZURE_GPT_4_TURBO_PREVIEW;
+  }
+
   convertContextDataToServiceParams(
     requestContext: AiRequestContext
   ): AzureOpenAiReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
+    const targetModel = this.getTargetModel(requestContext);
     const request: AzureOpenAiReqType = {
-      model: aiStep.targetAiServiceModel.model,
+      model: targetModel,
       input: [],
       temperature: AI_DEFAULT_TEMP,
     };
@@ -166,7 +179,7 @@ export class AzureOpenAiService extends AiService<
 
     if (previousOutput) {
       inputMessages.push({
-        role: PromptRoles.SYSTEM,
+        role: PromptRoles.USER,
         content: `Here is the previous output: ---------- \n\n ${previousOutput}`,
       });
     }
@@ -175,7 +188,7 @@ export class AzureOpenAiService extends AiService<
 
     if (includeEssay) {
       inputMessages.push({
-        role: PromptRoles.SYSTEM,
+        role: PromptRoles.USER,
         content: `Here is the users essay: -----------\n\n${docsPlainText}`,
       });
     }

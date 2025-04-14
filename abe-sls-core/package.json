@@ -38,7 +38,7 @@
     "jsonschema": "^1.4.1",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
-    "openai": "^4.88.0",
+    "openai": "^4.94.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
