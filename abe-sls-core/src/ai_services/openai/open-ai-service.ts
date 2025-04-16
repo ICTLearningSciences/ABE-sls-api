@@ -32,6 +32,11 @@ export const DefaultOpenAiConfig = {
   DEFAULT_GPT_MODEL: DefaultGptModels.OPEN_AI_GPT_4,
 };
 
+interface InputMessageType {
+  role: PromptRoles;
+  content: string;
+}
+
 export type OpenAiReqType = ResponseCreateParamsNonStreaming;
 export type OpenAiResType = Response;
 
@@ -133,6 +138,16 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     req.tools = [{ type: 'web_search_preview' }];
     // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
     req.tool_choice = { type: 'web_search_preview' };
+    req.input = (req.input as InputMessageType[]).map((message) => {
+      // convert system instructions to user instructions
+      if (message.role === PromptRoles.SYSTEM) {
+        return {
+          ...message,
+          role: PromptRoles.USER,
+        };
+      }
+      return message;
+    });
     return req;
   }
 
@@ -144,7 +159,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
       model: aiStep.targetAiServiceModel.model,
       input: [],
     };
-    const inputMessages = [];
+    const inputMessages: InputMessageType[] = [];
     inputMessages.push({
       role: PromptRoles.SYSTEM,
       content: aiStep.systemRole || DefaultOpenAiConfig.DEFAULT_SYSTEM_ROLE,
@@ -170,7 +185,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
     if (includeEssay) {
       inputMessages.push({
-        role: PromptRoles.USER,
+        role: PromptRoles.SYSTEM,
         content: `Here is the users essay: -----------\n\n${docsPlainText}`,
       });
     }
@@ -181,12 +196,12 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
       });
     });
 
+    newReq.store = false;
+    newReq.input = inputMessages;
     if (aiStep.webSearch) {
       newReq = this.applyWebSearchTool(newReq);
     }
-    newReq.store = false;
 
-    newReq.input = inputMessages;
     return newReq;
   }
 

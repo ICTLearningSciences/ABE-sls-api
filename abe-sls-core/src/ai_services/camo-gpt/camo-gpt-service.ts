@@ -207,7 +207,7 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
     if (includeEssay) {
       inputMessages.push({
-        role: PromptRoles.USER,
+        role: PromptRoles.SYSTEM,
         content: `Here is the users essay: -----------\n\n${docsPlainText}`,
       });
     }

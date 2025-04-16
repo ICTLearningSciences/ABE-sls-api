@@ -179,7 +179,7 @@ export class AzureOpenAiService extends AiService<
 
     if (previousOutput) {
       inputMessages.push({
-        role: PromptRoles.USER,
+        role: PromptRoles.SYSTEM,
         content: `Here is the previous output: ---------- \n\n ${previousOutput}`,
       });
     }
@@ -188,7 +188,7 @@ export class AzureOpenAiService extends AiService<
 
     if (includeEssay) {
       inputMessages.push({
-        role: PromptRoles.USER,
+        role: PromptRoles.SYSTEM,
         content: `Here is the users essay: -----------\n\n${docsPlainText}`,
       });
     }

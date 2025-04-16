@@ -184,7 +184,7 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
     if (includeEssay) {
       requestData.system_prompt += JSON.stringify({
-        role: PromptRoles.USER,
+        role: PromptRoles.SYSTEM,
         content: `Here is the users essay: -----------\n\n${docsPlainText}`,
       });
       requestData.system_prompt += '\n';
