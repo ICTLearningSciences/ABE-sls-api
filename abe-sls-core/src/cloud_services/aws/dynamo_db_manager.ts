@@ -21,7 +21,10 @@ import {
 import { AiServiceFinalResponseType } from '../../ai_services/ai-service-factory.js';
 import { GenericLlmRequest } from '../../generic_llm_request/helpers.js';
 import { TimelineRequestData } from '../../shared_functions/timeline/async_document_timeline_request.js';
-import { GQLDocumentTimeline } from '../../timeline-generation/types.js';
+import {
+  GQLDocumentTimeline,
+  StoredDocumentTimeline,
+} from '../../timeline-generation/types.js';
 export class DynamoDBManager extends DocumentDBManager {
   private readonly jobsTableName = requireEnv('JOBS_TABLE_NAME');
   dynamoDbClient: DynamoDB;
@@ -263,7 +266,7 @@ export class DynamoDBManager extends DocumentDBManager {
     }
     const jobStatus = data.Item.job_status.S;
     const documentTimelineData = data.Item.documentTimeline.S;
-    const documentTimeline: GQLDocumentTimeline = documentTimelineData
+    const documentTimeline: StoredDocumentTimeline = documentTimelineData
       ? JSON.parse(documentTimelineData)
       : null;
     return {
@@ -274,7 +277,7 @@ export class DynamoDBManager extends DocumentDBManager {
 
   async timelineProcessProgress(
     jobId: string,
-    documentTimeline: GQLDocumentTimeline
+    documentTimeline: StoredDocumentTimeline
   ): Promise<void> {
     const tableRequest: UpdateItemCommandInput = {
       TableName: this.jobsTableName,
@@ -299,7 +302,7 @@ export class DynamoDBManager extends DocumentDBManager {
 
   async timelineProcessFinished(
     jobId: string,
-    documentTimeline: GQLDocumentTimeline
+    documentTimeline: StoredDocumentTimeline
   ): Promise<void> {
     const tableRequest: UpdateItemCommandInput = {
       TableName: this.jobsTableName,

@@ -15,6 +15,9 @@ export abstract class DocService<T> {
 
   abstract fetchExternalDocVersion(docId: string): Promise<T[]>;
 
+  /**
+   * You MUST upload the new IGDocVersions to graphql
+   */
   abstract convertExternalDocVersionsToIGDocVersion(
     externalDocVersion: T[],
     lastRealVersion: IGDocVersion

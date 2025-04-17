@@ -75,7 +75,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
         };
         const res = await exponentialBackoff(5, 1000, requestConfig);
         return {
-          id: googleDocVersion.id || '',
+          _id: googleDocVersion.id || '',
           docId: googleDocVersion.id || '',
           plainText: res.data || '',
           lastChangedId: '',
@@ -94,8 +94,11 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
       }
     );
     const allRevisions = await Promise.all(requests);
-    return allRevisions.filter((revision) => {
+    const revisions = allRevisions.filter((revision) => {
       return revision !== undefined;
     }) as IGDocVersion[];
+
+    // TODO: upload these to graphql in batches
+    return revisions;
   }
 }

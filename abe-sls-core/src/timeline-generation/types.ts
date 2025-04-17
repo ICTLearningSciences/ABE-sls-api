@@ -39,10 +39,19 @@ export interface GQLTimelinePoint {
   relatedFeedback: string;
 }
 
+export interface StoredTimelinePoint extends Omit<GQLTimelinePoint, 'version'> {
+  versionId: string;
+}
+
 export interface GQLDocumentTimeline {
   docId: string;
   user: string;
   timelinePoints: GQLTimelinePoint[];
+}
+
+export interface StoredDocumentTimeline
+  extends Omit<GQLDocumentTimeline, 'timelinePoints'> {
+  timelinePoints: StoredTimelinePoint[];
 }
 
 export enum Sender {
@@ -61,6 +70,7 @@ export interface IIntention {
 }
 
 export interface IGDocVersion {
+  _id: string;
   docId: string;
   plainText: string;
   lastChangedId: string;

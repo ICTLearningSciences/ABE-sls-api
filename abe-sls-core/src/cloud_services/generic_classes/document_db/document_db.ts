@@ -10,7 +10,7 @@ import { ExtractedOpenAiRequestData } from '../../../shared_functions/ai_steps_r
 import { AiAsyncJobStatus } from '../../../types.js';
 import { CloudServices } from '../types.js';
 import { AiServiceFinalResponseType } from '../../../ai_services/ai-service-factory.js';
-import { GQLDocumentTimeline } from '../../../timeline-generation/types.js';
+import { StoredDocumentTimeline } from '../../../timeline-generation/types.js';
 
 export interface JobStatusRes {
   aiServiceResponse: string;
@@ -60,7 +60,7 @@ export interface GenericStatusRes {
 }
 
 export interface TimelineStatusRes {
-  documentTimeline: GQLDocumentTimeline;
+  documentTimeline: StoredDocumentTimeline;
   jobStatus: AiAsyncJobStatus;
 }
 
@@ -101,11 +101,11 @@ export abstract class DocumentDBManager {
   abstract timelineStatusRequest(jobId: string): Promise<TimelineStatusRes>;
   abstract timelineProcessProgress(
     jobId: string,
-    documentTimeline: GQLDocumentTimeline
+    documentTimeline: StoredDocumentTimeline
   ): Promise<void>;
   abstract timelineProcessFinished(
     jobId: string,
-    documentTimeline: GQLDocumentTimeline
+    documentTimeline: StoredDocumentTimeline
   ): Promise<void>;
   abstract timelineProcessFailed(jobId: string, error: string): Promise<void>;
 }

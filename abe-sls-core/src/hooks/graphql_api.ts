@@ -9,6 +9,7 @@ import { GQLPromptRunResponse, AiPromptStep } from '../types.js';
 import {
   GQLDocumentTimeline,
   IGDocVersion,
+  StoredDocumentTimeline,
 } from '../timeline-generation/types.js';
 import { execGql } from '../api.js';
 import pkg from 'lodash';
@@ -101,6 +102,7 @@ export async function fetchGoogleDocVersion(
     {
       query: `query FetchGoogleDocVersions($googleDocId: String!) {
         fetchGoogleDocVersions(googleDocId: $googleDocId) {
+          _id
           docId
           plainText
           lastChangedId
@@ -199,8 +201,8 @@ export async function fetchMostRecentVersion(
 export async function fetchDocTimeline(
   userId: string,
   docId: string
-): Promise<GQLDocumentTimeline | undefined> {
-  return await execGql<GQLDocumentTimeline>(
+): Promise<StoredDocumentTimeline | undefined> {
+  return await execGql<StoredDocumentTimeline>(
     {
       query: `query FetchDocTimeline($googleDocId: String!, $userId: String!) {
       fetchDocTimeline(googleDocId: $googleDocId, userId: $userId) {
@@ -209,6 +211,7 @@ export async function fetchDocTimeline(
           timelinePoints{
               type
               versionTime
+              versionId
               version{
                   docId
                   plainText
@@ -262,31 +265,11 @@ export async function fetchDocTimeline(
 }
 
 export async function storeDocTimeline(
-  docTimeline: GQLDocumentTimeline
-): Promise<GQLDocumentTimeline> {
+  docTimeline: StoredDocumentTimeline
+): Promise<StoredDocumentTimeline> {
   // remove createdAt and updatedAt from document, unexpected by gql
-  const inputDocs = docTimeline.timelinePoints.map((timelinePoint) => {
-    const omittedTimestamps = omit(timelinePoint.version, [
-      'createdAt',
-      'updatedAt',
-    ]);
-    return {
-      ...timelinePoint,
-      version: {
-        ...omittedTimestamps,
-        dayIntention: timelinePoint.version.dayIntention
-          ? omit(timelinePoint.version.dayIntention, ['createdAt'])
-          : undefined,
-        sessionIntention: timelinePoint.version.sessionIntention
-          ? omit(timelinePoint.version.sessionIntention, ['createdAt'])
-          : undefined,
-        documentIntention: timelinePoint.version.documentIntention
-          ? omit(timelinePoint.version.documentIntention, ['createdAt'])
-          : undefined,
-      },
-    };
-  });
-  return await execGql<GQLDocumentTimeline>(
+  const inputDocs = docTimeline.timelinePoints;
+  return await execGql<StoredDocumentTimeline>(
     {
       query: `mutation StoreDocTimeline($docTimeline: DocTimelineInputType!) {
       storeDocTimeline(docTimeline: $docTimeline) {
@@ -295,32 +278,7 @@ export async function storeDocTimeline(
           timelinePoints{
               type
               versionTime
-              version{
-                  docId
-                  plainText
-                  lastChangedId
-                  sessionId
-                  sessionIntention{
-                    description
-                    createdAt
-                  }
-                  documentIntention{
-                    description
-                    createdAt
-                  }
-                  dayIntention{
-                    description
-                    createdAt
-                  }
-                  chatLog{
-                      sender
-                      message
-                  }
-                  activity
-                  intent
-                  title
-                  lastModifyingUser
-              }
+              versionId
               intent
               changeSummary
               changeSummaryStatus
@@ -347,4 +305,22 @@ export async function storeDocTimeline(
       },
     }
   );
+}
+
+export function convertGQLDocumentTimelineToStoredDocumentTimeline(
+  gqlDocumentTimeline: GQLDocumentTimeline
+): StoredDocumentTimeline {
+  return {
+    ...gqlDocumentTimeline,
+    timelinePoints: gqlDocumentTimeline.timelinePoints.map((timelinePoint) => {
+      const copy = JSON.parse(JSON.stringify(timelinePoint));
+      if (copy.version) {
+        delete (copy as any).version;
+      }
+      return {
+        ...copy,
+        versionId: timelinePoint.version._id,
+      };
+    }),
+  };
 }

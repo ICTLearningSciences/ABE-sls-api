@@ -5,6 +5,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import {
+  convertGQLDocumentTimelineToStoredDocumentTimeline,
   fetchDocTimeline,
   fetchGoogleDocVersion,
   storeDocTimeline,
@@ -16,6 +17,7 @@ import {
   AiGenerationStatus,
   TimelinePointType,
   TimelineSlice,
+  StoredDocumentTimeline,
 } from './types.js';
 import { collectGoogleDocSlicesOutsideOfSessions } from './google-doc-version-handlers.js';
 import { reverseOutlinePromptRequest } from './reverse-outline.js';
@@ -100,6 +102,9 @@ function mergeExistingTimelinePoints(
   timelinePoints: GQLTimelinePoint[],
   existingTimelinePoints?: GQLTimelinePoint[]
 ) {
+  console.log('mergeExistingTimelinePoints');
+  console.log(JSON.stringify(timelinePoints[0], null, 2));
+  console.log(JSON.stringify(existingTimelinePoints?.[0], null, 2));
   // TODO: instead of getting the existing document timeline, implement key outline storage.
   if (!existingTimelinePoints || existingTimelinePoints.length === 0) {
     return timelinePoints;
@@ -316,6 +321,23 @@ export class DocumentTimelineGenerator {
     return timelinePoints;
   }
 
+  async hydrateGQLDocumentTimeline(
+    storedDocumentTimeline: StoredDocumentTimeline,
+    docVersions: IGDocVersion[]
+  ): Promise<GQLDocumentTimeline | undefined> {
+    const timelinePoints: GQLTimelinePoint[] =
+      storedDocumentTimeline.timelinePoints.reduce((acc, timelinePoint) => {
+        const version = docVersions.find(
+          (version) => version.createdAt === timelinePoint.versionTime
+        );
+        if (version) {
+          acc.push({ ...timelinePoint, version });
+        }
+        return acc;
+      }, [] as GQLTimelinePoint[]);
+    return { ...storedDocumentTimeline, timelinePoints };
+  }
+
   async getDocumentTimeline(
     jobId: string,
     userId: string,
@@ -348,7 +370,20 @@ export class DocumentTimelineGenerator {
         intent: '',
       };
     });
-    const existingDocumentTimeline = await fetchDocTimeline(userId, docId);
+    console.log(JSON.stringify(timelinePoints[0], null, 2));
+    console.log(JSON.stringify(timelinePoints[1], null, 2));
+    console.log(JSON.stringify(timelinePoints[2], null, 2));
+    // CURRENT: what is fetchDocTimline returning?
+    // Current: issue for subsequent timeline requests because of existing document timeline
+    let _existingDocumentTimeline = await fetchDocTimeline(userId, docId);
+    let existingDocumentTimeline: GQLDocumentTimeline | undefined;
+    if (_existingDocumentTimeline) {
+      existingDocumentTimeline = await this.hydrateGQLDocumentTimeline(
+        _existingDocumentTimeline,
+        docVersions
+      );
+    }
+    console.log(JSON.stringify(existingDocumentTimeline, null, 2));
     timelinePoints = mergeExistingTimelinePoints(
       timelinePoints,
       existingDocumentTimeline?.timelinePoints
@@ -372,6 +407,10 @@ export class DocumentTimelineGenerator {
       }
       numLoops++;
       // modifies timeline points in place by reference
+      console.log('Filling summaries in place');
+      console.log(JSON.stringify(timelinePointsToGenerate[0], null, 2));
+      console.log(JSON.stringify(timelinePointsToGenerate[1], null, 2));
+      console.log(JSON.stringify(timelinePointsToGenerate[2], null, 2));
       await this.fillSummariesInPlace(
         timelinePointsToGenerate,
         keyframeGenerator
@@ -385,7 +424,7 @@ export class DocumentTimelineGenerator {
         };
         await documentDBManager.timelineProcessProgress(
           jobId,
-          documentTimeline
+          convertGQLDocumentTimelineToStoredDocumentTimeline(documentTimeline)
         );
       }
     }
@@ -394,9 +433,14 @@ export class DocumentTimelineGenerator {
       user: userId,
       timelinePoints: sortDocumentTimelinePoints(timelinePoints),
     };
-    await documentDBManager.timelineProcessFinished(jobId, documentTimeline);
+    await documentDBManager.timelineProcessFinished(
+      jobId,
+      convertGQLDocumentTimelineToStoredDocumentTimeline(documentTimeline)
+    );
     // store timeline in gql
-    await storeDocTimeline(documentTimeline).catch((e) => {
+    await storeDocTimeline(
+      convertGQLDocumentTimelineToStoredDocumentTimeline(documentTimeline)
+    ).catch((e) => {
       console.error(e);
     });
     return documentTimeline;

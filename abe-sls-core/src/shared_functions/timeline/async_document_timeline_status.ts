@@ -6,7 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 
 // Note: had to add .js to find this file in serverless
-import { GQLDocumentTimeline } from '../../timeline-generation/types.js';
+import { StoredDocumentTimeline } from '../../timeline-generation/types.js';
 import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
 
 // modern module syntax
@@ -17,7 +17,7 @@ export const asyncDocumentTimelineStatus = async (jobId: string) => {
 
     const jobStatus = data.jobStatus;
     const documentTimelineData = data.documentTimeline;
-    const documentTimeline: GQLDocumentTimeline = documentTimelineData;
+    const documentTimeline: StoredDocumentTimeline = documentTimelineData;
     return {
       documentTimeline,
       jobStatus,
