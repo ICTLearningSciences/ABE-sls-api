@@ -102,10 +102,6 @@ function mergeExistingTimelinePoints(
   timelinePoints: GQLTimelinePoint[],
   existingTimelinePoints?: GQLTimelinePoint[]
 ) {
-  console.log('mergeExistingTimelinePoints');
-  console.log(JSON.stringify(timelinePoints[0], null, 2));
-  console.log(JSON.stringify(existingTimelinePoints?.[0], null, 2));
-  // TODO: instead of getting the existing document timeline, implement key outline storage.
   if (!existingTimelinePoints || existingTimelinePoints.length === 0) {
     return timelinePoints;
   }
@@ -235,27 +231,38 @@ export class DocumentTimelineGenerator {
         return;
       }
       const previousTimelinePoint = i > 0 ? timelinePoints[i - 1] : null;
-      if (!previousTimelinePoint) {
-        timelinePoint.changeSummary = await changeSummaryPromptRequest(
-          '',
-          timelinePoint.version.plainText,
-          this.aiService,
-          this.targetAiService
-        );
-      } else {
-        if (
-          previousTimelinePoint?.version.plainText ===
-          timelinePoint.version.plainText
-        ) {
-          timelinePoint.changeSummary = 'No changes from previous version';
-        } else {
+      try {
+        if (!previousTimelinePoint) {
           timelinePoint.changeSummary = await changeSummaryPromptRequest(
-            previousTimelinePoint.version.plainText,
+            '',
             timelinePoint.version.plainText,
             this.aiService,
             this.targetAiService
           );
+        } else {
+          if (
+            previousTimelinePoint?.version.plainText ===
+            timelinePoint.version.plainText
+          ) {
+            timelinePoint.changeSummary = 'No changes from previous version';
+          } else {
+            timelinePoint.changeSummary = await changeSummaryPromptRequest(
+              previousTimelinePoint.version.plainText,
+              timelinePoint.version.plainText,
+              this.aiService,
+              this.targetAiService
+            );
+          }
         }
+      } catch (error) {
+        console.error(
+          'Error generating change summary for version',
+          timelinePoint.version._id,
+          error
+        );
+        timelinePoint.changeSummary = '';
+        timelinePoint.changeSummaryStatus = AiGenerationStatus.FAILED;
+        return;
       }
       timelinePoint.changeSummaryStatus = AiGenerationStatus.COMPLETED;
     });
@@ -293,16 +300,35 @@ export class DocumentTimelineGenerator {
           // Will get filled in later from previous timeline point
         } else {
           console.log('Reverse Outline: making request to openai');
-
-          timelinePoint.reverseOutline = await reverseOutlinePromptRequest(
-            timelinePoint.version,
-            this.aiService,
-            keyframeOutline ? keyframeOutline.reverseOutline : ''
-          );
+          try {
+            timelinePoint.reverseOutline = await reverseOutlinePromptRequest(
+              timelinePoint.version,
+              this.aiService,
+              keyframeOutline ? keyframeOutline.reverseOutline : ''
+            );
+          } catch (error) {
+            console.error(
+              'Error generating reverse outline for version',
+              timelinePoint.version._id,
+              error
+            );
+            timelinePoint.reverseOutline = '';
+            timelinePoint.reverseOutlineStatus = AiGenerationStatus.FAILED;
+            return;
+          }
         }
         timelinePoint.reverseOutlineStatus = AiGenerationStatus.COMPLETED;
       }
     });
+  }
+
+  shouldAbandonGeneration(timelinePoints: GQLTimelinePoint[]): boolean {
+    const numSuccess = timelinePoints.filter(
+      (timelinePoint) =>
+        timelinePoint.changeSummaryStatus === AiGenerationStatus.COMPLETED &&
+        timelinePoint.reverseOutlineStatus === AiGenerationStatus.COMPLETED
+    ).length;
+    return numSuccess < timelinePoints.length / 2;
   }
 
   async fillSummariesInPlace(
@@ -317,6 +343,12 @@ export class DocumentTimelineGenerator {
       keyframeGenerator
     );
     await Promise.all([...changeSummaryRequests, ...reverseOutlineRequests]);
+    if (this.shouldAbandonGeneration(timelinePoints)) {
+      throw new Error(
+        'Abandoning generation because at least half of the summary/reverse outline requests failed'
+      );
+    }
+
     timelinePoints = fillInExistingReverseOutlines(timelinePoints);
     return timelinePoints;
   }

@@ -68,17 +68,24 @@ export class KeyframeGenerator {
         reverseOutline: timelinePoint.reverseOutline,
       });
     } else {
-      const reverseOutline = await reverseOutlinePromptRequest(
-        timelinePoint.version,
-        this.aiService
-      );
-      this.keyframes.push({
-        time: timelinePoint.versionTime,
-        reverseOutline: reverseOutline,
-      });
+      try {
+        const reverseOutline = await reverseOutlinePromptRequest(
+          timelinePoint.version,
+          this.aiService
+        );
+        this.keyframes.push({
+          time: timelinePoint.versionTime,
+          reverseOutline: reverseOutline,
+        });
+      } catch (error) {
+        console.error(
+          'Error generating reverse outline for version',
+          timelinePoint.version._id,
+          error
+        );
+      }
     }
   }
-
   /**
    * Generates keyframes in positions where there is a major change in the document.
    *
