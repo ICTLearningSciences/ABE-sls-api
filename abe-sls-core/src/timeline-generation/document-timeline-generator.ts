@@ -370,9 +370,6 @@ export class DocumentTimelineGenerator {
         intent: '',
       };
     });
-    console.log(JSON.stringify(timelinePoints[0], null, 2));
-    console.log(JSON.stringify(timelinePoints[1], null, 2));
-    console.log(JSON.stringify(timelinePoints[2], null, 2));
     // CURRENT: what is fetchDocTimline returning?
     // Current: issue for subsequent timeline requests because of existing document timeline
     let _existingDocumentTimeline = await fetchDocTimeline(userId, docId);
@@ -383,7 +380,6 @@ export class DocumentTimelineGenerator {
         docVersions
       );
     }
-    console.log(JSON.stringify(existingDocumentTimeline, null, 2));
     timelinePoints = mergeExistingTimelinePoints(
       timelinePoints,
       existingDocumentTimeline?.timelinePoints
@@ -407,10 +403,6 @@ export class DocumentTimelineGenerator {
       }
       numLoops++;
       // modifies timeline points in place by reference
-      console.log('Filling summaries in place');
-      console.log(JSON.stringify(timelinePointsToGenerate[0], null, 2));
-      console.log(JSON.stringify(timelinePointsToGenerate[1], null, 2));
-      console.log(JSON.stringify(timelinePointsToGenerate[2], null, 2));
       await this.fillSummariesInPlace(
         timelinePointsToGenerate,
         keyframeGenerator

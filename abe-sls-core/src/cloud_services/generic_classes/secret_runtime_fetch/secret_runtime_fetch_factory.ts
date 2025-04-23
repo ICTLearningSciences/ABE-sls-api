@@ -1,4 +1,4 @@
-import { SSMSecretRuntimeFetch } from '../../../cloud_services/aws/secrets_manager_fetch.js';
+import { ClientSecretRuntimeFetch } from '../../../cloud_services/aws/secrets_manager_fetch.js';
 import { SecretRuntimeFetch } from './secret_runtime_fetch.js';
 import { CloudServices } from '../types.js';
 import { getCloudService } from '../../../helpers.js';
@@ -17,7 +17,7 @@ export class SecretRuntimeFetchFactory {
   static getSecretRuntimeFetch(cloudService: CloudServices) {
     switch (cloudService) {
       case CloudServices.AWS:
-        return new SSMSecretRuntimeFetch();
+        return new ClientSecretRuntimeFetch();
       case CloudServices.AZURE:
         return new AzureKeyVaultRuntimeFetch();
       default:

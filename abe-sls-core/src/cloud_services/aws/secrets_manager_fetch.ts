@@ -10,7 +10,7 @@ import {
   SecretsManagerClient,
   GetSecretValueCommand,
 } from '@aws-sdk/client-secrets-manager';
-export class SSMSecretRuntimeFetch extends SecretRuntimeFetch {
+export class ClientSecretRuntimeFetch extends SecretRuntimeFetch {
   cloudService: CloudServices = CloudServices.AWS;
 
   async fetchSecret(secretName: string): Promise<string> {
