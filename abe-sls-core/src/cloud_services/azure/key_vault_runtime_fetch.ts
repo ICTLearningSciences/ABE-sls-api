@@ -4,22 +4,21 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
-import { DocData } from '../types.js';
-import { IGDocVersion } from '../timeline-generation/types.js';
+import { DefaultAzureCredential } from '@azure/identity';
+import { SecretClient } from '@azure/keyvault-secrets';
+import { SecretRuntimeFetch } from '../generic_classes/secret_runtime_fetch/secret_runtime_fetch.js';
+import { CloudServices } from '../generic_classes/types.js';
 
-export abstract class DocService<T> {
-  abstract authHeaders: AuthHeaders;
+const keyVaultName = 'abe-key-vault';
+const vaultUrl = `https://${keyVaultName}.vault.azure.net`;
+const credential = new DefaultAzureCredential();
+const client = new SecretClient(vaultUrl, credential);
 
-  abstract getDocData(docId: string): Promise<DocData>;
+export class AzureKeyVaultRuntimeFetch extends SecretRuntimeFetch {
+  cloudService: CloudServices = CloudServices.AZURE;
 
-  abstract fetchExternalDocVersion(docId: string): Promise<T[]>;
-
-  /**
-   * You MUST upload the new IGDocVersions to graphql
-   */
-  abstract convertExternalDocVersionsToIGDocVersion(
-    externalDocVersion: T[],
-    lastRealVersion: IGDocVersion
-  ): Promise<IGDocVersion[]>;
+  async fetchSecret(secretName: string): Promise<string> {
+    const secret = await client.getSecret(secretName);
+    return secret.value || '';
+  }
 }

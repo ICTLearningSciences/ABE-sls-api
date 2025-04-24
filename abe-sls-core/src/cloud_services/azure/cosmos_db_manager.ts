@@ -18,7 +18,10 @@ import {
 } from '../generic_classes/document_db/document_db.js';
 import { CloudServices } from '../generic_classes/types.js';
 import { AiServiceFinalResponseType } from '../../ai_services/ai-service-factory.js';
-import { GQLDocumentTimeline } from '../../timeline-generation/types.js';
+import {
+  GQLDocumentTimeline,
+  StoredDocumentTimeline,
+} from '../../timeline-generation/types.js';
 import requireEnv from '../../helpers.js';
 import { CosmosClient } from '@azure/cosmos';
 import { AiAsyncJobStatus } from '../../types.js';
@@ -191,7 +194,7 @@ export class CosmosDBManager extends DocumentDBManager {
     }
     const jobStatus = item.resource?.job_status;
     const documentTimelineData = item.resource?.documentTimeline;
-    const documentTimeline: GQLDocumentTimeline = documentTimelineData
+    const documentTimeline: StoredDocumentTimeline = documentTimelineData
       ? JSON.parse(documentTimelineData)
       : null;
     return {
@@ -202,7 +205,7 @@ export class CosmosDBManager extends DocumentDBManager {
 
   async timelineProcessProgress(
     jobId: string,
-    documentTimeline: GQLDocumentTimeline
+    documentTimeline: StoredDocumentTimeline
   ): Promise<void> {
     await this.timelineContainer
       .item(jobId, jobId)
@@ -215,7 +218,7 @@ export class CosmosDBManager extends DocumentDBManager {
 
   async timelineProcessFinished(
     jobId: string,
-    documentTimeline: GQLDocumentTimeline
+    documentTimeline: StoredDocumentTimeline
   ): Promise<void> {
     await this.timelineContainer
       .item(jobId, jobId)

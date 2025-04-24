@@ -32,6 +32,11 @@ export const DefaultOpenAiConfig = {
   DEFAULT_GPT_MODEL: DefaultGptModels.OPEN_AI_GPT_4,
 };
 
+interface InputMessageType {
+  role: PromptRoles;
+  content: string;
+}
+
 export type OpenAiReqType = ResponseCreateParamsNonStreaming;
 export type OpenAiResType = Response;
 
@@ -41,6 +46,9 @@ export type OpenAiPromptResponse = AiServiceResponse<
   OpenAiResType
 >;
 
+/**
+ * Required: OPENAI_API_KEY environment variable
+ */
 export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   private static instance: OpenAiService;
   aiServiceClient: OpenAI;
@@ -119,15 +127,39 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     return result;
   }
 
+  applyWebSearchTool(req: OpenAiReqType) {
+    const webSearchCompatibleModels = [
+      DefaultGptModels.OPEN_AI_GPT_4o,
+      DefaultGptModels.OPEN_AI_GPT_4o_MINI,
+    ];
+    if (!webSearchCompatibleModels.includes(req.model as DefaultGptModels)) {
+      req.model = DefaultGptModels.OPEN_AI_GPT_4o;
+    }
+    req.tools = [{ type: 'web_search_preview' }];
+    // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
+    req.tool_choice = { type: 'web_search_preview' };
+    req.input = (req.input as InputMessageType[]).map((message) => {
+      // convert system instructions to user instructions
+      if (message.role === PromptRoles.SYSTEM) {
+        return {
+          ...message,
+          role: PromptRoles.USER,
+        };
+      }
+      return message;
+    });
+    return req;
+  }
+
   convertContextDataToServiceParams(
     requestContext: AiRequestContext
   ): OpenAiReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
-    const newReq: OpenAiReqType = {
+    let newReq: OpenAiReqType = {
       model: aiStep.targetAiServiceModel.model,
       input: [],
     };
-    const inputMessages = [];
+    const inputMessages: InputMessageType[] = [];
     inputMessages.push({
       role: PromptRoles.SYSTEM,
       content: aiStep.systemRole || DefaultOpenAiConfig.DEFAULT_SYSTEM_ROLE,
@@ -164,14 +196,12 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
       });
     });
 
-    if (aiStep.webSearch) {
-      newReq.tools = [{ type: 'web_search_preview' }];
-      // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
-      newReq.tool_choice = { type: 'web_search_preview' };
-    }
     newReq.store = false;
-
     newReq.input = inputMessages;
+    if (aiStep.webSearch) {
+      newReq = this.applyWebSearchTool(newReq);
+    }
+
     return newReq;
   }
 

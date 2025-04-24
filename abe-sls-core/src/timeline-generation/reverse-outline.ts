@@ -106,6 +106,7 @@ export async function reverseOutlinePromptRequest(
                 ]
               }
               You must respond as JSON following the format above. Only respond using valid JSON. The thesis statement, claims, and evidence must all be described in briefly (20 words or less). Please check that the JSON is valid and follows the format given.
+              Even if there is no data in the essay, you MUST still output the format above, do not include ANY text other than the JSON response.
               `,
         includeEssay: true,
       },

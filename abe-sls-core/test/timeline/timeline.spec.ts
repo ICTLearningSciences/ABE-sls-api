@@ -257,7 +257,43 @@ describe("Document Timeline Unit Tests", () => {
       }
     })
 
+    it("Abandons generation if at least half of the summaries/outlines fail", async () => {
+      const gdocVersions: IGDocVersion[] = gqlDocVersionGenerator([
+        {activity: "0", plainText: "changed text 0", createdAt: isoStringMinsFromNow(1)},
+        {activity: "1", plainText: "changed text 1", createdAt: isoStringMinsFromNow(2)},
+      ])
+      mockGraphqlQuery("FetchDocTimeline", {
+        "fetchDocTimeline": undefined
+      });
+      mockGraphqlQuery("FetchGoogleDocVersions", {
+        "fetchGoogleDocVersions": gdocVersions
+      });
+      mockOpenAiChangeSummaryResponse(
+        defaultChangeSummaryRes,
+        {
+          interceptAllCalls: true,
+          statusCode: 400
+        }
+      )
+      mockOpenAiReverseOutlineResponse(
+        defaultReverseOutlineRes,
+        {
+          interceptAllCalls: true,
+          statusCode: 400
+        }
+      )
+      const docTimelineGenerator = new DocumentTimelineGenerator({
+        serviceName:AvailableAiServiceNames.OPEN_AI,
+        model: DefaultGptModels.OPEN_AI_GPT_3_5
+      })
+      const externalDocService = DocServiceFactory.getDocService(DocServices.GOOGLE_DOCS, {})
+      try {
+        await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], externalDocService)
+      } catch (error) {
+        assert.equal(error.message, 'Abandoning generation because at least half of the summary/reverse outline requests failed');
+      }
 
+    })
   })
 
 });

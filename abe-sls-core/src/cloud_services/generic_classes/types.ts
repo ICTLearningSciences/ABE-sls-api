@@ -7,4 +7,5 @@ The full terms of this copyright and license should always be found in the root 
 export enum CloudServices {
   AWS = 'aws',
   AZURE = 'azure',
+  DEFAULT = 'default',
 }

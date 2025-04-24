@@ -41,9 +41,12 @@ export type AzureOpenAiPromptResponse = AiServiceResponse<
 export const DefaultAzureOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:
     'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture. Knowledge cutoff: 2021-09.',
-  DEFAULT_GPT_MODEL: DefaultGptModels.AZURE_GPT_3_5,
+  DEFAULT_GPT_MODEL: DefaultGptModels.AZURE_GPT_4_TURBO_PREVIEW,
 };
 
+/**
+ * Required: AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT environment variable
+ */
 export class AzureOpenAiService extends AiService<
   AzureOpenAiReqType,
   AzureOpenAiResType
@@ -54,7 +57,7 @@ export class AzureOpenAiService extends AiService<
   constructor() {
     super(
       AvailableAiServiceNames.AZURE_OPEN_AI,
-      DefaultGptModels.AZURE_GPT_3_5
+      DefaultGptModels.AZURE_GPT_4_TURBO_PREVIEW
     );
     this.aiServiceClient = new AzureOpenAI({
       apiVersion: '2025-03-01-preview', // Latest GA release
@@ -132,12 +135,25 @@ export class AzureOpenAiService extends AiService<
     return res;
   }
 
+  getTargetModel(requestContext: AiRequestContext): DefaultGptModels {
+    const { aiStep } = requestContext;
+    if (
+      Object.values(DefaultGptModels).includes(
+        aiStep.targetAiServiceModel.model as DefaultGptModels
+      )
+    ) {
+      return aiStep.targetAiServiceModel.model as DefaultGptModels;
+    }
+    return DefaultGptModels.AZURE_GPT_4_TURBO_PREVIEW;
+  }
+
   convertContextDataToServiceParams(
     requestContext: AiRequestContext
   ): AzureOpenAiReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
+    const targetModel = this.getTargetModel(requestContext);
     const request: AzureOpenAiReqType = {
-      model: aiStep.targetAiServiceModel.model,
+      model: targetModel,
       input: [],
       temperature: AI_DEFAULT_TEMP,
     };
@@ -185,12 +201,12 @@ export class AzureOpenAiService extends AiService<
       });
     });
 
-    if (aiStep.webSearch) {
-      // TODO: re-enable if web search tool is ever added for Azure OpenAI
-      // request.tools = [{ type: 'web_search_preview' }];
-      // // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
-      // request.tool_choice = { type: 'web_search_preview' };
-    }
+    // //   TODO: re-enable if web search tool is ever added for Azure OpenAI
+    // if (aiStep.webSearch) {
+    //   request.tools = [{ type: 'web_search_preview' }];
+    //   // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
+    //   request.tool_choice = { type: 'web_search_preview' };
+    // }
 
     request.input = inputMessages;
     request.store = false;

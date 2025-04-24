@@ -71,6 +71,8 @@ export async function changeSummaryPromptRequest(
     previousOutput: '',
   };
 
+  // LEFT OFF: change summary/reverse outline not getting the docsPlainText
+
   const res = await aiService.completeChat(aiReqContext);
   return res.answer;
 }

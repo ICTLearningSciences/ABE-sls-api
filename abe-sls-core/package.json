@@ -1,6 +1,6 @@
 {
-  "name": "abe-sls-core-2",
-  "version": "1.0.17",
+  "name": "abe-sls-core",
+  "version": "1.0.32",
   "description": "",
   "main": "dist/shared_functions/exported-functions.js",
   "types": "dist/shared_functions/exported-functions.d.ts",
@@ -22,8 +22,11 @@
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.515.0",
+    "@aws-sdk/client-secrets-manager": "^3.775.0",
+    "@aws-sdk/client-ssm": "^3.775.0",
     "@azure/cosmos": "^4.2.0",
     "@azure/identity": "^4.8.0",
+    "@azure/keyvault-secrets": "^4.9.0",
     "@azure/openai": "^2.0.0",
     "@google/generative-ai": "^0.24.0",
     "axios": "^1.4.0",
@@ -35,7 +38,7 @@
     "jsonschema": "^1.4.1",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
-    "openai": "^4.88.0",
+    "openai": "^4.94.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
