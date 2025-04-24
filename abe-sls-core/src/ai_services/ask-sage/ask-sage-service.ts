@@ -220,7 +220,6 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
       context.aiStep.responseSchema
     );
 
-    console.log(response);
     return {
       aiStepData: {
         aiServiceRequestParams: reqData,

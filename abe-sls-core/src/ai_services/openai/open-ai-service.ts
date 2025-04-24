@@ -94,9 +94,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
             ...params,
             temperature: AI_DEFAULT_TEMP + j * 0.1,
           };
-          console.log(JSON.stringify(newParams, null, 2));
           result = await this.executeOpenAi(newParams);
-          console.log(JSON.stringify(result, null, 2));
           answer = result.output_text || '';
           if (!answer) {
             throw new Error('OpenAI API Error: No response message content.');
