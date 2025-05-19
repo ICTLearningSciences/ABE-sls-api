@@ -8,7 +8,7 @@ import { DocServices } from '../types.js';
 import { GoogleDocService } from './google-doc-services.js';
 import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import { MicrosoftDocService } from './microsoft-doc-service.js';
-
+import { RawTextDocService } from './raw-text-doc-service.js';
 export class DocServiceFactory {
   static getDocService(targetDocService: DocServices, authHeader: AuthHeaders) {
     switch (targetDocService) {
@@ -16,6 +16,8 @@ export class DocServiceFactory {
         return GoogleDocService.getInstance(authHeader);
       case DocServices.MICROSOFT_WORD:
         return MicrosoftDocService.getInstance(authHeader);
+      case DocServices.RAW_TEXT:
+        return RawTextDocService.getInstance(authHeader);
       default:
         throw new Error(`DocService ${targetDocService} not found`);
     }

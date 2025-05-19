@@ -85,4 +85,5 @@ export enum AiAsyncJobStatus {
 export enum DocServices {
   GOOGLE_DOCS = 'GOOGLE_DOCS',
   MICROSOFT_WORD = 'MICROSOFT_WORD',
+  RAW_TEXT = 'RAW_TEXT',
 }
