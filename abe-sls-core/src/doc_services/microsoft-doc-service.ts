@@ -30,6 +30,7 @@ export class MicrosoftDocService extends DocService<MicrosoftDocVersion> {
     const version = await fetchMostRecentVersion(docId);
     return Promise.resolve({
       plainText: version?.plainText || '',
+      markdownText: version?.markdownText || '',
       lastChangedId: version?.lastChangedId || '',
       title: version?.title || '',
       lastModifyingUser: version?.lastModifyingUser || '',

@@ -442,6 +442,7 @@ export function useWithGoogleApi(): UseWithGoogleApi {
 
     return {
       plainText,
+      markdownText: plainText,
       lastChangedId,
       title,
       lastModifyingUser,
