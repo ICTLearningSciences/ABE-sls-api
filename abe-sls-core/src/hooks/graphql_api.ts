@@ -104,6 +104,7 @@ export async function fetchGoogleDocVersion(
         fetchGoogleDocVersions(googleDocId: $googleDocId) {
           _id
           docId
+          markdownText
           plainText
           lastChangedId
           sessionId
@@ -155,6 +156,7 @@ export async function fetchMostRecentVersion(
       query: `query FetchMostRecentVersion($googleDocId: String!) {
           fetchMostRecentVersion(googleDocId: $googleDocId) {
           docId
+          markdownText
           plainText
           lastChangedId
           sessionId
@@ -214,6 +216,7 @@ export async function fetchDocTimeline(
               versionId
               version{
                   docId
+                  markdownText
                   plainText
                   lastChangedId
                   sessionId

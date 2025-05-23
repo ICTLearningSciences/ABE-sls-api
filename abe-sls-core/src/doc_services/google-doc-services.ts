@@ -78,6 +78,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
           _id: googleDocVersion.id || '',
           docId: googleDocVersion.id || '',
           plainText: res.data || '',
+          markdownText: res.data || '',
           lastChangedId: '',
           documentIntention: lastRealVersion.documentIntention,
           dayIntention: lastRealVersion.dayIntention,
