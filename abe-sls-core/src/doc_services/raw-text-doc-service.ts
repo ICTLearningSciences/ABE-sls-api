@@ -6,20 +6,18 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { DocData } from '../types.js';
 import { DocService } from './abstract-doc-service.js';
-import { getDocData as _getDocData } from '../api.js';
 import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
-import { fetchMostRecentVersion } from '../hooks/graphql_api.js';
 import { IGDocVersion } from '../timeline-generation/types.js';
+import { fetchMostRecentVersion } from '../hooks/graphql_api.js';
 
-type MicrosoftDocVersion = {
-  id: string;
-  modifiedTime: string;
-  rawText: string; // Might not be available
-};
+type RawTextDocVersion = string;
 
-export class MicrosoftDocService extends DocService<MicrosoftDocVersion> {
+/**
+ * "Service" for raw text documents that we fully manage ourselves.
+ */
+export class RawTextDocService extends DocService<RawTextDocVersion> {
   authHeaders: AuthHeaders;
-  private static instance: MicrosoftDocService;
+  private static instance: RawTextDocService;
 
   constructor(authHeaders: AuthHeaders) {
     super();
@@ -38,25 +36,23 @@ export class MicrosoftDocService extends DocService<MicrosoftDocVersion> {
     });
   }
 
-  static getInstance(
-    authHeaders: AuthHeaders
-  ): DocService<MicrosoftDocVersion> {
-    if (!MicrosoftDocService.instance) {
-      MicrosoftDocService.instance = new MicrosoftDocService(authHeaders);
+  static getInstance(authHeaders: AuthHeaders): DocService<RawTextDocVersion> {
+    if (!RawTextDocService.instance) {
+      RawTextDocService.instance = new RawTextDocService(authHeaders);
     }
-    return MicrosoftDocService.instance;
+    return RawTextDocService.instance;
   }
 
-  fetchExternalDocVersion(docId: string): Promise<MicrosoftDocVersion[]> {
-    // TODO: implement
+  fetchExternalDocVersion(docId: string): Promise<RawTextDocVersion[]> {
+    // No-op: There are no external versions for raw text docs, do nothing.
     return Promise.resolve([]);
   }
 
   convertExternalDocVersionsToIGDocVersion(
-    externalDocVersion: MicrosoftDocVersion[],
+    externalDocVersion: RawTextDocVersion[],
     lastRealVersion: IGDocVersion
   ): Promise<IGDocVersion[]> {
-    // TODO: implement
+    // No-op: There are no external versions for raw text docs, do nothing.
     return Promise.resolve([]);
   }
 }

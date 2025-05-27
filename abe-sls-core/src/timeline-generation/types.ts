@@ -73,6 +73,7 @@ export interface IGDocVersion {
   _id: string;
   docId: string;
   plainText: string;
+  markdownText: string;
   lastChangedId: string;
   sessionId: string;
   sessionIntention?: IIntention;
@@ -91,6 +92,7 @@ export interface IGDocVersion {
 export interface GQLIGDocVersion {
   docId: string;
   plainText: string;
+  markdownText: string;
   lastChangedId: string;
   chatLog: ChatItem[];
   activity: string;

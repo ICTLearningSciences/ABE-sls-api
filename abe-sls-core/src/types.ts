@@ -8,6 +8,7 @@ import { Schema } from 'jsonschema';
 
 export interface DocData {
   plainText: string;
+  markdownText: string;
   lastChangedId: string;
   title: string;
   lastModifyingUser: string;
@@ -85,4 +86,5 @@ export enum AiAsyncJobStatus {
 export enum DocServices {
   GOOGLE_DOCS = 'GOOGLE_DOCS',
   MICROSOFT_WORD = 'MICROSOFT_WORD',
+  RAW_TEXT = 'RAW_TEXT',
 }
