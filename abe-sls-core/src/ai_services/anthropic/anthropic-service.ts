@@ -115,7 +115,6 @@ export class AnthropicService extends AiService<
   }
 
   private extractTextFromResponse(response: AnthropicResType): string {
-    console.log(JSON.stringify(response, null, 2));
     const textContent = response.content.find(
       (content): content is Anthropic.TextBlock => content.type === 'text'
     );
@@ -127,7 +126,6 @@ export class AnthropicService extends AiService<
     console.log(
       `Executing Anthropic request ${id} starting at ${new Date().toISOString()}`
     );
-    console.log(JSON.stringify(params, null, 2));
     const result = await this.aiServiceClient.messages.create(params);
     const answer = this.extractTextFromResponse(result);
     if (!answer) {
