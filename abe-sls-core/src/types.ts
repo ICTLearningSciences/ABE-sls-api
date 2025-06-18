@@ -42,7 +42,29 @@ export enum DefaultGptModels {
   SAGE_GPT_4 = 'gpt4',
   SAGE_GPT_4_GOV = 'gpt4-gov',
   SAGE_GPT_4O_GOV = 'gpt-4o-gov',
+
+  ANTHROPIC_CLAUDE_3_5_SONNET_LATEST = 'claude-3-5-sonnet-latest',
+  ANTHROPIC_CLAUDE_3_7_SONNET_LATEST = 'claude-3-7-sonnet-latest',
+  ANTHROPIC_CLAUDE_4_SONNET_LATEST = 'claude-sonnet-4-0',
+
+  ANTHROPIC_CLAUDE_3_HAIKU_20240307 = 'claude-3-haiku-20240307',
+  ANTHROPIC_CLAUDE_3_5_HAIKU_LATEST = 'claude-3-5-haiku-latest',
+
+  ANTHROPIC_CLAUDE_3_OPUS_LATEST = 'claude-3-opus-latest',
+  ANTHROPIC_CLAUDE_4_OPUS_20250514 = 'claude-opus-4-20250514',
 }
+
+export const AnthropicModelMaxTokens = {
+  [DefaultGptModels.ANTHROPIC_CLAUDE_3_5_SONNET_LATEST]: 8192,
+  [DefaultGptModels.ANTHROPIC_CLAUDE_3_7_SONNET_LATEST]: 64000,
+  [DefaultGptModels.ANTHROPIC_CLAUDE_4_SONNET_LATEST]: 64000,
+
+  [DefaultGptModels.ANTHROPIC_CLAUDE_3_HAIKU_20240307]: 4096,
+  [DefaultGptModels.ANTHROPIC_CLAUDE_3_5_HAIKU_LATEST]: 8192,
+
+  [DefaultGptModels.ANTHROPIC_CLAUDE_3_OPUS_LATEST]: 4096,
+  [DefaultGptModels.ANTHROPIC_CLAUDE_4_OPUS_20250514]: 32000,
+};
 
 export interface TargetAiModelServiceType {
   serviceName: string;

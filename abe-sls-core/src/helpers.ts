@@ -5,7 +5,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-import Validator from 'jsonschema';
+import Validator, { Schema } from 'jsonschema';
 import { diffWords } from 'diff';
 import { CloudServices } from './cloud_services/generic_classes/types.js';
 
@@ -163,4 +163,12 @@ export function convertMarkdownToJsonString(jsonMarkdown: string): string {
     ? withoutStart.slice(0, -3) // Length of "```"
     : withoutStart;
   return withoutEnd.trim();
+}
+
+export function isProperJson(str: string, jsonSchema?: Schema): boolean {
+  if (jsonSchema) {
+    return validateJsonResponse(str, jsonSchema);
+  } else {
+    return isJsonString(str);
+  }
 }

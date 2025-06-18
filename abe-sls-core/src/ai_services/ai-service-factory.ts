@@ -29,6 +29,11 @@ import {
   OpenAiService,
   OpenAiStepDataType,
 } from './openai/open-ai-service.js';
+import {
+  AnthropicPromptResponse,
+  AnthropicService,
+  AnthropicStepDataType,
+} from './anthropic/anthropic-service.js';
 
 export interface AiStepData<ReqType, ResType> {
   aiServiceRequestParams: ReqType;
@@ -58,19 +63,22 @@ export type AiServiceStepDataTypes =
   | AzureOpenAiStepDataType
   | GeminiStepDataType
   | CamoGptStepDataType
-  | SageStepDataType;
+  | SageStepDataType
+  | AnthropicStepDataType;
 export type AiServicesPromptResponseTypes =
   | OpenAiPromptResponse
   | AzureOpenAiPromptResponse
   | GeminiPromptResponse
   | CamoGptPromptResponse
-  | SagePromptResponse;
+  | SagePromptResponse
+  | AnthropicPromptResponse;
 export type AvailableAiServices =
   | OpenAiService
   | AzureOpenAiService
   | GeminiAiService
   | CamoGptService
-  | AskSageService;
+  | AskSageService
+  | AnthropicService;
 
 export enum AvailableAiServiceNames {
   OPEN_AI = 'OPEN_AI',
@@ -78,6 +86,7 @@ export enum AvailableAiServiceNames {
   GEMINI = 'GEMINI',
   CAMO_GPT = 'CAMO_GPT',
   ASK_SAGE = 'ASK_SAGE',
+  ANTHROPIC = 'ANTHROPIC',
 }
 
 export class AiServiceFactory {
@@ -93,6 +102,8 @@ export class AiServiceFactory {
         return CamoGptService.getInstance();
       case AvailableAiServiceNames.ASK_SAGE:
         return AskSageService.getInstance();
+      case AvailableAiServiceNames.ANTHROPIC:
+        return AnthropicService.getInstance();
       default:
         throw new Error('Invalid AI service name');
     }
