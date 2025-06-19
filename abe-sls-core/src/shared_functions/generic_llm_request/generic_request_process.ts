@@ -5,12 +5,12 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 // Note: had to add .js to find this file in serverless
-import { AiAsyncJobStatus } from '../../types.js';
 import { extractErrorMessageFromError } from '../../helpers.js';
 import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
 import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
 import { GenericLlmRequestData } from '../../generic_llm_request/helpers.js';
-// modern module syntax
+import { AiModelConfigs } from '../../hooks/ai-model-configs.js';
+
 export const genericRequestProcess = async (
   jobId: string,
   requestData: GenericLlmRequestData
@@ -20,9 +20,13 @@ export const genericRequestProcess = async (
   const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
     await documentDBManager.setGenericRequestJobInProgress(jobId);
-    const aiServiceResponse =
-      await aiServiceHandler.executeGenericLlmRequest(llmRequest);
-    // Update the job in dynamo db
+    const aiModelConfigs = AiModelConfigs.getInstance();
+    await aiModelConfigs.initialize();
+    const llmModelConfigs = aiModelConfigs.getAllConfigs();
+    const aiServiceResponse = await aiServiceHandler.executeGenericLlmRequest(
+      llmRequest,
+      llmModelConfigs
+    );
     await documentDBManager.genericProcessFinished(jobId, aiServiceResponse);
   } catch (err) {
     await documentDBManager.genericProcessFailed(

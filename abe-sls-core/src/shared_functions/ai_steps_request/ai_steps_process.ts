@@ -10,8 +10,8 @@ import { extractErrorMessageFromError } from '../../helpers.js';
 import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
 import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
 import { ExtractedOpenAiRequestData } from '../../shared_functions/ai_steps_request/helpers.js';
+import { AiModelConfigs } from '../../hooks/ai-model-configs.js';
 
-// modern module syntax
 export const aiStepsProcess = async (
   jobId: string,
   aiRequestData: ExtractedOpenAiRequestData
@@ -21,13 +21,17 @@ export const aiStepsProcess = async (
   const aiServiceHandler = new AiServiceHandler();
   const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
   try {
+    const aiModelConfigs = AiModelConfigs.getInstance();
+    await aiModelConfigs.initialize();
+    const llmModelConfigs = aiModelConfigs.getAllConfigs();
     await documentDBManager.setStepsJobInProgress(jobId);
     const aiServiceResponse = await aiServiceHandler.executeAiSteps(
       aiPromptSteps,
       docsId,
       userId,
       authHeaders,
-      docService
+      docService,
+      llmModelConfigs
     );
     await documentDBManager.stepsProcessFinished(jobId, aiServiceResponse);
   } catch (err) {

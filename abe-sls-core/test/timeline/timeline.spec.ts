@@ -7,12 +7,12 @@ import { externalGoogleDocRevisionGenerator, gqlDocVersionGenerator, isoStringMi
 import { docTimeline } from "../fixtures/documents/2-sessions-inbetween-outside-ABE/doc-timeline.js";
 import {ddbMock} from "../init.spec.js";
 import { UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { AiAsyncJobStatus, DefaultGptModels, DocServices } from "../../src/types.js";
-import {AvailableAiServiceNames} from '../../src/ai_services/ai-service-factory.js'
+import { AiAsyncJobStatus, DocServices } from "../../src/types.js";
 import {DocServiceFactory} from '../../src/doc_services/doc-service-factory.js'
 import sinon from "sinon";
 import { GoogleDocService } from "../../src/doc_services/google-doc-services.js";
 import { useWithGoogleApi } from "../../src/hooks/google_api.js";
+import { llmModelConfigs, targetAiService } from "../keyframe-generator/keyframe-generator.spec.js";
 describe("Document Timeline Unit Tests", () => {
   beforeEach(() => {
     mockDefault()
@@ -93,10 +93,7 @@ describe("Document Timeline Unit Tests", () => {
       const openAiNocScope = mockOpenAiCall(
         "fake-summary"
       )
-      const docTimelineGenerator = new DocumentTimelineGenerator({
-        serviceName:AvailableAiServiceNames.OPEN_AI,
-        model: DefaultGptModels.OPEN_AI_GPT_3_5
-      })
+      const docTimelineGenerator = new DocumentTimelineGenerator(targetAiService, llmModelConfigs)
       const externalDocService = DocServiceFactory.getDocService(DocServices.GOOGLE_DOCS, {})
 
       const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], externalDocService)
@@ -140,10 +137,7 @@ describe("Document Timeline Unit Tests", () => {
           interceptAllCalls: true,
         }
       )
-      const docTimelineGenerator = new DocumentTimelineGenerator({
-        serviceName:AvailableAiServiceNames.OPEN_AI,
-        model: DefaultGptModels.OPEN_AI_GPT_3_5
-      })
+      const docTimelineGenerator = new DocumentTimelineGenerator(targetAiService, llmModelConfigs)
       const externalDocService = DocServiceFactory.getDocService(DocServices.GOOGLE_DOCS, {})
       const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], externalDocService)
       assert.equal(openAiChangeSummaryNock.isDone(), true);
@@ -206,10 +200,7 @@ describe("Document Timeline Unit Tests", () => {
           interceptAllCalls: true,
         }
       )
-      const docTimelineGenerator = new DocumentTimelineGenerator({
-        serviceName:AvailableAiServiceNames.OPEN_AI,
-        model: DefaultGptModels.OPEN_AI_GPT_3_5
-      })
+      const docTimelineGenerator = new DocumentTimelineGenerator(targetAiService, llmModelConfigs)
       const externalDocService = DocServiceFactory.getDocService(DocServices.GOOGLE_DOCS, {})
       await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], externalDocService)
       assert.equal(openAiChangeSummaryNock.isDone(), true);
@@ -282,10 +273,7 @@ describe("Document Timeline Unit Tests", () => {
           statusCode: 400
         }
       )
-      const docTimelineGenerator = new DocumentTimelineGenerator({
-        serviceName:AvailableAiServiceNames.OPEN_AI,
-        model: DefaultGptModels.OPEN_AI_GPT_3_5
-      })
+      const docTimelineGenerator = new DocumentTimelineGenerator(targetAiService, llmModelConfigs)
       const externalDocService = DocServiceFactory.getDocService(DocServices.GOOGLE_DOCS, {})
       try {
         await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], externalDocService)

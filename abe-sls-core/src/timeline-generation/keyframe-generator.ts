@@ -17,6 +17,7 @@ import {
   percentageChangeUsingDiffWords,
 } from '../helpers.js';
 import { TargetAiModelServiceType } from '../types.js';
+import { AiServiceModelConfigs } from '../gql_types.js';
 
 export interface ReverseOutlineKeyframe {
   time: string;
@@ -33,12 +34,14 @@ export class KeyframeGenerator {
 
   constructor(
     timeLinePoints: GQLTimelinePoint[],
-    targetAiService: TargetAiModelServiceType
+    targetAiService: TargetAiModelServiceType,
+    llmModelConfigs: AiServiceModelConfigs[]
   ) {
     this.timelinePoints = timeLinePoints;
     this.keyframes = [];
     this.aiService = AiServiceFactory.getAiService(
-      targetAiService.serviceName as AvailableAiServiceNames
+      targetAiService.serviceName as AvailableAiServiceNames,
+      llmModelConfigs
     );
   }
 

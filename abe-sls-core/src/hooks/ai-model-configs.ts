@@ -30,14 +30,11 @@ export class AiModelConfigs {
     this.initialized = true;
   }
 
-  public getModelInfo(targetModel: TargetAiModelServiceType): ServiceModelInfo {
-    if (!this.initialized) {
-      throw new Error(
-        'AiModelConfigs not initialized. Call initialize() first.'
-      );
-    }
-
-    const serviceConfig = this.configs.find(
+  static getModelInfo(
+    targetModel: TargetAiModelServiceType,
+    llmModelConfigs: AiServiceModelConfigs[]
+  ): ServiceModelInfo {
+    const serviceConfig = llmModelConfigs.find(
       (config) => config.serviceName === targetModel.serviceName
     );
 

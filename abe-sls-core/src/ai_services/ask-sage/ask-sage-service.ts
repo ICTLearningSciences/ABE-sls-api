@@ -22,6 +22,7 @@ import {
   AiStepData,
   AvailableAiServiceNames,
 } from '../ai-service-factory.js';
+import { AiServiceModelConfigs } from '../../gql_types.js';
 
 dotenv.config();
 
@@ -50,12 +51,6 @@ interface SageRes {
   vectors_down: boolean;
 }
 
-export const DefaultCamoGptConfig = {
-  DEFAULT_GPT_MODEL: DefaultGptModels.SAGE_GPT_4O_GOV,
-  DEFAULT_SYSTEM_ROLE:
-    'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture. Knowledge cutoff: 2021-09.',
-};
-
 const apiKey: string = process.env.SAGE_API_KEY || '';
 
 export type SageReqType = ApiRequestData;
@@ -70,13 +65,17 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
   private static instance: AskSageService;
   aiServiceClient: any;
 
-  constructor() {
-    super(AvailableAiServiceNames.ASK_SAGE, DefaultGptModels.SAGE_GPT_4O_GOV);
+  constructor(llmModelConfigs: AiServiceModelConfigs[]) {
+    super(
+      AvailableAiServiceNames.ASK_SAGE,
+      DefaultGptModels.SAGE_GPT_4O_GOV,
+      llmModelConfigs
+    );
   }
 
-  static getInstance(): AskSageService {
+  static getInstance(llmModelConfigs: AiServiceModelConfigs[]): AskSageService {
     if (!AskSageService.instance) {
-      AskSageService.instance = new AskSageService();
+      AskSageService.instance = new AskSageService(llmModelConfigs);
     }
     return AskSageService.instance;
   }
@@ -153,10 +152,12 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
       system_prompt: '',
     };
 
-    requestData.system_prompt += JSON.stringify({
-      role: PromptRoles.SYSTEM,
-      content: aiStep.systemRole || DefaultCamoGptConfig.DEFAULT_SYSTEM_ROLE,
-    });
+    if (aiStep.systemRole) {
+      requestData.system_prompt += JSON.stringify({
+        role: PromptRoles.SYSTEM,
+        content: aiStep.systemRole,
+      });
+    }
 
     requestData.system_prompt += '\n';
 
@@ -196,13 +197,7 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
       });
       requestData.message += '\n';
     });
-    // TODO: add web search
-    // if (aiStep.webSearch) {
-    //   newReq.tools = [{ type: 'web_search_preview' }];
-    //   // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
-    //   newReq.tool_choice = { type: 'web_search_preview' };
-    // }
-    // newReq.store = false;
+    // TODO: add web search if Ask Sage makes it available
 
     return requestData;
   }

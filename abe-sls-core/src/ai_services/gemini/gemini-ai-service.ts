@@ -36,6 +36,8 @@ import {
   UsageMetadata,
 } from '@google/generative-ai/dist/types/responses';
 import { FunctionCall } from '@google/generative-ai/dist/types/content.js';
+import { AiModelConfigs } from '../../hooks/ai-model-configs.js';
+import { AiServiceModelConfigs } from '../../gql_types.js';
 
 export type GeminiReqType = GeminiChatCompletionRequest;
 export type GeminiResType = GeminiJsonResponse;
@@ -67,15 +69,21 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
   private static instance: GeminiAiService;
   aiServiceClient: GoogleGenerativeAI;
 
-  constructor() {
-    super(AvailableAiServiceNames.GEMINI, DefaultGptModels.GEMINI_1_PRO);
+  constructor(llmModelConfigs: AiServiceModelConfigs[]) {
+    super(
+      AvailableAiServiceNames.GEMINI,
+      DefaultGptModels.GEMINI_1_PRO,
+      llmModelConfigs
+    );
     const geminiApiKey = process.env.GEMINI_API_KEY || '';
     this.aiServiceClient = new GoogleGenerativeAI(geminiApiKey);
   }
 
-  static getInstance(): GeminiAiService {
+  static getInstance(
+    llmModelConfigs: AiServiceModelConfigs[]
+  ): GeminiAiService {
     if (!GeminiAiService.instance) {
-      GeminiAiService.instance = new GeminiAiService();
+      GeminiAiService.instance = new GeminiAiService(llmModelConfigs);
     }
     return GeminiAiService.instance;
   }
@@ -127,6 +135,10 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
     requestContext: AiRequestContext
   ): GeminiReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
+    const llmModelInfo = AiModelConfigs.getModelInfo(
+      aiStep.targetAiServiceModel,
+      this.llmModelConfigs
+    );
     const canUseSystemInstruction =
       aiStep.targetAiServiceModel.model === DefaultGptModels.GEMINI_1_5_PREVIEW;
     let customSystemInstructions = '';
@@ -213,42 +225,17 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
     }
     const lastPromptStep = aiStep.prompts[aiStep.prompts.length - 1];
 
-    // search does not work for 1.0 models
-    if (
-      aiStep.webSearch &&
-      aiStep.targetAiServiceModel.model !== DefaultGptModels.GEMINI_1_PRO
-    ) {
-      // for 1.5 models, use Google Search Retrieval. For 2.0 models, use Search as a tool.
-      if (
-        aiStep.targetAiServiceModel.model ===
-        DefaultGptModels.GEMINI_1_5_PREVIEW
-      ) {
-        chatParams.tools = [
-          {
-            googleSearchRetrieval: {
-              dynamicRetrievalConfig: {
-                mode: DynamicRetrievalMode.MODE_DYNAMIC,
-                // 0 means always use retrieval
-                dynamicThreshold: 0,
-              },
-            },
-          },
-        ];
-      } else if (
-        aiStep.targetAiServiceModel.model ===
-        DefaultGptModels.GEMINI_2_0_PREVIEW
-      ) {
-        chatParams.tools = [
-          {
-            googleSearch: {},
-            // gemini typescript types are not updated to include googleSearch, PR currently open: https://github.com/google-gemini/generative-ai-js/pull/370
-          } as any,
-        ];
-      }
+    if (aiStep.webSearch && llmModelInfo.supportsWebSearch) {
+      chatParams.tools = [
+        {
+          googleSearch: {},
+          // gemini typescript types are not updated to include googleSearch, PR currently open: https://github.com/google-gemini/generative-ai-js/pull/370
+        } as any,
+      ];
     }
     return {
       startChatParams: chatParams,
-      model: aiStep.targetAiServiceModel.model,
+      model: llmModelInfo.name,
       requestText: lastPromptStep.promptText,
     };
   }

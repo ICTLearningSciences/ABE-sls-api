@@ -25,6 +25,8 @@ import {
   ResponseCreateParamsNonStreaming,
   Response,
 } from 'openai/resources/responses/responses.js';
+import { AiModelConfigs } from '../../hooks/ai-model-configs.js';
+import { AiServiceModelConfigs } from '../../gql_types.js';
 
 export const DefaultOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:
@@ -53,17 +55,21 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   private static instance: OpenAiService;
   aiServiceClient: OpenAI;
 
-  constructor() {
-    super(AvailableAiServiceNames.OPEN_AI, DefaultGptModels.OPEN_AI_GPT_4);
+  constructor(llmModelConfigs: AiServiceModelConfigs[]) {
+    super(
+      AvailableAiServiceNames.OPEN_AI,
+      DefaultGptModels.OPEN_AI_GPT_4,
+      llmModelConfigs
+    );
     this.aiServiceClient = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
       timeout: 30 * 1000, // 30 seconds to be in line with lambda timeout (default is 10 minutes)
     });
   }
 
-  static getInstance(): OpenAiService {
+  static getInstance(llmModelConfigs: AiServiceModelConfigs[]): OpenAiService {
     if (!OpenAiService.instance) {
-      OpenAiService.instance = new OpenAiService();
+      OpenAiService.instance = new OpenAiService(llmModelConfigs);
     }
     return OpenAiService.instance;
   }
@@ -155,9 +161,14 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     requestContext: AiRequestContext
   ): OpenAiReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
+    const llmModelInfo = AiModelConfigs.getModelInfo(
+      aiStep.targetAiServiceModel,
+      this.llmModelConfigs
+    );
     let newReq: OpenAiReqType = {
-      model: aiStep.targetAiServiceModel.model,
+      model: llmModelInfo.name,
       input: [],
+      max_output_tokens: llmModelInfo.maxTokens,
     };
     const inputMessages: InputMessageType[] = [];
     inputMessages.push({
