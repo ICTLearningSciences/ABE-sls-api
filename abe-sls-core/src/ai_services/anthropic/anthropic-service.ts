@@ -118,10 +118,13 @@ export class AnthropicService extends AiService<
   }
 
   private extractTextFromResponse(response: AnthropicResType): string {
-    const textContent = response.content.find(
-      (content): content is Anthropic.TextBlock => content.type === 'text'
-    );
-    return textContent?.text || '';
+    const allTextContent = response.content.reduce((acc, content) => {
+      if (content.type === 'text') {
+        acc += content.text + '\n';
+      }
+      return acc;
+    }, '' as string);
+    return allTextContent;
   }
 
   async executeAnthropic(params: AnthropicReqType) {
@@ -173,12 +176,19 @@ export class AnthropicService extends AiService<
       });
     });
 
+    const webSearchTool: Anthropic.Messages.WebSearchTool20250305 = {
+      type: 'web_search_20250305',
+      name: 'web_search',
+      max_uses: 2,
+    };
+
     const newReq: AnthropicReqType = {
       model: llmModelInfo.name,
       max_tokens: llmModelInfo.maxTokens,
       system: systemMessage,
       messages: messages,
       temperature: AI_DEFAULT_TEMP,
+      tools: llmModelInfo.supportsWebSearch ? [webSearchTool] : [],
     };
 
     return newReq;

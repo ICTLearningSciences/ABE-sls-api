@@ -23,6 +23,8 @@ import {
   AvailableAiServiceNames,
 } from '../ai-service-factory.js';
 import { AiServiceModelConfigs } from '../../gql_types.js';
+import OpenAI from 'openai';
+import { AiModelConfigs } from '../../hooks/ai-model-configs.js';
 
 dotenv.config();
 
@@ -35,6 +37,9 @@ interface ApiRequestData {
   live?: number;
   temperature?: number;
   dataset?: string;
+  // Ask Sage supports web search through openAI tools
+  tools?: OpenAI.Responses.Tool[];
+  tool_choice?: OpenAI.Responses.ToolChoiceTypes;
 }
 
 interface SageRes {
@@ -145,6 +150,10 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
     requestContext: AiRequestContext
   ): SageReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
+    const llmModelInfo = AiModelConfigs.getModelInfo(
+      aiStep.targetAiServiceModel,
+      this.llmModelConfigs
+    );
     const requestData: SageReqType = {
       model: aiStep.targetAiServiceModel.model,
       message: '',
@@ -197,7 +206,12 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
       });
       requestData.message += '\n';
     });
-    // TODO: add web search if Ask Sage makes it available
+
+    if (aiStep.webSearch && llmModelInfo.supportsWebSearch) {
+      requestData.tools = [{ type: 'web_search_preview' }];
+      // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
+      requestData.tool_choice = { type: 'web_search_preview' };
+    }
 
     return requestData;
   }
