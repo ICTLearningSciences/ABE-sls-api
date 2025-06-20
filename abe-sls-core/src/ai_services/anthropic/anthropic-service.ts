@@ -188,7 +188,10 @@ export class AnthropicService extends AiService<
       system: systemMessage,
       messages: messages,
       temperature: AI_DEFAULT_TEMP,
-      tools: llmModelInfo.supportsWebSearch ? [webSearchTool] : [],
+      tools:
+        llmModelInfo.supportsWebSearch && aiStep.webSearch
+          ? [webSearchTool]
+          : [],
     };
 
     return newReq;
