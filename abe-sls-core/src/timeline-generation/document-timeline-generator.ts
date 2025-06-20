@@ -31,6 +31,7 @@ import {
 import { KeyframeGenerator } from './keyframe-generator.js';
 import { DocService } from '../doc_services/abstract-doc-service.js';
 import { DocumentDBFactory } from '../cloud_services/generic_classes/document_db/document_db_factory.js';
+import { AiServiceModelConfigs } from '../gql_types.js';
 
 export function isNextTimelinePoint(
   lastTimelinePoint: IGDocVersion,
@@ -209,9 +210,13 @@ export class DocumentTimelineGenerator {
   aiService: AvailableAiServices;
   targetAiService: TargetAiModelServiceType;
 
-  constructor(targetAiService: TargetAiModelServiceType) {
+  constructor(
+    targetAiService: TargetAiModelServiceType,
+    llmModelConfigs: AiServiceModelConfigs[]
+  ) {
     this.aiService = AiServiceFactory.getAiService(
-      targetAiService.serviceName as AvailableAiServiceNames
+      targetAiService.serviceName as AvailableAiServiceNames,
+      llmModelConfigs
     );
     this.targetAiService = targetAiService;
   }
@@ -419,7 +424,8 @@ export class DocumentTimelineGenerator {
     let timelinePointsToGenerate = getTimelinePointsToGenerate(timelinePoints);
     const keyframeGenerator = new KeyframeGenerator(
       timelinePoints,
-      this.targetAiService
+      this.targetAiService,
+      this.aiService.llmModelConfigs
     );
     if (timelinePointsToGenerate.length > 0) {
       await keyframeGenerator.generateKeyframes();

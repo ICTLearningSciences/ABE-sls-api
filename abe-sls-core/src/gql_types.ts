@@ -5,7 +5,20 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 
+import { AvailableAiServiceNames } from './ai_services/ai-service-factory.js';
+
 export interface GQLAiStep {
   aiServiceRequestParams: string;
   aiServiceResponse: string;
 }
+
+export interface ServiceModelInfo {
+  name: string;
+  maxTokens: number;
+  supportsWebSearch: boolean;
+}
+
+export type AiServiceModelConfigs = {
+  serviceName: AvailableAiServiceNames;
+  modelList: ServiceModelInfo[];
+};

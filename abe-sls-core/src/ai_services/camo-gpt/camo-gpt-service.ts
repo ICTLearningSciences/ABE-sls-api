@@ -28,6 +28,7 @@ import {
   AvailableAiServiceNames,
 } from '../ai-service-factory.js';
 import { SecretRuntimeFetchFactory } from '../../cloud_services/generic_classes/secret_runtime_fetch/secret_runtime_fetch_factory.js';
+import { AiServiceModelConfigs } from '../../gql_types.js';
 
 dotenv.config();
 
@@ -77,16 +78,17 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
   private static instance: CamoGptService;
   aiServiceClient: any;
 
-  constructor() {
+  constructor(llmModelConfigs: AiServiceModelConfigs[]) {
     super(
       AvailableAiServiceNames.CAMO_GPT,
-      DefaultGptModels.CAMO_GPT_MISTRAL_7B
+      DefaultGptModels.CAMO_GPT_MISTRAL_7B,
+      llmModelConfigs
     );
   }
 
-  static getInstance(): CamoGptService {
+  static getInstance(llmModelConfigs: AiServiceModelConfigs[]): CamoGptService {
     if (!CamoGptService.instance) {
-      CamoGptService.instance = new CamoGptService();
+      CamoGptService.instance = new CamoGptService(llmModelConfigs);
     }
     return CamoGptService.instance;
   }

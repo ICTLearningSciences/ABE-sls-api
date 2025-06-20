@@ -7,10 +7,8 @@ The full terms of this copyright and license should always be found in the root 
 import Anthropic from '@anthropic-ai/sdk';
 import {
   AiRequestContext,
-  AnthropicModelMaxTokens,
   DefaultGptModels,
   PromptOutputTypes,
-  PromptRoles,
 } from '../../types.js';
 import { AiService } from '../abstract-classes/abstract-ai-service.js';
 import { v4 as uuid } from 'uuid';
@@ -22,6 +20,8 @@ import {
   AiServiceResponse,
   AvailableAiServiceNames,
 } from '../ai-service-factory.js';
+import { AiModelConfigs } from '../../hooks/ai-model-configs.js';
+import { AiServiceModelConfigs } from '../../gql_types.js';
 
 export const DefaultAnthropicConfig = {
   DEFAULT_SYSTEM_ROLE:
@@ -58,10 +58,11 @@ export class AnthropicService extends AiService<
   private static instance: AnthropicService;
   aiServiceClient: Anthropic;
 
-  constructor() {
+  constructor(llmModelConfigs: AiServiceModelConfigs[]) {
     super(
       AvailableAiServiceNames.ANTHROPIC,
-      DefaultGptModels.ANTHROPIC_CLAUDE_3_5_SONNET_LATEST
+      DefaultGptModels.ANTHROPIC_CLAUDE_3_5_SONNET_LATEST,
+      llmModelConfigs
     );
     this.aiServiceClient = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
@@ -69,9 +70,11 @@ export class AnthropicService extends AiService<
     });
   }
 
-  static getInstance(): AnthropicService {
+  static getInstance(
+    llmModelConfigs: AiServiceModelConfigs[]
+  ): AnthropicService {
     if (!AnthropicService.instance) {
-      AnthropicService.instance = new AnthropicService();
+      AnthropicService.instance = new AnthropicService(llmModelConfigs);
     }
     return AnthropicService.instance;
   }
@@ -141,7 +144,10 @@ export class AnthropicService extends AiService<
     requestContext: AiRequestContext
   ): AnthropicReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
-
+    const llmModelInfo = AiModelConfigs.getModelInfo(
+      aiStep.targetAiServiceModel,
+      this.llmModelConfigs
+    );
     const messages: Anthropic.Messages.MessageParam[] = [];
     let systemMessage =
       aiStep.systemRole || DefaultAnthropicConfig.DEFAULT_SYSTEM_ROLE;
@@ -168,12 +174,8 @@ export class AnthropicService extends AiService<
     });
 
     const newReq: AnthropicReqType = {
-      model: aiStep.targetAiServiceModel.model,
-      max_tokens:
-        AnthropicModelMaxTokens[
-          aiStep.targetAiServiceModel
-            .model as keyof typeof AnthropicModelMaxTokens
-        ],
+      model: llmModelInfo.name,
+      max_tokens: llmModelInfo.maxTokens,
       system: systemMessage,
       messages: messages,
       temperature: AI_DEFAULT_TEMP,

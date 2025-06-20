@@ -14,6 +14,7 @@ import { DocumentTimelineGenerator } from '../../timeline-generation/document-ti
 import { DocServiceFactory } from '../../doc_services/doc-service-factory.js';
 import { extractErrorMessageFromError } from '../../helpers.js';
 import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
+import { AiModelConfigs } from '../../hooks/ai-model-configs.js';
 interface ExtractedDocumentTimelineRequestData {
   docId: string;
   userId: string;
@@ -36,13 +37,19 @@ export const asyncDocumentTimelineProcess = async (
     );
   }
   try {
+    const aiModelConfigs = AiModelConfigs.getInstance();
+    await aiModelConfigs.initialize();
+    const llmModelConfigs = aiModelConfigs.getAllConfigs();
     await documentDBManager.setTimelineJobInProgress(jobId);
     const { docId, userId, targetAiService, docService } =
       docTimelineRequestData;
     const docServiceInstance = DocServiceFactory.getDocService(docService, {});
     const externalGoogleDocRevisions =
       await docServiceInstance.fetchExternalDocVersion(docId);
-    const docTimelineGenerator = new DocumentTimelineGenerator(targetAiService);
+    const docTimelineGenerator = new DocumentTimelineGenerator(
+      targetAiService,
+      llmModelConfigs
+    );
     await docTimelineGenerator.getDocumentTimeline(
       jobId,
       userId,

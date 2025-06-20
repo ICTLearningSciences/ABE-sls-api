@@ -13,7 +13,7 @@ import {
 } from '../timeline-generation/types.js';
 import { execGql } from '../api.js';
 import pkg from 'lodash';
-import { GQLAiStep } from '../gql_types.js';
+import { AiServiceModelConfigs, GQLAiStep } from '../gql_types.js';
 import { AiServiceStepDataTypes } from '../ai_services/ai-service-factory.js';
 const { omit } = pkg;
 const GRAPHQL_ENDPOINT = process.env.GRAPHQL_ENDPOINT || '';
@@ -326,4 +326,31 @@ export function convertGQLDocumentTimelineToStoredDocumentTimeline(
       };
     }),
   };
+}
+
+export function fetchAiServiceModelConfigs(): Promise<AiServiceModelConfigs[]> {
+  return execGql<AiServiceModelConfigs[]>(
+    {
+      query: `query {
+          fetchConfig {
+            aiServiceModelConfigs {
+              serviceName
+              modelList {
+                name
+                maxTokens
+                supportsWebSearch
+              }
+            }
+          }
+        }`,
+    },
+    {
+      dataPath: ['fetchConfig', 'aiServiceModelConfigs'],
+      axiosConfig: {
+        headers: {
+          [SECRET_HEADER_NAME]: SECRET_HEADER_VALUE,
+        },
+      },
+    }
+  );
 }

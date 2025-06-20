@@ -25,6 +25,8 @@ import {
   ResponseCreateParamsNonStreaming,
   Response,
 } from 'openai/resources/responses/responses.js';
+import { AiModelConfigs } from '../../hooks/ai-model-configs.js';
+import { AiServiceModelConfigs } from '../../gql_types.js';
 
 export type AzureOpenAiReqType = ResponseCreateParamsNonStreaming;
 export type AzureOpenAiResType = Response;
@@ -54,19 +56,22 @@ export class AzureOpenAiService extends AiService<
   private static instance: AzureOpenAiService;
   aiServiceClient: AzureOpenAI;
 
-  constructor() {
+  constructor(llmModelConfigs: AiServiceModelConfigs[]) {
     super(
       AvailableAiServiceNames.AZURE_OPEN_AI,
-      DefaultGptModels.AZURE_GPT_4_TURBO_PREVIEW
+      DefaultGptModels.AZURE_GPT_4_TURBO_PREVIEW,
+      llmModelConfigs
     );
     this.aiServiceClient = new AzureOpenAI({
       apiVersion: '2025-03-01-preview', // Latest GA release
     });
   }
 
-  static getInstance(): AzureOpenAiService {
+  static getInstance(
+    llmModelConfigs: AiServiceModelConfigs[]
+  ): AzureOpenAiService {
     if (!AzureOpenAiService.instance) {
-      AzureOpenAiService.instance = new AzureOpenAiService();
+      AzureOpenAiService.instance = new AzureOpenAiService(llmModelConfigs);
     }
     return AzureOpenAiService.instance;
   }
@@ -135,27 +140,20 @@ export class AzureOpenAiService extends AiService<
     return res;
   }
 
-  getTargetModel(requestContext: AiRequestContext): DefaultGptModels {
-    const { aiStep } = requestContext;
-    if (
-      Object.values(DefaultGptModels).includes(
-        aiStep.targetAiServiceModel.model as DefaultGptModels
-      )
-    ) {
-      return aiStep.targetAiServiceModel.model as DefaultGptModels;
-    }
-    return DefaultGptModels.AZURE_GPT_4_TURBO_PREVIEW;
-  }
-
   convertContextDataToServiceParams(
     requestContext: AiRequestContext
   ): AzureOpenAiReqType {
     const { aiStep, docsPlainText, previousOutput } = requestContext;
-    const targetModel = this.getTargetModel(requestContext);
+    const llmModelInfo = AiModelConfigs.getModelInfo(
+      aiStep.targetAiServiceModel,
+      this.llmModelConfigs
+    );
     const request: AzureOpenAiReqType = {
-      model: targetModel,
+      model: llmModelInfo.name,
       input: [],
       temperature: AI_DEFAULT_TEMP,
+      max_output_tokens: llmModelInfo.maxTokens,
+      store: false,
     };
     const inputMessages = [];
     inputMessages.push({
@@ -209,8 +207,6 @@ export class AzureOpenAiService extends AiService<
     // }
 
     request.input = inputMessages;
-    request.store = false;
-    request.max_output_tokens = 4096;
     return request;
   }
 

@@ -34,6 +34,7 @@ import {
   AnthropicService,
   AnthropicStepDataType,
 } from './anthropic/anthropic-service.js';
+import { AiServiceModelConfigs } from '../gql_types.js';
 
 export interface AiStepData<ReqType, ResType> {
   aiServiceRequestParams: ReqType;
@@ -90,20 +91,23 @@ export enum AvailableAiServiceNames {
 }
 
 export class AiServiceFactory {
-  static getAiService(targetAiService: AvailableAiServiceNames) {
+  static getAiService(
+    targetAiService: AvailableAiServiceNames,
+    llmModelConfigs: AiServiceModelConfigs[]
+  ) {
     switch (targetAiService) {
       case AvailableAiServiceNames.OPEN_AI:
-        return OpenAiService.getInstance();
+        return OpenAiService.getInstance(llmModelConfigs);
       case AvailableAiServiceNames.AZURE_OPEN_AI:
-        return AzureOpenAiService.getInstance();
+        return AzureOpenAiService.getInstance(llmModelConfigs);
       case AvailableAiServiceNames.GEMINI:
-        return GeminiAiService.getInstance();
+        return GeminiAiService.getInstance(llmModelConfigs);
       case AvailableAiServiceNames.CAMO_GPT:
-        return CamoGptService.getInstance();
+        return CamoGptService.getInstance(llmModelConfigs);
       case AvailableAiServiceNames.ASK_SAGE:
-        return AskSageService.getInstance();
+        return AskSageService.getInstance(llmModelConfigs);
       case AvailableAiServiceNames.ANTHROPIC:
-        return AnthropicService.getInstance();
+        return AnthropicService.getInstance(llmModelConfigs);
       default:
         throw new Error('Invalid AI service name');
     }

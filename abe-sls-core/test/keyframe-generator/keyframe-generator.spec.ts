@@ -7,19 +7,34 @@ import { documentBigUpdate, documentStart } from "../fixtures/plain-text/doc-wit
 import { gqlTimelinePointGenerator } from "../fixtures/documents/helpers/gql-timeline-points-generator";
 import { gqlDocVersionGenerator, isoStringMinsFromNow } from "../fixtures/documents/helpers/document-generator";
 import { IGDocVersion, TimelinePointType } from "../../src/timeline-generation/types";
-import { assertRequestIncludesMessage, defaultChangeSummaryRes, defaultReverseOutlineRes, mockGraphqlQuery, mockOpenAiCall, mockOpenAiChangeSummaryResponse, mockOpenAiReverseOutlineResponse } from "../helpers";
+import { assertRequestIncludesMessage, defaultChangeSummaryRes, defaultReverseOutlineRes, mockGraphqlQuery, mockOpenAiChangeSummaryResponse, mockOpenAiReverseOutlineResponse } from "../helpers";
 import { DocumentTimelineGenerator } from "../../src/timeline-generation/document-timeline-generator";
 import { docTimeline } from "../fixtures/documents/2-sessions-inbetween-outside-ABE/doc-timeline";
 import { GoogleDocService } from "../../src/doc_services/google-doc-services";
+
+export const targetAiService = {
+    serviceName:AvailableAiServiceNames.OPEN_AI,
+    model: DefaultGptModels.OPEN_AI_GPT_4
+}
+
+export const llmModelConfigs = [
+    {
+        serviceName: AvailableAiServiceNames.OPEN_AI,
+        modelList: [
+            {
+                name: DefaultGptModels.OPEN_AI_GPT_4,
+                maxTokens: 0,
+                supportsWebSearch: false
+            }
+        ]
+    }
+]
 
 describe("Keyframe Generator class unit tests", ()=>{
     describe("detect text major change", ()=>{
         describe("false", ()=>{
             it("Current text less than 100 words", ()=>{
-                const keyframeGenerator = new KeyframeGenerator([], {
-                    serviceName:AvailableAiServiceNames.OPEN_AI,
-                    model: DefaultGptModels.OPEN_AI_GPT_3_5
-                });
+                const keyframeGenerator = new KeyframeGenerator([], targetAiService, llmModelConfigs);
                 const previousPlainText = "Less than 100 words";
                 const currentPlainText = "Still is less than one hundred words";
                 const isMajorChange = keyframeGenerator.textMajorChange(previousPlainText, currentPlainText);
@@ -27,10 +42,7 @@ describe("Keyframe Generator class unit tests", ()=>{
             })
             
             it("no text change", ()=>{
-                const keyframeGenerator = new KeyframeGenerator([], {
-                    serviceName:AvailableAiServiceNames.OPEN_AI,
-                    model: DefaultGptModels.OPEN_AI_GPT_3_5
-                });
+                const keyframeGenerator = new KeyframeGenerator([], targetAiService, llmModelConfigs);
     
                 const isMajorChange = keyframeGenerator.textMajorChange(documentStart, documentStart);
                 expect(isMajorChange).to.equal(false);
@@ -39,10 +51,7 @@ describe("Keyframe Generator class unit tests", ()=>{
 
         describe("true", ()=>{
             it("Percentage change greater than 20", ()=>{
-                const keyframeGenerator = new KeyframeGenerator([], {
-                    serviceName:AvailableAiServiceNames.OPEN_AI,
-                    model: DefaultGptModels.OPEN_AI_GPT_3_5
-                });
+                const keyframeGenerator = new KeyframeGenerator([], targetAiService, llmModelConfigs);
                 const isMajorChange = keyframeGenerator.textMajorChange(documentStart, documentBigUpdate);
                 expect(isMajorChange).to.equal(true);
             })
@@ -73,10 +82,7 @@ describe("Keyframe Generator class unit tests", ()=>{
                 },
             ])
             const [reverseOutlineNock, reverseOutlineNockRequestData] = mockOpenAiReverseOutlineResponse(defaultReverseOutlineRes)
-            const keyframeGenerator = new KeyframeGenerator(docs, {
-                serviceName:AvailableAiServiceNames.OPEN_AI,
-                model: DefaultGptModels.OPEN_AI_GPT_4
-            });
+            const keyframeGenerator = new KeyframeGenerator(docs, targetAiService, llmModelConfigs);
             await keyframeGenerator.generateKeyframes();
             assert.equal(reverseOutlineNock.isDone(), true);
             assert(reverseOutlineNockRequestData.calls === 1)
@@ -115,10 +121,7 @@ describe("Keyframe Generator class unit tests", ()=>{
                 interceptAllCalls: true
             
             })
-            const keyframeGenerator = new KeyframeGenerator(docs, {
-                serviceName:AvailableAiServiceNames.OPEN_AI,
-                model: DefaultGptModels.OPEN_AI_GPT_3_5
-            });
+            const keyframeGenerator = new KeyframeGenerator(docs, targetAiService, llmModelConfigs);
             await keyframeGenerator.generateKeyframes();
             assert.equal(reverseOutlineNock.isDone(), true);
             assert(reverseOutlineNockRequestData.calls === 2)
@@ -150,10 +153,7 @@ describe("Keyframe Generator class unit tests", ()=>{
             ])
 
             const [_, openAiReverseOutlineRequestData] = mockOpenAiReverseOutlineResponse(defaultReverseOutlineRes)
-            const keyframeGenerator = new KeyframeGenerator(docs, {
-                serviceName:AvailableAiServiceNames.OPEN_AI,
-                model: DefaultGptModels.OPEN_AI_GPT_3_5
-            });
+            const keyframeGenerator = new KeyframeGenerator(docs, targetAiService, llmModelConfigs);
             await keyframeGenerator.generateKeyframes();
             assert(openAiReverseOutlineRequestData.calls === 0)
             assert(keyframeGenerator.keyframes.length === 1)
@@ -165,10 +165,7 @@ describe("Keyframe Generator class unit tests", ()=>{
     describe("getting keyframes for a timeline point", ()=>{
 
         it("if no keyframes, returns undefined", ()=>{
-            const keyframeGenerator = new KeyframeGenerator([], {
-                serviceName:AvailableAiServiceNames.OPEN_AI,
-                model: DefaultGptModels.OPEN_AI_GPT_3_5
-            });
+            const keyframeGenerator = new KeyframeGenerator([], targetAiService, llmModelConfigs);
             keyframeGenerator.keyframes = [];
 
             const keyframe = keyframeGenerator.getKeyFrameForTime(isoStringMinsFromNow(0))
@@ -176,10 +173,7 @@ describe("Keyframe Generator class unit tests", ()=>{
         })
 
         it("returns keyframe that comes just before the timeline point", ()=>{
-            const keyframeGenerator = new KeyframeGenerator([], {
-                serviceName:AvailableAiServiceNames.OPEN_AI,
-                model: DefaultGptModels.OPEN_AI_GPT_3_5
-            });
+            const keyframeGenerator = new KeyframeGenerator([], targetAiService, llmModelConfigs);
             keyframeGenerator.keyframes = [
                 {
                     time: isoStringMinsFromNow(0),
@@ -274,10 +268,7 @@ describe("Keyframe Generator class unit tests", ()=>{
                 );
 
 
-                const docTimelineGenerator = new DocumentTimelineGenerator({
-                    serviceName:AvailableAiServiceNames.OPEN_AI,
-                    model: DefaultGptModels.OPEN_AI_GPT_3_5
-                  })
+                const docTimelineGenerator = new DocumentTimelineGenerator(targetAiService, llmModelConfigs);
     
                 const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], new GoogleDocService({}))
     
@@ -371,10 +362,8 @@ describe("Keyframe Generator class unit tests", ()=>{
                     }
                 )
 
-              const docTimelineGenerator = new DocumentTimelineGenerator({
-                serviceName:AvailableAiServiceNames.OPEN_AI,
-                model: DefaultGptModels.OPEN_AI_GPT_3_5
-              })
+              const docTimelineGenerator = new DocumentTimelineGenerator(targetAiService, llmModelConfigs);
+
 
             const res = await docTimelineGenerator.getDocumentTimeline("","fake-user", "fake-doc", [], new GoogleDocService({}))
 

@@ -16,6 +16,7 @@ import {
 } from '../ai_services/ai-service-factory.js';
 import { GenericLlmRequest } from '../generic_llm_request/helpers.js';
 import { DocServiceFactory } from '../doc_services/doc-service-factory.js';
+import { AiServiceModelConfigs } from '../gql_types.js';
 
 export class AiServiceHandler {
   constructor() {}
@@ -29,7 +30,8 @@ export class AiServiceHandler {
     docsId: string,
     userId: string,
     authHeaders: AuthHeaders,
-    targetDocService: DocServices
+    targetDocService: DocServices,
+    llmModelConfigs: AiServiceModelConfigs[]
   ): Promise<AiServiceFinalResponseType> {
     if (aiSteps.length >= MAX_OPEN_AI_CHAIN_REQUESTS) {
       throw new Error(
@@ -48,7 +50,8 @@ export class AiServiceHandler {
     for (let i = 0; i < aiSteps.length; i++) {
       const curAiStep = aiSteps[i];
       const aiService = AiServiceFactory.getAiService(
-        curAiStep.targetAiServiceModel.serviceName as AvailableAiServiceNames
+        curAiStep.targetAiServiceModel.serviceName as AvailableAiServiceNames,
+        llmModelConfigs
       );
       const res = await aiService.completeChat({
         aiStep: curAiStep,
@@ -74,7 +77,8 @@ export class AiServiceHandler {
   }
 
   async executeGenericLlmRequest(
-    llmRequest: GenericLlmRequest
+    llmRequest: GenericLlmRequest,
+    llmModelConfigs: AiServiceModelConfigs[]
   ): Promise<AiServiceFinalResponseType> {
     if (
       !Object.values(AvailableAiServiceNames).includes(
@@ -99,7 +103,8 @@ export class AiServiceHandler {
     };
     const allStepsData: AiServiceStepDataTypes[] = [];
     const aiService = AiServiceFactory.getAiService(
-      llmRequest.targetAiServiceModel.serviceName as AvailableAiServiceNames
+      llmRequest.targetAiServiceModel.serviceName as AvailableAiServiceNames,
+      llmModelConfigs
     );
     const res = await aiService.completeChat({
       aiStep: curAiStep,

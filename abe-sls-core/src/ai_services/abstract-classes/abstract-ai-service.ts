@@ -6,6 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { AiServicesPromptResponseTypes } from '../ai-service-factory.js';
 import { AiRequestContext, TargetAiModelServiceType } from '../../types.js';
+import { AiServiceModelConfigs } from '../../gql_types.js';
 
 /**
  * Response from OpenAI API
@@ -19,14 +20,20 @@ export interface CompleteChatResponse<Req, Res> {
 export abstract class AiService<Req, Res> {
   serviceName: string;
   defaultAiServiceModel: TargetAiModelServiceType;
+  llmModelConfigs: AiServiceModelConfigs[];
   abstract aiServiceClient: any;
 
-  constructor(serviceName: string, defaultModel: string) {
+  constructor(
+    serviceName: string,
+    defaultModel: string,
+    llmModelConfigs: AiServiceModelConfigs[]
+  ) {
     this.serviceName = serviceName;
     this.defaultAiServiceModel = {
       serviceName,
       model: defaultModel,
     };
+    this.llmModelConfigs = llmModelConfigs;
   }
 
   abstract convertContextDataToServiceParams(
