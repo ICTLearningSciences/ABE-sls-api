@@ -163,7 +163,7 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
 
     if (aiStep.systemRole) {
       requestData.system_prompt += JSON.stringify({
-        role: PromptRoles.SYSTEM,
+        role: PromptRoles.USER,
         content: aiStep.systemRole,
       });
     }
@@ -172,21 +172,21 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
 
     if (aiStep.responseFormat) {
       requestData.system_prompt += JSON.stringify({
-        role: PromptRoles.SYSTEM,
+        role: PromptRoles.USER,
         content: `Please format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`,
       });
       requestData.system_prompt += '\n';
     }
     if (aiStep.outputDataType === PromptOutputTypes.JSON) {
       requestData.system_prompt += JSON.stringify({
-        role: PromptRoles.SYSTEM,
+        role: PromptRoles.USER,
         content: `\n\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA`,
       });
       requestData.system_prompt += '\n';
     }
     if (previousOutput) {
       requestData.system_prompt += JSON.stringify({
-        role: PromptRoles.SYSTEM,
+        role: PromptRoles.USER,
         content: `Here is the previous output: ---------- \n\n ${previousOutput}`,
       });
       requestData.system_prompt += '\n';
@@ -194,16 +194,13 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
     if (includeEssay) {
       requestData.system_prompt += JSON.stringify({
-        role: PromptRoles.SYSTEM,
+        role: PromptRoles.USER,
         content: `Here is the users essay: -----------\n\n${docsPlainText}`,
       });
       requestData.system_prompt += '\n';
     }
     aiStep.prompts.forEach((prompt) => {
-      requestData.message += JSON.stringify({
-        role: prompt.promptRole || PromptRoles.USER,
-        content: prompt.promptText,
-      });
+      requestData.message += prompt.promptText;
       requestData.message += '\n';
     });
 
