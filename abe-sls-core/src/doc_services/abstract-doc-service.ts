@@ -8,6 +8,23 @@ import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import { DocData } from '../types.js';
 import { IGDocVersion } from '../timeline-generation/types.js';
 
+export enum DocEditAction {
+  INSERT = 'insert',
+  APPEND = 'append',
+  REMOVE = 'remove',
+  REPLACE_ALL = 'replaceAll',
+  REPLACE = 'replace',
+  HIGHLIGHT = 'highlight',
+}
+
+export interface DocEdit {
+  action: DocEditAction;
+  // The text to insert, append, remove, replace with, or highlight
+  text: string;
+  // Exists if action is replace
+  textToReplace?: string;
+}
+
 export abstract class DocService<T> {
   abstract authHeaders: AuthHeaders;
 
@@ -22,4 +39,11 @@ export abstract class DocService<T> {
     externalDocVersion: T[],
     lastRealVersion: IGDocVersion
   ): Promise<IGDocVersion[]>;
+
+  /**
+   * Must handle for all cases of DocEditAction
+   * @param docId - The ID of the document to edit
+   * @param edits - The edits to make to the document
+   */
+  abstract handleDocEdits(docId: string, edits: DocEdit[]): Promise<void>;
 }
