@@ -5,7 +5,8 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { DocData } from '../types.js';
-import { DocEdit, DocService } from './abstract-doc-service.js';
+import { DocService } from './abstract-doc-service.js';
+import { DocEdit } from './helpers/edit-doc-helpers.js';
 import { getDocData as _getDocData } from '../api.js';
 import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import { fetchMostRecentVersion } from '../hooks/graphql_api.js';

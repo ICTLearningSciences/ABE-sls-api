@@ -30,17 +30,25 @@ export interface EditDocResponse {
 
 export function getEditDocResponseFormat(): string {
   return `
-    Respond in JSON. Validate that your response is valid JSON. Your JSON must follow this format:
+    Respond in JSON. Validate that your response is valid JSON. Your JSON MUST follow this format:
     {
-      "edits": [ // a list of edits to make to the document
+      "edits": [ // a list of edits to make to the document. If the user requests an edit that is not supported, return an empty list.
         {
-          "action": string // Values: "insert", "append", "remove", "replace", "replaceAll", "highlight"
-          "text": string // The text to insert, append, remove, replace/replaceAll with, or highlight
+          "action": string // Values: "insert", "append", "remove", "replace", "replaceAll" (replaceAll is only for requests to replace the ENTIRE document), "highlight"
+          "text": string // The text to insert, append, remove, replace/replaceAll with, or highlight. Do NOT include markdown formatting.
           "textToReplace": string // OPTIONAL: The text to be replaced, only include this if the action is "replace"
         }
       ],
-      "responseMessage": string // A message to the user explaining the edits that were made. Do NOT include any JSON in this field. Keep it somewhat short and concise.
+      "responseMessage": string // A message to the user explaining the edits that were made, if any. Do NOT include any JSON in this field. Keep it somewhat short and concise.
     }
+
+    When to use which action:
+    - insert: when the user requests to insert text at the start of the document
+    - append: when the user requests to append text to the end of the document
+    - remove: when the user requests to remove text from the document
+    - replace: when the user requests to replace some text with new text.
+    - replaceAll: when the user requests to replace the ENTIRE document with a new text.
+    - highlight: when the user requests to highlight some text in the document.
     `;
 }
 

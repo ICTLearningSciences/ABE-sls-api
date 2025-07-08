@@ -118,11 +118,17 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     return revisions;
   }
 
+  async getDocContent(docId: string): Promise<docs_v1.Schema$StructuralElement[]> {
+    const { docs } = await this.getGoogleAPIs();
+    const doc = await docs.documents.get({ documentId: docId });
+    return doc.data.body?.content || [];
+  }
+
   async buildHighlightRequest(
     docId: string,
-    docContent: docs_v1.Schema$StructuralElement[],
     textToHighlight: string
   ): Promise<docs_v1.Schema$Request> {
+    const docContent = await this.getDocContent(docId);
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
@@ -160,16 +166,15 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
    * Inserts the text at the start of the doc
    */
   async buildInsertRequest(
-    docId: string,
-    docContent: docs_v1.Schema$StructuralElement[],
     textToInsert: string
   ): Promise<docs_v1.Schema$Request> {
+    const formattedText = textToInsert.endsWith(" ") ? textToInsert : textToInsert + " ";
     const insertRequest: docs_v1.Schema$Request = {
       insertText: {
-        text: textToInsert,
-        location: {
-          index: 0,
-        },
+        text: formattedText,
+        location:{
+          index: 1
+        }
       },
     };
     return insertRequest;
@@ -179,15 +184,14 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
    * Appends the text to the end of the doc
    */
   async buildAppendRequest(
-    docId: string,
-    docContent: docs_v1.Schema$StructuralElement[],
     textToAppend: string
   ): Promise<docs_v1.Schema$Request> {
+    const formattedText = textToAppend.startsWith(" ") ? textToAppend : " " + textToAppend;
     const appendRequest: docs_v1.Schema$Request = {
       insertText: {
-        text: textToAppend,
-        location: {
-          index: docContent.length,
+        text: formattedText,
+        endOfSegmentLocation: {
+          segmentId: null
         },
       },
     };
@@ -196,9 +200,9 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
 
   async buildRemoveRequest(
     docId: string,
-    docContent: docs_v1.Schema$StructuralElement[],
     textToRemove: string
   ): Promise<docs_v1.Schema$Request> {
+    const docContent = await this.getDocContent(docId);
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
@@ -220,10 +224,10 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
 
   async buildReplaceRequest(
     docId: string,
-    docContent: docs_v1.Schema$StructuralElement[],
     textToReplace: string,
     textToReplaceWith: string
-  ): Promise<docs_v1.Schema$Request> {
+  ): Promise<docs_v1.Schema$Request[]> {
+    const docContent = await this.getDocContent(docId);
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
@@ -232,87 +236,94 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     if (startIndex == -1 || endIndex == -1) {
       throw new Error(`Could not find text ${textToReplace} in doc ${docId}`);
     }
-    const replaceRequest: docs_v1.Schema$Request = {
+    const replaceRequest: docs_v1.Schema$Request[] = [{
       deleteContentRange: {
         range: {
           startIndex: startIndex,
           endIndex: endIndex,
         },
       },
+    },
+    {
       insertText: {
         text: textToReplaceWith,
         location: {
           index: startIndex,
         },
       },
-    };
+    }
+
+  ];
     return replaceRequest;
   }
 
   async buildReplaceAllRequest(
     docId: string,
-    docContent: docs_v1.Schema$StructuralElement[],
     textToReplaceWith: string
-  ): Promise<docs_v1.Schema$Request> {
-    const replaceAllRequest: docs_v1.Schema$Request = {
+  ): Promise<docs_v1.Schema$Request[]> {
+    const docContent = await this.getDocContent(docId);
+    const lastContent =  docContent.length - 1 > 0 ? docContent[docContent.length - 1] : null;
+    const lastContentIndex = lastContent ? (lastContent.endIndex || 2) - 1 : 1;
+    const replaceAllRequest: docs_v1.Schema$Request[] = [{
       deleteContentRange: {
         range: {
-          startIndex: 0,
-          endIndex: docContent.length,
+          startIndex: 1,
+          endIndex: lastContentIndex,
         },
       },
+    },
+    {
       insertText: {
         text: textToReplaceWith,
         location: {
-          index: 0,
+          index: 1,
         },
-      },
-    };
+      }, 
+    }];
     return replaceAllRequest;
   }
 
+  async executeBatchUpdate(docsApi: docs_v1.Docs, docId: string, requests: docs_v1.Schema$Request[]): Promise<void> {
+    await docsApi.documents.batchUpdate({
+      documentId: docId,
+      requestBody: {
+        requests: requests,
+      },
+    });
+  }
+
   async handleDocEdits(docId: string, edits: DocEdit[]): Promise<void> {
-    const requests: docs_v1.Schema$Request[] = [];
     const { docs } = await this.getGoogleAPIs();
-    const doc = await docs.documents.get({ documentId: docId });
-    const docContent = doc.data.body?.content || [];
-    if (!docContent.length) {
-      console.warn(`Doc ${docId} has no content`);
-      return;
-    }
+    console.log(`edits: `);
+    console.log(JSON.stringify(edits, null, 2));
     for (const edit of edits) {
+      console.log(`edit ${edit.action} executing`);
       switch (edit.action) {
         case DocEditAction.HIGHLIGHT:
           const highlightRequest = await this.buildHighlightRequest(
             docId,
-            docContent,
             edit.text
           );
-          requests.push(highlightRequest);
+          await this.executeBatchUpdate(docs, docId, [highlightRequest]);
           break;
         case DocEditAction.INSERT:
           const insertRequest = await this.buildInsertRequest(
-            docId,
-            docContent,
             edit.text
           );
-          requests.push(insertRequest);
+          await this.executeBatchUpdate(docs, docId, [insertRequest]);
           break;
         case DocEditAction.APPEND:
           const appendRequest = await this.buildAppendRequest(
-            docId,
-            docContent,
             edit.text
           );
-          requests.push(appendRequest);
+          await this.executeBatchUpdate(docs, docId, [appendRequest]);
           break;
         case DocEditAction.REMOVE:
           const removeRequest = await this.buildRemoveRequest(
             docId,
-            docContent,
             edit.text
           );
-          requests.push(removeRequest);
+          await this.executeBatchUpdate(docs, docId, [removeRequest]);
           break;
         case DocEditAction.REPLACE:
           if (!edit.textToReplace) {
@@ -320,30 +331,21 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
           }
           const replaceRequest = await this.buildReplaceRequest(
             docId,
-            docContent,
-            edit.text,
-            edit.textToReplace
+            edit.textToReplace,
+            edit.text
           );
-          requests.push(replaceRequest);
+          await this.executeBatchUpdate(docs, docId, replaceRequest);
           break;
         case DocEditAction.REPLACE_ALL:
           const replaceAllRequest = await this.buildReplaceAllRequest(
             docId,
-            docContent,
             edit.text
           );
-          requests.push(replaceAllRequest);
+          await this.executeBatchUpdate(docs, docId, replaceAllRequest);
           break;
         default:
           throw new Error(`Unknown edit action: ${edit.action}`);
       }
     }
-    // TODO: see if we get weird behavior due to batching (that can mess with indexing)
-    await docs.documents.batchUpdate({
-      documentId: docId,
-      requestBody: {
-        requests: requests,
-      },
-    });
   }
 }
