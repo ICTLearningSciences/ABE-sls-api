@@ -125,7 +125,7 @@ export function findSubstringInParagraphs(
   };
 }
 
-export interface GoogleAPIs{
+export interface GoogleAPIs {
   drive: drive_v3.Drive;
   docs: docs_v1.Docs;
   accessToken: string | null | undefined;
@@ -170,7 +170,6 @@ export interface UseWithGoogleApi {
     docId: string
   ) => Promise<DocData>;
 }
-
 
 export function useWithGoogleApi(): UseWithGoogleApi {
   async function getGoogleAPIs() {

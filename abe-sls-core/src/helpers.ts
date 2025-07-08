@@ -133,8 +133,10 @@ export const exponentialBackoff = (
   });
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function validateJsonResponse(response: string, schema: any): boolean {
+export function validateJsonResponse(
+  response: string,
+  schema: Schema
+): boolean {
   try {
     const v = new Validator.Validator();
     const responseJson = JSON.parse(response);

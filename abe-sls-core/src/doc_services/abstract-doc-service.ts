@@ -7,23 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import { DocData } from '../types.js';
 import { IGDocVersion } from '../timeline-generation/types.js';
-
-export enum DocEditAction {
-  INSERT = 'insert',
-  APPEND = 'append',
-  REMOVE = 'remove',
-  REPLACE_ALL = 'replaceAll',
-  REPLACE = 'replace',
-  HIGHLIGHT = 'highlight',
-}
-
-export interface DocEdit {
-  action: DocEditAction;
-  // The text to insert, append, remove, replace with, or highlight
-  text: string;
-  // Exists if action is replace
-  textToReplace?: string;
-}
+import { DocEdit } from './helpers/edit-doc-helpers.js';
 
 export abstract class DocService<T> {
   abstract authHeaders: AuthHeaders;
