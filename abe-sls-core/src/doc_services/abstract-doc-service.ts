@@ -7,6 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import { DocData } from '../types.js';
 import { IGDocVersion } from '../timeline-generation/types.js';
+import { DocEdit } from './helpers/edit-doc-helpers.js';
 
 export abstract class DocService<T> {
   abstract authHeaders: AuthHeaders;
@@ -22,4 +23,9 @@ export abstract class DocService<T> {
     externalDocVersion: T[],
     lastRealVersion: IGDocVersion
   ): Promise<IGDocVersion[]>;
+
+  /**
+   * Should handle all cases of DocEditAction
+   */
+  abstract handleDocEdits(docId: string, edits: DocEdit[]): Promise<void>;
 }

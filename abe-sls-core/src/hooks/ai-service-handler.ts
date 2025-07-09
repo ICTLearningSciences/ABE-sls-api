@@ -5,7 +5,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { MAX_OPEN_AI_CHAIN_REQUESTS } from '../constants.js';
-import { AiPromptStep, DocServices } from '../types.js';
+import { AiPromptStep, DocServices, PromptOutputTypes } from '../types.js';
 import { storePromptRun } from './graphql_api.js';
 import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import {
@@ -17,6 +17,11 @@ import {
 import { GenericLlmRequest } from '../generic_llm_request/helpers.js';
 import { DocServiceFactory } from '../doc_services/doc-service-factory.js';
 import { AiServiceModelConfigs } from '../gql_types.js';
+import {
+  EditDocResponse,
+  editDocResponseSchema,
+  getEditDocResponseFormat,
+} from '../doc_services/helpers/edit-doc-helpers.js';
 
 export class AiServiceHandler {
   constructor() {}
@@ -49,6 +54,10 @@ export class AiServiceHandler {
     let previousOutput = '';
     for (let i = 0; i < aiSteps.length; i++) {
       const curAiStep = aiSteps[i];
+      if (curAiStep.editDoc) {
+        curAiStep.responseFormat = getEditDocResponseFormat();
+        curAiStep.responseSchema = editDocResponseSchema;
+      }
       const aiService = AiServiceFactory.getAiService(
         curAiStep.targetAiServiceModel.serviceName as AvailableAiServiceNames,
         llmModelConfigs
@@ -58,8 +67,15 @@ export class AiServiceHandler {
         docsPlainText,
         previousOutput,
       });
-      const { aiStepData, answer } = res;
+      let { aiStepData, answer } = res;
       allStepsData.push(aiStepData);
+
+      if (curAiStep.editDoc) {
+        const editDocResponse = JSON.parse(answer) as EditDocResponse;
+        await docHandler.handleDocEdits(docsId, editDocResponse.edits);
+        answer = editDocResponse.responseMessage;
+      }
+
       previousOutput = answer;
       finalAnswer = answer;
     }

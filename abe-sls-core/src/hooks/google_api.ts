@@ -64,7 +64,7 @@ interface InspectDocContent {
   plainText: string;
 }
 
-function inspectDocContent(
+export function inspectDocContent(
   docContent: docs_v1.Schema$StructuralElement[]
 ): InspectDocContent {
   const allParagraphs: docs_v1.Schema$StructuralElement[] = docContent.filter(
@@ -103,7 +103,7 @@ interface SubstringPosition {
   endIndex: number;
 }
 
-function findSubstringInParagraphs(
+export function findSubstringInParagraphs(
   paragraphData: InspectParagraph[],
   substring: string
 ): SubstringPosition {
@@ -125,12 +125,14 @@ function findSubstringInParagraphs(
   };
 }
 
+export interface GoogleAPIs {
+  drive: drive_v3.Drive;
+  docs: docs_v1.Docs;
+  accessToken: string | null | undefined;
+}
+
 export interface UseWithGoogleApi {
-  getGoogleAPIs: () => Promise<{
-    drive: drive_v3.Drive;
-    docs: docs_v1.Docs;
-    accessToken: string | null | undefined;
-  }>;
+  getGoogleAPIs: () => Promise<GoogleAPIs>;
   createGoogleDoc: (
     driveAPI: drive_v3.Drive,
     emailsToGiveAccess: string[],

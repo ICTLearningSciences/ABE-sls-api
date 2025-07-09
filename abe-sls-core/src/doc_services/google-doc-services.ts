@@ -4,18 +4,22 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { drive_v3 } from 'googleapis';
+import { docs_v1, drive_v3 } from 'googleapis';
 import { DocData } from '../types.js';
 import { DocService } from './abstract-doc-service.js';
 import { getDocData as _getDocData } from '../api.js';
 import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import {
+  GoogleAPIs,
   UseWithGoogleApi,
   useWithGoogleApi as _useWithGoogleApi,
+  findSubstringInParagraphs,
+  inspectDocContent,
 } from '../hooks/google_api.js';
 import { IGDocVersion } from '../timeline-generation/types.js';
 import { exponentialBackoff } from '../helpers.js';
 import { AxiosRequestConfig } from 'axios';
+import { DocEdit, DocEditAction } from './helpers/edit-doc-helpers.js';
 
 type GoogleDocVersion = drive_v3.Schema$Revision;
 
@@ -23,6 +27,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
   authHeaders: AuthHeaders;
   private static instance: GoogleDocService;
   useWithGoogleApi: UseWithGoogleApi;
+  googleApi?: GoogleAPIs;
 
   constructor(authHeaders: AuthHeaders) {
     super();
@@ -30,10 +35,20 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     this.useWithGoogleApi = _useWithGoogleApi();
   }
 
+  async getGoogleAPIs(): Promise<GoogleAPIs> {
+    if (!this.googleApi) {
+      this.googleApi = await this.useWithGoogleApi.getGoogleAPIs();
+    }
+    return this.googleApi;
+  }
+
   async getDocData(docsId: string): Promise<DocData> {
-    const { getGoogleAPIs, getDocCurrentData } = this.useWithGoogleApi;
-    const { drive, docs } = await getGoogleAPIs();
-    const docData = await getDocCurrentData(docs, drive, docsId);
+    const { drive, docs } = await this.getGoogleAPIs();
+    const docData = await this.useWithGoogleApi.getDocCurrentData(
+      docs,
+      drive,
+      docsId
+    );
     return docData;
   }
 
@@ -101,5 +116,239 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
 
     // TODO: upload these to graphql in batches
     return revisions;
+  }
+
+  async getDocContent(
+    docId: string
+  ): Promise<docs_v1.Schema$StructuralElement[]> {
+    const { docs } = await this.getGoogleAPIs();
+    const doc = await docs.documents.get({ documentId: docId });
+    return doc.data.body?.content || [];
+  }
+
+  async buildHighlightRequest(
+    docId: string,
+    textToHighlight: string
+  ): Promise<docs_v1.Schema$Request> {
+    const docContent = await this.getDocContent(docId);
+    const paragraphData = inspectDocContent(docContent).paragraphData;
+    const { startIndex, endIndex } = findSubstringInParagraphs(
+      paragraphData,
+      textToHighlight
+    );
+
+    if (startIndex == -1 || endIndex == -1) {
+      throw new Error(`Could not find text ${textToHighlight} in doc ${docId}`);
+    }
+
+    const highlightRequest: docs_v1.Schema$Request = {
+      updateTextStyle: {
+        range: {
+          startIndex: startIndex,
+          endIndex: endIndex,
+        },
+        textStyle: {
+          backgroundColor: {
+            color: {
+              rgbColor: {
+                red: 1.0,
+                green: 1.0,
+                blue: 0.5,
+              },
+            },
+          },
+        },
+        fields: 'backgroundColor',
+      },
+    };
+    return highlightRequest;
+  }
+
+  /**
+   * Inserts the text at the start of the doc
+   */
+  async buildInsertRequest(
+    textToInsert: string
+  ): Promise<docs_v1.Schema$Request> {
+    const formattedText = textToInsert.endsWith(' ')
+      ? textToInsert
+      : textToInsert + ' ';
+    const insertRequest: docs_v1.Schema$Request = {
+      insertText: {
+        text: formattedText,
+        location: {
+          index: 1,
+        },
+      },
+    };
+    return insertRequest;
+  }
+
+  /**
+   * Appends the text to the end of the doc
+   */
+  async buildAppendRequest(
+    textToAppend: string
+  ): Promise<docs_v1.Schema$Request> {
+    const formattedText = textToAppend.startsWith(' ')
+      ? textToAppend
+      : ' ' + textToAppend;
+    const appendRequest: docs_v1.Schema$Request = {
+      insertText: {
+        text: formattedText,
+        endOfSegmentLocation: {
+          segmentId: null,
+        },
+      },
+    };
+    return appendRequest;
+  }
+
+  async buildRemoveRequest(
+    docId: string,
+    textToRemove: string
+  ): Promise<docs_v1.Schema$Request> {
+    const docContent = await this.getDocContent(docId);
+    const paragraphData = inspectDocContent(docContent).paragraphData;
+    const { startIndex, endIndex } = findSubstringInParagraphs(
+      paragraphData,
+      textToRemove
+    );
+    if (startIndex == -1 || endIndex == -1) {
+      throw new Error(`Could not find text ${textToRemove} in doc ${docId}`);
+    }
+    const removeRequest: docs_v1.Schema$Request = {
+      deleteContentRange: {
+        range: {
+          startIndex: startIndex,
+          endIndex: endIndex,
+        },
+      },
+    };
+    return removeRequest;
+  }
+
+  async buildReplaceRequest(
+    docId: string,
+    textToReplace: string,
+    textToReplaceWith: string
+  ): Promise<docs_v1.Schema$Request[]> {
+    const docContent = await this.getDocContent(docId);
+    const paragraphData = inspectDocContent(docContent).paragraphData;
+    const { startIndex, endIndex } = findSubstringInParagraphs(
+      paragraphData,
+      textToReplace
+    );
+    if (startIndex == -1 || endIndex == -1) {
+      throw new Error(`Could not find text ${textToReplace} in doc ${docId}`);
+    }
+    const replaceRequest: docs_v1.Schema$Request[] = [
+      {
+        deleteContentRange: {
+          range: {
+            startIndex: startIndex,
+            endIndex: endIndex,
+          },
+        },
+      },
+      {
+        insertText: {
+          text: textToReplaceWith,
+          location: {
+            index: startIndex,
+          },
+        },
+      },
+    ];
+    return replaceRequest;
+  }
+
+  async buildReplaceAllRequest(
+    docId: string,
+    textToReplaceWith: string
+  ): Promise<docs_v1.Schema$Request[]> {
+    const docContent = await this.getDocContent(docId);
+    const lastContent =
+      docContent.length - 1 > 0 ? docContent[docContent.length - 1] : null;
+    const lastContentIndex = lastContent ? (lastContent.endIndex || 2) - 1 : 1;
+    const replaceAllRequest: docs_v1.Schema$Request[] = [
+      {
+        deleteContentRange: {
+          range: {
+            startIndex: 1,
+            endIndex: lastContentIndex,
+          },
+        },
+      },
+      {
+        insertText: {
+          text: textToReplaceWith,
+          location: {
+            index: 1,
+          },
+        },
+      },
+    ];
+    return replaceAllRequest;
+  }
+
+  async executeBatchUpdate(
+    docsApi: docs_v1.Docs,
+    docId: string,
+    requests: docs_v1.Schema$Request[]
+  ): Promise<void> {
+    await docsApi.documents.batchUpdate({
+      documentId: docId,
+      requestBody: {
+        requests: requests,
+      },
+    });
+  }
+
+  async handleDocEdits(docId: string, edits: DocEdit[]): Promise<void> {
+    const { docs } = await this.getGoogleAPIs();
+    for (const edit of edits) {
+      switch (edit.action) {
+        case DocEditAction.HIGHLIGHT:
+          const highlightRequest = await this.buildHighlightRequest(
+            docId,
+            edit.text
+          );
+          await this.executeBatchUpdate(docs, docId, [highlightRequest]);
+          break;
+        case DocEditAction.INSERT:
+          const insertRequest = await this.buildInsertRequest(edit.text);
+          await this.executeBatchUpdate(docs, docId, [insertRequest]);
+          break;
+        case DocEditAction.APPEND:
+          const appendRequest = await this.buildAppendRequest(edit.text);
+          await this.executeBatchUpdate(docs, docId, [appendRequest]);
+          break;
+        case DocEditAction.REMOVE:
+          const removeRequest = await this.buildRemoveRequest(docId, edit.text);
+          await this.executeBatchUpdate(docs, docId, [removeRequest]);
+          break;
+        case DocEditAction.REPLACE:
+          if (!edit.textToReplace) {
+            throw new Error(`Text to replace is required for replace action`);
+          }
+          const replaceRequest = await this.buildReplaceRequest(
+            docId,
+            edit.textToReplace,
+            edit.text
+          );
+          await this.executeBatchUpdate(docs, docId, replaceRequest);
+          break;
+        case DocEditAction.REPLACE_ALL:
+          const replaceAllRequest = await this.buildReplaceAllRequest(
+            docId,
+            edit.text
+          );
+          await this.executeBatchUpdate(docs, docId, replaceAllRequest);
+          break;
+        default:
+          throw new Error(`Unknown edit action: ${edit.action}`);
+      }
+    }
   }
 }
