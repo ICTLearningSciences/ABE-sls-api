@@ -55,7 +55,6 @@ export class AiServiceHandler {
     for (let i = 0; i < aiSteps.length; i++) {
       const curAiStep = aiSteps[i];
       if (curAiStep.editDoc) {
-        curAiStep.outputDataType = PromptOutputTypes.JSON;
         curAiStep.responseFormat = getEditDocResponseFormat();
         curAiStep.responseSchema = editDocResponseSchema;
       }

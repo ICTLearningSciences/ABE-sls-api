@@ -32,11 +32,11 @@ export function getEditDocResponseFormat(): string {
   return `
     Respond in JSON. Validate that your response is valid JSON. Your JSON MUST follow this format:
     {
-      "edits": [ // a list of edits to make to the document. If the user requests an edit that is not supported, return an empty list.
+      "edits": [ // a list of edits to make to the users essay/document. If the user requests an edit that is not supported, return an empty list.
         {
-          "action": string // Values: "insert", "append", "remove", "replace", "replaceAll" (replaceAll is only for requests to replace the ENTIRE document), "highlight"
-          "text": string // The text to insert, append, remove, replace/replaceAll with, or highlight. Do NOT include markdown formatting.
-          "textToReplace": string // OPTIONAL: The text to be replaced, only include this if the action is "replace"
+          "action": string // Values: "insert", "append", "replace", "replaceAll", "highlight"
+          "text": string // The text to insert, append, replace/replaceAll with, or highlight. Do NOT include markdown formatting. This text MUST come directly from the users essay.
+          "textToReplace": string // OPTIONAL: ONLY INCLUDE THIS if the action is "replace". This is the text that needs to be replaced with new text. This text MUST come directly from the users essay.
         }
       ],
       "responseMessage": string // A message to the user explaining the edits that were made, if any. Do NOT include any JSON in this field. Keep it somewhat short and concise.
@@ -45,10 +45,10 @@ export function getEditDocResponseFormat(): string {
     When to use which action:
     - insert: when the user requests to insert text at the start of the document
     - append: when the user requests to append text to the end of the document
-    - remove: when the user requests to remove text from the document
-    - replace: when the user requests to replace some text with new text.
+    - replace: when the user requests to replace some text with new text, OR when the user wants some text removed (use the "textToReplace" field to specify the text to remove, and set "text" to an empty string.)
     - replaceAll: when the user requests to replace the ENTIRE document with a new text.
     - highlight: when the user requests to highlight some text in the document.
+
     `;
 }
 

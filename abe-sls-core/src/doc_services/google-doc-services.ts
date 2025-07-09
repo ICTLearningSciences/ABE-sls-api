@@ -118,7 +118,9 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     return revisions;
   }
 
-  async getDocContent(docId: string): Promise<docs_v1.Schema$StructuralElement[]> {
+  async getDocContent(
+    docId: string
+  ): Promise<docs_v1.Schema$StructuralElement[]> {
     const { docs } = await this.getGoogleAPIs();
     const doc = await docs.documents.get({ documentId: docId });
     return doc.data.body?.content || [];
@@ -168,13 +170,15 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
   async buildInsertRequest(
     textToInsert: string
   ): Promise<docs_v1.Schema$Request> {
-    const formattedText = textToInsert.endsWith(" ") ? textToInsert : textToInsert + " ";
+    const formattedText = textToInsert.endsWith(' ')
+      ? textToInsert
+      : textToInsert + ' ';
     const insertRequest: docs_v1.Schema$Request = {
       insertText: {
         text: formattedText,
-        location:{
-          index: 1
-        }
+        location: {
+          index: 1,
+        },
       },
     };
     return insertRequest;
@@ -186,12 +190,14 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
   async buildAppendRequest(
     textToAppend: string
   ): Promise<docs_v1.Schema$Request> {
-    const formattedText = textToAppend.startsWith(" ") ? textToAppend : " " + textToAppend;
+    const formattedText = textToAppend.startsWith(' ')
+      ? textToAppend
+      : ' ' + textToAppend;
     const appendRequest: docs_v1.Schema$Request = {
       insertText: {
         text: formattedText,
         endOfSegmentLocation: {
-          segmentId: null
+          segmentId: null,
         },
       },
     };
@@ -236,24 +242,24 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     if (startIndex == -1 || endIndex == -1) {
       throw new Error(`Could not find text ${textToReplace} in doc ${docId}`);
     }
-    const replaceRequest: docs_v1.Schema$Request[] = [{
-      deleteContentRange: {
-        range: {
-          startIndex: startIndex,
-          endIndex: endIndex,
+    const replaceRequest: docs_v1.Schema$Request[] = [
+      {
+        deleteContentRange: {
+          range: {
+            startIndex: startIndex,
+            endIndex: endIndex,
+          },
         },
       },
-    },
-    {
-      insertText: {
-        text: textToReplaceWith,
-        location: {
-          index: startIndex,
+      {
+        insertText: {
+          text: textToReplaceWith,
+          location: {
+            index: startIndex,
+          },
         },
       },
-    }
-
-  ];
+    ];
     return replaceRequest;
   }
 
@@ -262,28 +268,35 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     textToReplaceWith: string
   ): Promise<docs_v1.Schema$Request[]> {
     const docContent = await this.getDocContent(docId);
-    const lastContent =  docContent.length - 1 > 0 ? docContent[docContent.length - 1] : null;
+    const lastContent =
+      docContent.length - 1 > 0 ? docContent[docContent.length - 1] : null;
     const lastContentIndex = lastContent ? (lastContent.endIndex || 2) - 1 : 1;
-    const replaceAllRequest: docs_v1.Schema$Request[] = [{
-      deleteContentRange: {
-        range: {
-          startIndex: 1,
-          endIndex: lastContentIndex,
+    const replaceAllRequest: docs_v1.Schema$Request[] = [
+      {
+        deleteContentRange: {
+          range: {
+            startIndex: 1,
+            endIndex: lastContentIndex,
+          },
         },
       },
-    },
-    {
-      insertText: {
-        text: textToReplaceWith,
-        location: {
-          index: 1,
+      {
+        insertText: {
+          text: textToReplaceWith,
+          location: {
+            index: 1,
+          },
         },
-      }, 
-    }];
+      },
+    ];
     return replaceAllRequest;
   }
 
-  async executeBatchUpdate(docsApi: docs_v1.Docs, docId: string, requests: docs_v1.Schema$Request[]): Promise<void> {
+  async executeBatchUpdate(
+    docsApi: docs_v1.Docs,
+    docId: string,
+    requests: docs_v1.Schema$Request[]
+  ): Promise<void> {
     await docsApi.documents.batchUpdate({
       documentId: docId,
       requestBody: {
@@ -307,22 +320,15 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
           await this.executeBatchUpdate(docs, docId, [highlightRequest]);
           break;
         case DocEditAction.INSERT:
-          const insertRequest = await this.buildInsertRequest(
-            edit.text
-          );
+          const insertRequest = await this.buildInsertRequest(edit.text);
           await this.executeBatchUpdate(docs, docId, [insertRequest]);
           break;
         case DocEditAction.APPEND:
-          const appendRequest = await this.buildAppendRequest(
-            edit.text
-          );
+          const appendRequest = await this.buildAppendRequest(edit.text);
           await this.executeBatchUpdate(docs, docId, [appendRequest]);
           break;
         case DocEditAction.REMOVE:
-          const removeRequest = await this.buildRemoveRequest(
-            docId,
-            edit.text
-          );
+          const removeRequest = await this.buildRemoveRequest(docId, edit.text);
           await this.executeBatchUpdate(docs, docId, [removeRequest]);
           break;
         case DocEditAction.REPLACE:
