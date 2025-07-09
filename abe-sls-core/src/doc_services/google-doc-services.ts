@@ -307,10 +307,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
 
   async handleDocEdits(docId: string, edits: DocEdit[]): Promise<void> {
     const { docs } = await this.getGoogleAPIs();
-    console.log(`edits: `);
-    console.log(JSON.stringify(edits, null, 2));
     for (const edit of edits) {
-      console.log(`edit ${edit.action} executing`);
       switch (edit.action) {
         case DocEditAction.HIGHLIGHT:
           const highlightRequest = await this.buildHighlightRequest(

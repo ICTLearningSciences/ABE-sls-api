@@ -130,7 +130,6 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     console.log(
       `Executing OpenAI request ${id} ending at ${new Date().toISOString()}`
     );
-    console.log(JSON.stringify(result, null, 2));
     return result;
   }
 

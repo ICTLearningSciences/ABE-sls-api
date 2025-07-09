@@ -25,9 +25,7 @@ export abstract class DocService<T> {
   ): Promise<IGDocVersion[]>;
 
   /**
-   * Must handle for all cases of DocEditAction
-   * @param docId - The ID of the document to edit
-   * @param edits - The edits to make to the document
+   * Should handle all cases of DocEditAction
    */
   abstract handleDocEdits(docId: string, edits: DocEdit[]): Promise<void>;
 }
