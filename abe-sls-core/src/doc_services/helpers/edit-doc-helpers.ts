@@ -8,19 +8,19 @@ import { Schema } from 'jsonschema';
 
 export enum DocEditAction {
   INSERT = 'insert',
-  APPEND = 'append',
-  REMOVE = 'remove',
   REPLACE = 'replace',
+  REMOVE = 'remove',
   REPLACE_ALL = 'replaceAll',
   HIGHLIGHT = 'highlight',
 }
 
 export interface DocEdit {
   action: DocEditAction;
-  // The text to insert, append, remove, replace with, or highlight
+  // The text to insert, replace with, or highlight
   text: string;
   // Exists if action is replace
   textToReplace?: string;
+  location?: string;
 }
 
 export interface EditDocResponse {
@@ -30,24 +30,32 @@ export interface EditDocResponse {
 
 export function getEditDocResponseFormat(): string {
   return `
-    Respond in JSON. Validate that your response is valid JSON. Your JSON MUST follow this format:
+    Respond in JSON. Validate that your response is valid JSON. Do NOT include JSON markdown. Your JSON MUST follow this format:
     {
-      "edits": [ // a list of edits to make to the users essay/document. If the user requests an edit that is not supported, return an empty list.
+      "edits": [ // Leave this array empty if the user asks a question.
         {
-          "action": string // Values: "insert", "append", "replace", "replaceAll", "highlight"
-          "text": string // The text to insert, append, replace/replaceAll with, or highlight. Do NOT include markdown formatting. This text MUST come directly from the users essay.
-          "textToReplace": string // OPTIONAL: ONLY INCLUDE THIS if the action is "replace". This is the text that needs to be replaced with new text. This text MUST come directly from the users essay.
+          "action": string, // Values: "insert", "replace", "remove", "highlight"
+          "text": string, // Text to insert, replace with, remove, or highlight. Do NOT include markdown formatting. For remove and highlight, the text should be the exact text from the essay to remove or highlight.
+          "textToReplace": string, // OPTIONAL: Only for "replace". Exact text to be replaced from the user's essay.
+          "location": string // REQUIRED: Possible values: "start_of_document", "end_of_document", "after:<exact_text>" The <exact_text> must be from the user's essay. Prioritize "after:<exact_text>" for insert location when possible.
         }
       ],
-      "responseMessage": string // A message to the user explaining the edits that were made, if any. Do NOT include any JSON in this field. Keep it somewhat short and concise.
+      "responseMessage": string // Short, clear explanation of the edits made, no JSON here.
     }
 
-    When to use which action:
-    - insert: when the user requests to insert text at the start of the document
-    - append: when the user requests to append text to the end of the document
-    - replace: when the user requests to replace some text with new text, OR when the user wants some text removed (use the "textToReplace" field to specify the text to remove, and set "text" to an empty string.)
-    - replaceAll: when the user requests to replace the ENTIRE document with a new text.
-    - highlight: when the user requests to highlight some text in the document.
+    IMPORTANT RULES:
+    - For "insert" action, prioritize "after:<exact_text>" for location when possible.
+    - If the user asks a question, do not edit the document, just respond with a message to the user (in the responseMessage field).
+    - For any "replace" action, the "textToReplace" must NOT contain newline characters. Replacements must be single-line. Insertions can contain newlines.
+    - If a user requests to replace/remove multi-line text, split it into multiple "replace" or "remove" actions, each handling one line at a time.
+    - Do NOT include any newlines inside the "textToReplace" fields.
+    - Use multiple replace actions sequentially if needed for multi-line replacements.
+
+    Action guidance:
+    - insert: Insert new text at a specified location. Use the "location" field to specify where.
+    - replace: Replace exact text ("textToReplace") with new text ("text"). To remove text, set "text" to an empty string.
+    - remove: Remove exact text ("text").
+    - highlight: Highlight specified text.
 
     `;
 }

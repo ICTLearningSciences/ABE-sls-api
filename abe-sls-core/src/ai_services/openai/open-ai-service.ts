@@ -14,7 +14,12 @@ import {
 import { AiService } from '../abstract-classes/abstract-ai-service.js';
 import { v4 as uuid } from 'uuid';
 import { Schema } from 'jsonschema';
-import { isJsonString, validateJsonResponse } from '../../helpers.js';
+import {
+  convertMarkdownToJsonString,
+  isJsonMarkdown,
+  isJsonString,
+  validateJsonResponse,
+} from '../../helpers.js';
 import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
 import {
   AiStepData,
@@ -81,7 +86,11 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   ): Promise<[OpenAiResType, string]> {
     let result = await this.executeOpenAi(params);
     let answer = result.output_text || '';
+    console.log('answer', answer);
     if (mustBeJson) {
+      if (isJsonMarkdown(answer)) {
+        answer = convertMarkdownToJsonString(answer);
+      }
       const checkJson = (answer: string) => {
         if (jsonSchema) {
           return validateJsonResponse(answer, jsonSchema);
