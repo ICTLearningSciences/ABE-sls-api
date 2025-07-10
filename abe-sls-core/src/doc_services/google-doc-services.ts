@@ -13,14 +13,18 @@ import {
   GoogleAPIs,
   UseWithGoogleApi,
   useWithGoogleApi as _useWithGoogleApi,
-  findSubstringAfterSubstring,
   findSubstringInParagraphs,
   inspectDocContent,
 } from '../hooks/google_api.js';
 import { IGDocVersion } from '../timeline-generation/types.js';
 import { exponentialBackoff } from '../helpers.js';
 import { AxiosRequestConfig } from 'axios';
-import { DocEdit, DocEditAction } from './helpers/edit-doc-helpers.js';
+import {
+  DocEdit,
+  DocEditAction,
+  InsertTextAction,
+  ModifyTextAction,
+} from './helpers/edit-doc-helpers.js';
 
 type GoogleDocVersion = drive_v3.Schema$Revision;
 
@@ -129,24 +133,18 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
 
   async buildHighlightRequest(
     docId: string,
-    edit: DocEdit
+    edit: ModifyTextAction
   ): Promise<docs_v1.Schema$Request> {
-    const textToHighlight = edit.text;
     const docContent = await this.getDocContent(docId);
     const paragraphData = inspectDocContent(docContent).paragraphData;
-    const afterSubstring = edit.location.after;
-    const { startIndex, endIndex } = afterSubstring ? findSubstringAfterSubstring(
+    const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      textToHighlight,
-      afterSubstring,
-      edit.location.nthOccurrence
-    ) : findSubstringInParagraphs(
-      paragraphData,
-      textToHighlight
+      edit.targetText,
+      edit.nthTargetTextOccurrence
     );
 
     if (startIndex == -1 || endIndex == -1) {
-      throw new Error(`Could not find text ${textToHighlight} in doc ${docId}`);
+      throw new Error(`Could not find text ${edit.targetText} in doc ${docId}`);
     }
 
     const highlightRequest: docs_v1.Schema$Request = {
@@ -208,29 +206,29 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
 
   async buildInsertAfterRequest(
     docId: string,
-    edit: DocEdit
+    edit: InsertTextAction
   ): Promise<docs_v1.Schema$Request> {
-    if (!edit.location.after) {
-      throw new Error(`Location is required for insert action`);
+    if (!edit.insertAfterText) {
+      throw new Error(`insertAfterText is required for insert after action`);
     }
     const docContent = await this.getDocContent(docId);
     const paragraphData = inspectDocContent(docContent).paragraphData;
-    const { startIndex, endIndex } = findSubstringAfterSubstring(
-      paragraphData,
-      edit.text,
-      edit.location.after,
-      edit.location.nthOccurrence
-    );
-    if (startIndex == -1 || endIndex == -1) {
+    const { startIndex: insertAfterStartIndex, endIndex: insertAfterEndIndex } =
+      findSubstringInParagraphs(
+        paragraphData,
+        edit.insertAfterText,
+        edit.nthInsertAfterTextOccurrence
+      );
+    if (insertAfterStartIndex == -1 || insertAfterEndIndex == -1) {
       throw new Error(
-        `Could not find text ${edit.location.after} in doc ${docId}`
+        `Could not find text ${edit.insertAfterText} in doc ${docId}`
       );
     }
     const insertAfterRequest: docs_v1.Schema$Request = {
       insertText: {
-        text: edit.text,
+        text: edit.textToInsert,
         location: {
-          index: endIndex,
+          index: insertAfterEndIndex,
         },
       },
     };
@@ -239,16 +237,17 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
 
   async buildRemoveRequest(
     docId: string,
-    textToRemove: string
+    edit: ModifyTextAction
   ): Promise<docs_v1.Schema$Request> {
     const docContent = await this.getDocContent(docId);
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      textToRemove
+      edit.targetText,
+      edit.nthTargetTextOccurrence
     );
     if (startIndex == -1 || endIndex == -1) {
-      throw new Error(`Could not find text ${textToRemove} in doc ${docId}`);
+      throw new Error(`Could not find text ${edit.targetText} in doc ${docId}`);
     }
     const removeRequest: docs_v1.Schema$Request = {
       deleteContentRange: {
@@ -263,24 +262,15 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
 
   async buildReplaceRequest(
     docId: string,
-    edit: DocEdit
+    edit: ModifyTextAction
   ): Promise<docs_v1.Schema$Request[]> {
-    if (!edit.textToReplace) {
-      throw new Error(`Text to replace is required for replace action`);
-    }
-    const textToReplaceWith = edit.text;
-    const textToReplace = edit.textToReplace;
+    const textToReplace = edit.targetText;
     const docContent = await this.getDocContent(docId);
     const paragraphData = inspectDocContent(docContent).paragraphData;
-    const afterSubstring = edit.location.after;
-    const { startIndex, endIndex } = afterSubstring ? findSubstringAfterSubstring(
+    const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      textToReplace,
-      afterSubstring,
-      edit.location.nthOccurrence
-    ) : findSubstringInParagraphs(
-      paragraphData,
-      textToReplace
+      edit.targetText,
+      edit.nthTargetTextOccurrence
     );
     if (startIndex == -1 || endIndex == -1) {
       throw new Error(`Could not find text ${textToReplace} in doc ${docId}`);
@@ -296,7 +286,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
       },
       {
         insertText: {
-          text: textToReplaceWith,
+          text: edit.targetText,
           location: {
             index: startIndex,
           },
@@ -326,37 +316,54 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     for (const edit of edits) {
       console.log(`executing edit: ${edit.action}`);
       switch (edit.action) {
-        case DocEditAction.HIGHLIGHT:
-          const highlightRequest = await this.buildHighlightRequest(
-            docId,
-            edit
-          );
-          await this.executeBatchUpdate(docs, docId, [highlightRequest]);
-          break;
-        case DocEditAction.REMOVE:
-          const removeRequest = await this.buildRemoveRequest(docId, edit.text);
-          await this.executeBatchUpdate(docs, docId, [removeRequest]);
-          break;
         case DocEditAction.INSERT:
-          if (edit.location.after === '') {
+          if (!edit.insertTextAction) {
+            throw new Error(`Insert text action is required for insert action`);
+          }
+          if (edit.insertTextAction.insertAfterText === '') {
             // insert at the start of the document
             const insertAtStartRequest = await this.buildInsertAtStartRequest(
-              edit.text
+              edit.insertTextAction.textToInsert
             );
             await this.executeBatchUpdate(docs, docId, [insertAtStartRequest]);
           } else {
             const insertAfterRequest = await this.buildInsertAfterRequest(
               docId,
-              edit
+              edit.insertTextAction
             );
             await this.executeBatchUpdate(docs, docId, [insertAfterRequest]);
           }
           break;
-        case DocEditAction.REPLACE:
-          if (!edit.textToReplace) {
-            throw new Error(`Text to replace is required for replace action`);
+        case DocEditAction.HIGHLIGHT:
+          if (!edit.modifyTextAction) {
+            throw new Error(
+              `modifyTextAction is required for highlight action`
+            );
           }
-          const replaceRequest = await this.buildReplaceRequest(docId, edit);
+          const highlightRequest = await this.buildHighlightRequest(
+            docId,
+            edit.modifyTextAction
+          );
+          await this.executeBatchUpdate(docs, docId, [highlightRequest]);
+          break;
+        case DocEditAction.REMOVE:
+          if (!edit.modifyTextAction) {
+            throw new Error(`modifyTextAction is required for remove action`);
+          }
+          const removeRequest = await this.buildRemoveRequest(
+            docId,
+            edit.modifyTextAction
+          );
+          await this.executeBatchUpdate(docs, docId, [removeRequest]);
+          break;
+        case DocEditAction.REPLACE:
+          if (!edit.modifyTextAction) {
+            throw new Error(`modifyTextAction is required for replace action`);
+          }
+          const replaceRequest = await this.buildReplaceRequest(
+            docId,
+            edit.modifyTextAction
+          );
           await this.executeBatchUpdate(docs, docId, replaceRequest);
           break;
         default:

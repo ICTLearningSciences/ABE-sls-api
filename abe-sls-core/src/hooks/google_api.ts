@@ -105,23 +105,41 @@ interface SubstringPosition {
 
 export function findSubstringInParagraphs(
   paragraphData: InspectParagraph[],
-  substring: string
+  substring: string,
+  nthOccurence: number
 ): SubstringPosition {
-  const relevantParagraph = paragraphData.find((paragraph) => {
-    return paragraph.allText.includes(substring);
-  });
-  if (!relevantParagraph) {
-    return {
-      startIndex: -1,
-      endIndex: -1,
-    };
+  let occurrenceCount = 0;
+
+  // Loop through each paragraph
+  for (let i = 0; i < paragraphData.length; i++) {
+    const paragraph = paragraphData[i];
+
+    // Find all occurrences of substring in this paragraph
+    let searchIndex = 0;
+    while (searchIndex < paragraph.allText.length) {
+      const foundIndex = paragraph.allText.indexOf(substring, searchIndex);
+      if (foundIndex === -1) break;
+
+      occurrenceCount++;
+
+      // If this is the nth occurrence, return its position
+      if (occurrenceCount === nthOccurence) {
+        const startIndex = paragraph.startIndex + foundIndex;
+        const endIndex = startIndex + substring.length;
+        return {
+          startIndex,
+          endIndex,
+        };
+      }
+
+      searchIndex = foundIndex + 1;
+    }
   }
-  const substringStart = relevantParagraph.allText.indexOf(substring);
-  const startIndex = relevantParagraph.startIndex + substringStart;
-  const endIndex = startIndex + substring.length;
+
+  // nth occurrence not found
   return {
-    startIndex,
-    endIndex,
+    startIndex: -1,
+    endIndex: -1,
   };
 }
 
@@ -386,7 +404,8 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      textToHighlight
+      textToHighlight,
+      1
     );
 
     if (startIndex == -1 || endIndex == -1) {
@@ -433,7 +452,8 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      textToRemove
+      textToRemove,
+      1
     );
 
     if (startIndex == -1 || endIndex == -1) {
@@ -469,7 +489,8 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      insertAfterText
+      insertAfterText,
+      1
     );
 
     if (startIndex == -1 || endIndex == -1) {
