@@ -226,7 +226,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
       insertText: {
         text: '\n' + textToInsert,
         location: {
-          index: endIndex + 1,
+          index: endIndex,
         },
       },
     };

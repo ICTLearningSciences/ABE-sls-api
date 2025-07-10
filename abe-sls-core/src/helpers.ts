@@ -174,3 +174,7 @@ export function isProperJson(str: string, jsonSchema?: Schema): boolean {
     return isJsonString(str);
   }
 }
+
+export function userEssayPromptFormat(essay: string): string {
+  return `Here is the users essay:\n---START OF ESSAY---\n${essay}\n---END OF ESSAY---\n`;
+}

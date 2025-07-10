@@ -18,6 +18,7 @@ import {
   convertMarkdownToJsonString,
   isJsonMarkdown,
   isJsonString,
+  userEssayPromptFormat,
   validateJsonResponse,
 } from '../../helpers.js';
 import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
@@ -199,7 +200,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     if (includeEssay) {
       inputMessages.push({
         role: PromptRoles.SYSTEM,
-        content: `Here is the users essay: -----------\n\n${docsPlainText}`,
+        content: userEssayPromptFormat(docsPlainText),
       });
     }
     aiStep.prompts.forEach((prompt) => {
