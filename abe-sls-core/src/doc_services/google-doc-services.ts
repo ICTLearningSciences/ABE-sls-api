@@ -13,6 +13,7 @@ import {
   GoogleAPIs,
   UseWithGoogleApi,
   useWithGoogleApi as _useWithGoogleApi,
+  findSubstringAfterSubstring,
   findSubstringInParagraphs,
   inspectDocContent,
 } from '../hooks/google_api.js';
@@ -131,10 +132,15 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     edit: DocEdit
   ): Promise<docs_v1.Schema$Request> {
     const textToHighlight = edit.text;
-    // TODO: use location to better determine what to highlight
     const docContent = await this.getDocContent(docId);
     const paragraphData = inspectDocContent(docContent).paragraphData;
-    const { startIndex, endIndex } = findSubstringInParagraphs(
+    const afterSubstring = edit.location.after;
+    const { startIndex, endIndex } = afterSubstring ? findSubstringAfterSubstring(
+      paragraphData,
+      textToHighlight,
+      afterSubstring,
+      edit.location.nthOccurrence
+    ) : findSubstringInParagraphs(
       paragraphData,
       textToHighlight
     );
@@ -172,12 +178,9 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
   async buildInsertAtStartRequest(
     textToInsert: string
   ): Promise<docs_v1.Schema$Request> {
-    const formattedText = textToInsert.endsWith('\n')
-      ? textToInsert
-      : textToInsert + '\n';
     const insertRequest: docs_v1.Schema$Request = {
       insertText: {
-        text: formattedText,
+        text: textToInsert,
         location: {
           index: 1,
         },
@@ -192,12 +195,9 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
   async buildInsertAtEndRequest(
     textToAppend: string
   ): Promise<docs_v1.Schema$Request> {
-    const formattedText = textToAppend.startsWith('\n')
-      ? textToAppend
-      : '\n' + textToAppend;
     const appendRequest: docs_v1.Schema$Request = {
       insertText: {
-        text: formattedText,
+        text: textToAppend,
         endOfSegmentLocation: {
           segmentId: null,
         },
@@ -208,56 +208,33 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
 
   async buildInsertAfterRequest(
     docId: string,
-    textToInsert: string,
-    textToInsertAfter: string
+    edit: DocEdit
   ): Promise<docs_v1.Schema$Request> {
+    if (!edit.location.after) {
+      throw new Error(`Location is required for insert action`);
+    }
     const docContent = await this.getDocContent(docId);
     const paragraphData = inspectDocContent(docContent).paragraphData;
-    const { startIndex, endIndex } = findSubstringInParagraphs(
+    const { startIndex, endIndex } = findSubstringAfterSubstring(
       paragraphData,
-      textToInsertAfter
+      edit.text,
+      edit.location.after,
+      edit.location.nthOccurrence
     );
     if (startIndex == -1 || endIndex == -1) {
       throw new Error(
-        `Could not find text ${textToInsertAfter} in doc ${docId}`
+        `Could not find text ${edit.location.after} in doc ${docId}`
       );
     }
     const insertAfterRequest: docs_v1.Schema$Request = {
       insertText: {
-        text: '\n' + textToInsert,
+        text: edit.text,
         location: {
           index: endIndex,
         },
       },
     };
     return insertAfterRequest;
-  }
-
-  async buildInsertBeforeRequest(
-    docId: string,
-    textToInsert: string,
-    textToInsertBefore: string
-  ): Promise<docs_v1.Schema$Request> {
-    const docContent = await this.getDocContent(docId);
-    const paragraphData = inspectDocContent(docContent).paragraphData;
-    const { startIndex, endIndex } = findSubstringInParagraphs(
-      paragraphData,
-      textToInsertBefore
-    );
-    if (startIndex == -1 || endIndex == -1) {
-      throw new Error(
-        `Could not find text ${textToInsertBefore} in doc ${docId}`
-      );
-    }
-    const insertBeforeRequest: docs_v1.Schema$Request = {
-      insertText: {
-        text: '\n' + textToInsert,
-        location: {
-          index: startIndex - 1,
-        },
-      },
-    };
-    return insertBeforeRequest;
   }
 
   async buildRemoveRequest(
@@ -288,7 +265,6 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     docId: string,
     edit: DocEdit
   ): Promise<docs_v1.Schema$Request[]> {
-    // TODO: use location to better determine where exactly to replace (find the )
     if (!edit.textToReplace) {
       throw new Error(`Text to replace is required for replace action`);
     }
@@ -296,7 +272,13 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     const textToReplace = edit.textToReplace;
     const docContent = await this.getDocContent(docId);
     const paragraphData = inspectDocContent(docContent).paragraphData;
-    const { startIndex, endIndex } = findSubstringInParagraphs(
+    const afterSubstring = edit.location.after;
+    const { startIndex, endIndex } = afterSubstring ? findSubstringAfterSubstring(
+      paragraphData,
+      textToReplace,
+      afterSubstring,
+      edit.location.nthOccurrence
+    ) : findSubstringInParagraphs(
       paragraphData,
       textToReplace
     );
@@ -322,35 +304,6 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
       },
     ];
     return replaceRequest;
-  }
-
-  async buildReplaceAllRequest(
-    docId: string,
-    textToReplaceWith: string
-  ): Promise<docs_v1.Schema$Request[]> {
-    const docContent = await this.getDocContent(docId);
-    const lastContent =
-      docContent.length - 1 > 0 ? docContent[docContent.length - 1] : null;
-    const lastContentIndex = lastContent ? (lastContent.endIndex || 2) - 1 : 1;
-    const replaceAllRequest: docs_v1.Schema$Request[] = [
-      {
-        deleteContentRange: {
-          range: {
-            startIndex: 1,
-            endIndex: lastContentIndex,
-          },
-        },
-      },
-      {
-        insertText: {
-          text: textToReplaceWith,
-          location: {
-            index: 1,
-          },
-        },
-      },
-    ];
-    return replaceAllRequest;
   }
 
   async executeBatchUpdate(
@@ -385,34 +338,18 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
           await this.executeBatchUpdate(docs, docId, [removeRequest]);
           break;
         case DocEditAction.INSERT:
-          if (!edit.location) {
-            throw new Error(`Location is required for insert action`);
-          }
-          if (edit.location === 'start_of_document') {
+          if (edit.location.after === '') {
             // insert at the start of the document
             const insertAtStartRequest = await this.buildInsertAtStartRequest(
               edit.text
             );
             await this.executeBatchUpdate(docs, docId, [insertAtStartRequest]);
-          } else if (edit.location === 'end_of_document') {
-            const insertAtEndRequest = await this.buildInsertAtEndRequest(
-              edit.text
-            );
-            await this.executeBatchUpdate(docs, docId, [insertAtEndRequest]);
-          } else if (edit.location.startsWith('after:')) {
+          } else {
             const insertAfterRequest = await this.buildInsertAfterRequest(
               docId,
-              edit.text,
-              edit.location.split('after:')[1]
+              edit
             );
             await this.executeBatchUpdate(docs, docId, [insertAfterRequest]);
-          } else if (edit.location.startsWith('before:')) {
-            const insertBeforeRequest = await this.buildInsertBeforeRequest(
-              docId,
-              edit.text,
-              edit.location.split('before:')[1]
-            );
-            await this.executeBatchUpdate(docs, docId, [insertBeforeRequest]);
           }
           break;
         case DocEditAction.REPLACE:
@@ -421,13 +358,6 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
           }
           const replaceRequest = await this.buildReplaceRequest(docId, edit);
           await this.executeBatchUpdate(docs, docId, replaceRequest);
-          break;
-        case DocEditAction.REPLACE_ALL:
-          const replaceAllRequest = await this.buildReplaceAllRequest(
-            docId,
-            edit.text
-          );
-          await this.executeBatchUpdate(docs, docId, replaceAllRequest);
           break;
         default:
           throw new Error(`Unknown edit action: ${edit.action}`);
