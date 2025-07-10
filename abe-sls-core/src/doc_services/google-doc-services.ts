@@ -264,6 +264,9 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     docId: string,
     edit: ModifyTextAction
   ): Promise<docs_v1.Schema$Request[]> {
+    if (!edit.newText) {
+      throw new Error(`newText is required for replace action`);
+    }
     const textToReplace = edit.targetText;
     const docContent = await this.getDocContent(docId);
     const paragraphData = inspectDocContent(docContent).paragraphData;
@@ -286,7 +289,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
       },
       {
         insertText: {
-          text: edit.targetText,
+          text: edit.newText,
           location: {
             index: startIndex,
           },
