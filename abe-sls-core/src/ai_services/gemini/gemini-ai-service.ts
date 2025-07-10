@@ -19,6 +19,7 @@ import {
   convertMarkdownToJsonString,
   isJsonMarkdown,
   isJsonString,
+  userEssayPromptFormat,
   validateJsonResponse,
 } from '../../helpers.js';
 import {
@@ -194,7 +195,7 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
 
     if (includeEssay) {
-      contextText += `Here is the essay:\n${docsPlainText}\n\n`;
+      contextText += userEssayPromptFormat(docsPlainText);
     }
 
     chatParams.history?.push({

@@ -12,7 +12,11 @@ import {
   PromptRoles,
 } from '../../types.js';
 import { AzureOpenAI } from 'openai';
-import { isJsonString, validateJsonResponse } from '../../helpers.js';
+import {
+  isJsonString,
+  userEssayPromptFormat,
+  validateJsonResponse,
+} from '../../helpers.js';
 import {
   AiServiceResponse,
   AiStepData,
@@ -187,7 +191,7 @@ export class AzureOpenAiService extends AiService<
     if (includeEssay) {
       inputMessages.push({
         role: PromptRoles.SYSTEM,
-        content: `Here is the users essay: -----------\n\n${docsPlainText}`,
+        content: userEssayPromptFormat(docsPlainText),
       });
     }
 

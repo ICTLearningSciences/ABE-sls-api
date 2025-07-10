@@ -6,7 +6,11 @@ The full terms of this copyright and license should always be found in the root 
 */
 import * as https from 'https';
 import dotenv from 'dotenv';
-import { isJsonString, validateJsonResponse } from '../../helpers.js';
+import {
+  isJsonString,
+  userEssayPromptFormat,
+  validateJsonResponse,
+} from '../../helpers.js';
 import axios from 'axios';
 import { PromptOutputTypes } from '../../types.js';
 import { AiService } from '../abstract-classes/abstract-ai-service.js';
@@ -195,7 +199,7 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
     if (includeEssay) {
       requestData.system_prompt += JSON.stringify({
         role: PromptRoles.USER,
-        content: `Here is the users essay: -----------\n\n${docsPlainText}`,
+        content: userEssayPromptFormat(docsPlainText),
       });
       requestData.system_prompt += '\n';
     }

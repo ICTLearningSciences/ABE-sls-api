@@ -10,6 +10,7 @@ import {
   convertMarkdownToJsonString,
   isJsonMarkdown,
   isJsonString,
+  userEssayPromptFormat,
   validateJsonResponse,
 } from '../../helpers.js';
 import axios from 'axios';
@@ -210,7 +211,7 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
     if (includeEssay) {
       inputMessages.push({
         role: PromptRoles.SYSTEM,
-        content: `Here is the users essay: -----------\n\n${docsPlainText}`,
+        content: userEssayPromptFormat(docsPlainText),
       });
     }
     aiStep.prompts.forEach((prompt) => {
