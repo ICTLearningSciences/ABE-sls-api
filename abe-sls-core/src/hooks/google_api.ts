@@ -105,23 +105,116 @@ interface SubstringPosition {
 
 export function findSubstringInParagraphs(
   paragraphData: InspectParagraph[],
-  substring: string
+  substring: string,
+  nthOccurence: number
 ): SubstringPosition {
-  const relevantParagraph = paragraphData.find((paragraph) => {
-    return paragraph.allText.includes(substring);
-  });
-  if (!relevantParagraph) {
-    return {
-      startIndex: -1,
-      endIndex: -1,
-    };
+  let occurrenceCount = 0;
+
+  // Loop through each paragraph
+  for (let i = 0; i < paragraphData.length; i++) {
+    const paragraph = paragraphData[i];
+
+    // Find all occurrences of substring in this paragraph
+    let searchIndex = 0;
+    while (searchIndex < paragraph.allText.length) {
+      const foundIndex = paragraph.allText.indexOf(substring, searchIndex);
+      if (foundIndex === -1) break;
+
+      occurrenceCount++;
+
+      // If this is the nth occurrence, return its position
+      if (occurrenceCount === nthOccurence) {
+        const startIndex = paragraph.startIndex + foundIndex;
+        const endIndex = startIndex + substring.length;
+        return {
+          startIndex,
+          endIndex,
+        };
+      }
+
+      searchIndex = foundIndex + 1;
+    }
   }
-  const substringStart = relevantParagraph.allText.indexOf(substring);
-  const startIndex = relevantParagraph.startIndex + substringStart;
-  const endIndex = startIndex + substring.length;
+
+  // nth occurrence not found
   return {
-    startIndex,
-    endIndex,
+    startIndex: -1,
+    endIndex: -1,
+  };
+}
+
+export function findSubstringAfterSubstring(
+  paragraphData: InspectParagraph[],
+  targetSubstring: string,
+  afterSubstring: string,
+  nthOccurrence: number
+): SubstringPosition {
+  let occurrenceCount = 0;
+
+  // Loop through each paragraph
+  for (let i = 0; i < paragraphData.length; i++) {
+    const paragraph = paragraphData[i];
+
+    // Find all occurrences of afterSubstring in this paragraph
+    let searchIndex = 0;
+    while (searchIndex < paragraph.allText.length) {
+      const foundIndex = paragraph.allText.indexOf(afterSubstring, searchIndex);
+      if (foundIndex === -1) break;
+
+      occurrenceCount++;
+
+      // If this is the nth occurrence, check for targetSubstring after it
+      if (occurrenceCount === nthOccurrence) {
+        const afterSubstringEndIndex = foundIndex + afterSubstring.length;
+        const remainingText = paragraph.allText.substring(
+          afterSubstringEndIndex
+        );
+        const targetIndexInRemaining = remainingText.indexOf(targetSubstring);
+
+        if (targetIndexInRemaining !== -1) {
+          const startIndex =
+            paragraph.startIndex +
+            afterSubstringEndIndex +
+            targetIndexInRemaining;
+          const endIndex = startIndex + targetSubstring.length;
+          return {
+            startIndex,
+            endIndex,
+          };
+        }
+
+        // If targetSubstring not found after nth occurrence in this paragraph,
+        // search all subsequent paragraphs for targetSubstring
+        for (let j = i + 1; j < paragraphData.length; j++) {
+          const subsequentParagraph = paragraphData[j];
+          const targetIndex =
+            subsequentParagraph.allText.indexOf(targetSubstring);
+
+          if (targetIndex !== -1) {
+            const startIndex = subsequentParagraph.startIndex + targetIndex;
+            const endIndex = startIndex + targetSubstring.length;
+            return {
+              startIndex,
+              endIndex,
+            };
+          }
+        }
+
+        // targetSubstring not found in any subsequent paragraph
+        return {
+          startIndex: -1,
+          endIndex: -1,
+        };
+      }
+
+      searchIndex = foundIndex + 1;
+    }
+  }
+
+  // nth occurrence of afterSubstring not found
+  return {
+    startIndex: -1,
+    endIndex: -1,
   };
 }
 
@@ -311,7 +404,8 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      textToHighlight
+      textToHighlight,
+      1
     );
 
     if (startIndex == -1 || endIndex == -1) {
@@ -358,7 +452,8 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      textToRemove
+      textToRemove,
+      1
     );
 
     if (startIndex == -1 || endIndex == -1) {
@@ -394,7 +489,8 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      insertAfterText
+      insertAfterText,
+      1
     );
 
     if (startIndex == -1 || endIndex == -1) {
