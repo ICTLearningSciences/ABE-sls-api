@@ -18,23 +18,29 @@ export interface DocEditAction {
 
 export interface InsertParagraphAction extends DocEditAction {
   action: DocEditActions.INSERT_PARAGRAPH;
+  insert_paragraph_data: {
   location: {
     where: 'start_of_document' | 'end_of_document' | 'after_paragraph';
     afterParagraphId?: string;
+    };
+    newParagraphText: string;
   };
-  newParagraphText: string;
 }
 
 export interface ModifyParagraphAction extends DocEditAction {
   action: DocEditActions.MODIFY_PARAGRAPH;
-  paragraphId: string;
-  newParagraphText: string;
+  modify_paragraph_data: {
+    paragraphId: string;
+    newParagraphText: string;
+  };
 }
 
 export interface HighlightPhraseInParagraphAction extends DocEditAction {
   action: DocEditActions.HIGHLIGHT_PHRASE_IN_PARAGRAPH;
-  paragraphId: string;
-  phrase: string;
+  highlight_phrase_in_paragraph_data: {
+    paragraphId: string;
+    phrase: string;
+  };
 }
 
 export interface EditDocResponse {
@@ -61,23 +67,23 @@ export function getEditDocResponseFormat(labeledDocFullText: string): string {
     1. Determine which paragraph(s) must be modified to satisfy the users request.
     2. Modify the relevant paragraphs.
       - When you need to alter the text of a paragraph (removal, replacement, inserting new text into paragraph, etc.), you must use the "modify_paragraph" action.
-    3. Output JSON:
+    3. Output JSON following this format, Do NOT include JSON markdown. ENSURE you follow the format of this JSON object:
     {
       "actions": [
         {
-          "action": string, // one of the following: "insert_paragraph", "modify_paragraph", "highlight_phrase_in_paragraph"
-          "insert_paragraph": {
+          "action": string, // REQUIRED: one of the following: "insert_paragraph", "modify_paragraph", "highlight_phrase_in_paragraph"
+          "insert_paragraph_data": {
             "location": {
               "where": string, // one of the following: "start_of_document", "end_of_document", "after_paragraph"
               "afterParagraphId": string?, // OPTIONAL: If inserting after a paragraph, the id of the paragraph to insert after
             },
-            "newParagraphText": string,
+            "newParagraphText": string, // Do NOT include the paragraph number/id within the new paragraph text
           },
-          "modify_paragraph": {
+          "modify_paragraph_data": {
             "paragraphId": string,
             "newParagraphText": string,
           },
-          "highlight_phrase_in_paragraph": {
+          "highlight_phrase_in_paragraph_data": {
             "paragraphId": string,
             "phrase": string,
           },
@@ -98,7 +104,7 @@ export const editDocResponseSchema: Schema = {
         type: 'object',
         properties: {
           action: { type: 'string', enum: Object.values(DocEditActions) },
-          insert_paragraph: {
+          insert_paragraph_data: {
             type: 'object',
             properties: {
               location: {
@@ -120,7 +126,7 @@ export const editDocResponseSchema: Schema = {
             },
             required: ['location', 'newParagraphText'],
           },
-          modify_paragraph: {
+          modify_paragraph_data: {
             type: 'object',
             properties: {
               paragraphId: { type: 'string' },
@@ -128,7 +134,7 @@ export const editDocResponseSchema: Schema = {
             },
             required: ['paragraphId', 'newParagraphText'],
           },
-          highlight_phrase_in_paragraph: {
+          highlight_phrase_in_paragraph_data: {
             type: 'object',
             properties: {
               paragraphId: { type: 'string' },

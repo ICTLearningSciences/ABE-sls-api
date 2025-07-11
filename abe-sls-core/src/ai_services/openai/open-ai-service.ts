@@ -115,6 +115,9 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
           if (!answer) {
             throw new Error('OpenAI API Error: No response message content.');
           }
+          if (isJsonMarkdown(answer)) {
+            answer = convertMarkdownToJsonString(answer);
+          }
           isJsonResponse = checkJson(answer);
         }
       }

@@ -5,12 +5,16 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { DocData } from '../types.js';
-import { DocService } from './abstract-doc-service.js';
-import { DocEdit } from './helpers/edit-doc-helpers.js';
+import {
+  DocService,
+  LabeledDocData,
+  LabeledDocDataRecord,
+} from './abstract-doc-service.js';
 import { getDocData as _getDocData } from '../api.js';
 import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import { fetchMostRecentVersion } from '../hooks/graphql_api.js';
 import { IGDocVersion } from '../timeline-generation/types.js';
+import { DocEditAction } from './helpers/edit-doc-helpers.js';
 
 type MicrosoftDocVersion = {
   id: string;
@@ -21,6 +25,7 @@ type MicrosoftDocVersion = {
 export class MicrosoftDocService extends DocService<MicrosoftDocVersion> {
   authHeaders: AuthHeaders;
   private static instance: MicrosoftDocService;
+  labeledDocData: LabeledDocDataRecord = {};
 
   constructor(authHeaders: AuthHeaders) {
     super();
@@ -61,7 +66,11 @@ export class MicrosoftDocService extends DocService<MicrosoftDocVersion> {
     return Promise.resolve([]);
   }
 
-  async handleDocEdits(docId: string, edits: DocEdit[]): Promise<void> {
+  async handleDocEdits(docId: string, edits: DocEditAction[]): Promise<void> {
+    throw new Error('Not implemented');
+  }
+
+  async getLabeledDocData(docId: string): Promise<LabeledDocData> {
     throw new Error('Not implemented');
   }
 }

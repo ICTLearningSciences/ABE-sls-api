@@ -143,7 +143,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     docId: string,
     edit: HighlightPhraseInParagraphAction
   ): Promise<docs_v1.Schema$Request> {
-    const paragraphId = edit.paragraphId;
+    const paragraphId = edit.highlight_phrase_in_paragraph_data.paragraphId;
     const paragraph = this.labeledDocData[docId]?.docTextMappings.find((p) => {
       return p.paragraphId === paragraphId;
     }) as DocTextMapping;
@@ -154,12 +154,12 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     }
     const { startIndex, endIndex } = findSubstringInParagraphMapping(
       paragraph,
-      edit.phrase
+      edit.highlight_phrase_in_paragraph_data.phrase
     );
 
     if (startIndex == -1 || endIndex == -1) {
       throw new Error(
-        `Could not find text ${edit.phrase} in doc ${docId} at paragraph ${edit.paragraphId}`
+        `Could not find text ${edit.highlight_phrase_in_paragraph_data.phrase} in doc ${docId} at paragraph ${edit.highlight_phrase_in_paragraph_data.paragraphId}`
       );
     }
 
@@ -225,22 +225,22 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     edit: InsertParagraphAction
   ): Promise<docs_v1.Schema$Request> {
     const paragraph = this.labeledDocData[docId]?.docTextMappings.find((p) => {
-      return p.paragraphId === edit.location.afterParagraphId;
+      return p.paragraphId === edit.insert_paragraph_data.location.afterParagraphId;
     }) as DocTextMapping;
     if (!paragraph) {
       throw new Error(
-        `Could not find paragraph ${edit.location.afterParagraphId} in mappings for doc ${docId}`
+        `Could not find paragraph ${edit.insert_paragraph_data.location.afterParagraphId} in mappings for doc ${docId}`
       );
     }
     const { paragraphStartIndex, paragraphEndIndex } = paragraph;
     if (paragraphStartIndex == -1 || paragraphEndIndex == -1) {
       throw new Error(
-        `Could not find paragraph ${edit.location.afterParagraphId} in doc ${docId}`
+        `Could not find paragraph ${edit.insert_paragraph_data.location.afterParagraphId} in doc ${docId}`
       );
     }
     const insertAfterRequest: docs_v1.Schema$Request = {
       insertText: {
-        text: edit.newParagraphText,
+        text: edit.insert_paragraph_data.newParagraphText,
         location: {
           index: paragraphEndIndex,
         },
@@ -254,17 +254,17 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     edit: ModifyParagraphAction
   ): Promise<docs_v1.Schema$Request[]> {
     const paragraph = this.labeledDocData[docId]?.docTextMappings.find((p) => {
-      return p.paragraphId === edit.paragraphId;
+      return p.paragraphId === edit.modify_paragraph_data.paragraphId;
     }) as DocTextMapping;
     if (!paragraph) {
       throw new Error(
-        `Could not find paragraph ${edit.paragraphId} in mappings for doc ${docId}`
+        `Could not find paragraph ${edit.modify_paragraph_data.paragraphId} in mappings for doc ${docId}`
       );
     }
     const { paragraphStartIndex, paragraphEndIndex } = paragraph;
     if (paragraphStartIndex == -1 || paragraphEndIndex == -1) {
       throw new Error(
-        `Could not find paragraph ${edit.paragraphId} in doc ${docId}`
+        `Could not find paragraph ${edit.modify_paragraph_data.paragraphId} in doc ${docId}`
       );
     }
     const modifyRequest: docs_v1.Schema$Request[] = [
@@ -278,7 +278,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
       },
       {
         insertText: {
-          text: edit.newParagraphText,
+          text: edit.modify_paragraph_data.newParagraphText,
           location: {
             index: paragraphStartIndex,
           },
@@ -306,7 +306,8 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     console.log('edits', JSON.stringify(edits, null, 2));
     console.log(JSON.stringify(edits, null, 2));
     for (const edit of edits) {
-      console.log(`executing edit: ${edit.action}`);
+      // TODO: recalibrate the doc text mappings after each edit
+      console.log(`executing edit: ${edit}`);
       switch (edit.action) {
         case DocEditActions.HIGHLIGHT_PHRASE_IN_PARAGRAPH:
           const highlightAction = edit as HighlightPhraseInParagraphAction;
@@ -318,23 +319,23 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
           break;
         case DocEditActions.INSERT_PARAGRAPH:
           const action = edit as InsertParagraphAction;
-          if (action.location.where === 'start_of_document') {
+          if (action.insert_paragraph_data.location.where === 'start_of_document') {
             // insert at the start of the document
             const insertAtStartRequest = await this.buildInsertAtStartRequest(
-              action.newParagraphText
+              action.insert_paragraph_data.newParagraphText
             );
             await this.executeBatchUpdate(docs, docId, [insertAtStartRequest]);
-          } else if (action.location.where === 'end_of_document') {
+          } else if (action.insert_paragraph_data.location.where === 'end_of_document') {
             const insertAtEndRequest = await this.buildInsertAtEndRequest(
-              action.newParagraphText
+              action.insert_paragraph_data.newParagraphText
             );
             await this.executeBatchUpdate(docs, docId, [insertAtEndRequest]);
-          } else if (action.location.where === 'after_paragraph') {
+          } else if (action.insert_paragraph_data.location.where === 'after_paragraph') {
             const insertAfterRequest =
               await this.buildInsertAfterParagraphRequest(docId, action);
             await this.executeBatchUpdate(docs, docId, [insertAfterRequest]);
           } else {
-            throw new Error(`Unknown location: ${action.location.where}`);
+            throw new Error(`Unknown location: ${action.insert_paragraph_data.location.where}`);
           }
           break;
         case DocEditActions.MODIFY_PARAGRAPH:
