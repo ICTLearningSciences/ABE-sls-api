@@ -52,7 +52,7 @@ SUPPORTED ACTIONS:
     - highlight: Highlight specified text (“text”).
 
 IMPORTANT RULES:
-    - If the user asks a question, do not edit the document, leave the edits array empty, just respond with a message to the user (in the responseMessage field).
+    - If the user asks a question, do not edit the document, leave the edits array empty, just respond to the user's question (in the responseMessage field).
     - For any "replace" action, the "targetText" must NOT contain newline characters. Replacements must be single-line.
     - Insertions can contain newlines.
     - If a user requests to replace/remove multi-line text, split it into multiple "replace" or "remove" actions, each handling one line at a time.
@@ -85,7 +85,7 @@ insertTextAction: ONLY for when the "action" is "insert". This object contains i
 modifyTextAction: ONLY for when the "action" is "replace", "remove", or "highlight". This object contains information for the modify action.
   - newText: ONLY used when "action" is "replace". The text to replace the "targetText" with.
   - targetText: The exact text to remove, replace, or highlight. Must contain exact text from the essay. IMPORTANT: MUST NOT INCLUDE NEWLINES, handle separate lines as separate text.
-responseMessage: Short, clear explanation of the edits made, no JSON here.
+responseMessage: Short, clear explanation of the edits made, no JSON here. If the user asks a question, you may respond to the question here.
     `;
 }
 
