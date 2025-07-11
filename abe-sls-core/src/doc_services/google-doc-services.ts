@@ -139,8 +139,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      edit.targetText,
-      edit.nthTargetTextOccurrence
+      edit.targetText
     );
 
     if (startIndex == -1 || endIndex == -1) {
@@ -217,7 +216,6 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
       findSubstringInParagraphs(
         paragraphData,
         edit.insertAfterText,
-        edit.nthInsertAfterTextOccurrence
       );
     if (insertAfterStartIndex == -1 || insertAfterEndIndex == -1) {
       throw new Error(
@@ -244,7 +242,6 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
       edit.targetText,
-      edit.nthTargetTextOccurrence
     );
     if (startIndex == -1 || endIndex == -1) {
       throw new Error(`Could not find text ${edit.targetText} in doc ${docId}`);
@@ -253,7 +250,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
       deleteContentRange: {
         range: {
           startIndex: startIndex,
-          endIndex: endIndex,
+          endIndex: endIndex -1,
         },
       },
     };
@@ -273,7 +270,6 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
       edit.targetText,
-      edit.nthTargetTextOccurrence
     );
     if (startIndex == -1 || endIndex == -1) {
       throw new Error(`Could not find text ${textToReplace} in doc ${docId}`);
@@ -283,7 +279,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
         deleteContentRange: {
           range: {
             startIndex: startIndex,
-            endIndex: endIndex,
+            endIndex: endIndex - 1,
           },
         },
       },

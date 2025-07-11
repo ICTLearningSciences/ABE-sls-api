@@ -17,13 +17,11 @@ export enum DocEditAction {
 export interface InsertTextAction {
   textToInsert: string;
   insertAfterText: string;
-  nthInsertAfterTextOccurrence: number;
 }
 
 export interface ModifyTextAction {
   targetText: string;
   newText?: string;
-  nthTargetTextOccurrence: number;
 }
 
 export interface DocEdit {
@@ -68,12 +66,10 @@ Respond in JSON. Validate that your response is valid JSON. Do NOT include JSON 
           "insertTextAction": { // if action is "insert", this object is required, else leave empty
             "textToInsert": string,
             "insertAfterText": string,
-            "nthInsertAfterTextOccurrence": number
           },
           "modifyTextAction": { // if action is "replace", "remove", or "highlight", this object is required, else leave empty
             "newText": string,
             "targetText": string,
-            "nthTargetTextOccurrence": number,
           }
         }
       ],
@@ -86,11 +82,9 @@ action: The supported action that we are executing. Values: "insert", "replace",
 insertTextAction: ONLY for when the "action" is "insert". This object contains information for the insert action.
   - textToInsert: The text to insert into the document. Do NOT include markdown formatting.
   - insertAfterText: This is a text to insert after. If we are inserting at the start of the document, then leave empty. The insertAfterText must be exact text from the user's essay. ENSURE that the after text in the location makes sense, i.e. if adding a new item to a list, the after text should be the last item in the list. Or if inserting at the end of the document, the after text should be the last text in the document.
-  - nthInsertAfterTextOccurrence: The nth occurrence of the "insertAfterText" text to insert after. For example, if the insertAfterText appears 3 times in the document, and you want to insert after the 2nd occurrence, set nthInsertAfterTextOccurrence to 2.
 modifyTextAction: ONLY for when the "action" is "replace", "remove", or "highlight". This object contains information for the modify action.
   - newText: ONLY used when "action" is "replace". The text to replace the "targetText" with.
   - targetText: The exact text to remove, replace, or highlight. Must contain exact text from the essay. IMPORTANT: MUST NOT INCLUDE NEWLINES, handle separate lines as separate text.
-  - nthTargetTextOccurrence: CRITICALLY IMPORTANT: The nth occurrence of the "targetText" text to remove, replace, or highlight. For example, if the targetText appears 3 times in the document, and you want to remove/replace/highlight the 2nd occurrence, set nthTargetTextOccurrence to 2. ENSURE you count the occurrences of the "targetText" correctly.
 responseMessage: Short, clear explanation of the edits made, no JSON here.
     `;
 }

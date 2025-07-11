@@ -105,41 +105,17 @@ interface SubstringPosition {
 
 export function findSubstringInParagraphs(
   paragraphData: InspectParagraph[],
-  substring: string,
-  nthOccurence: number
+  substring: string
 ): SubstringPosition {
-  let occurrenceCount = 0;
-
-  // Loop through each paragraph
-  for (let i = 0; i < paragraphData.length; i++) {
-    const paragraph = paragraphData[i];
-
-    // Find all occurrences of substring in this paragraph
-    let searchIndex = 0;
-    while (searchIndex < paragraph.allText.length) {
-      const foundIndex = paragraph.allText.indexOf(substring, searchIndex);
-      if (foundIndex === -1) break;
-
-      occurrenceCount++;
-
-      // If this is the nth occurrence, return its position
-      if (occurrenceCount === nthOccurence) {
-        const startIndex = paragraph.startIndex + foundIndex;
-        const endIndex = startIndex + substring.length;
-        return {
-          startIndex,
-          endIndex,
-        };
-      }
-
-      searchIndex = foundIndex + 1;
-    }
+  const firstOccurrence = paragraphData.find((p) => {
+    return p.allText.includes(substring);
+  });
+  if (!firstOccurrence) {
+    return { startIndex: -1, endIndex: -1 };
   }
-
-  // nth occurrence not found
   return {
-    startIndex: -1,
-    endIndex: -1,
+    startIndex: firstOccurrence.startIndex,
+    endIndex: firstOccurrence.endIndex,
   };
 }
 
@@ -405,7 +381,6 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
       textToHighlight,
-      1
     );
 
     if (startIndex == -1 || endIndex == -1) {
@@ -453,7 +428,6 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
       textToRemove,
-      1
     );
 
     if (startIndex == -1 || endIndex == -1) {
@@ -490,7 +464,6 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
       insertAfterText,
-      1
     );
 
     if (startIndex == -1 || endIndex == -1) {
