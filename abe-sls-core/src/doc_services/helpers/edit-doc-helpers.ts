@@ -42,8 +42,13 @@ export interface EditDocResponse {
   responseMessage: string;
 }
 
-export function getEditDocResponseFormat(): string {
+export function getEditDocResponseFormat(labeledDocFullText: string): string {
   return `
+    Here is the users essay:
+    --- START OF ESSAY ---
+    ${labeledDocFullText}
+    --- END OF ESSAY ---
+
     YOUR ROLE:
     You are an expert in analyzing text documents and determining the location of text in the document.
 

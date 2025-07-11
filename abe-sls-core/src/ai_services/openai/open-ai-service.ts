@@ -132,6 +132,8 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     console.log(
       `Executing OpenAI request ${id} starting at ${new Date().toISOString()}`
     );
+    console.log('params');
+    console.log(JSON.stringify(params, null, 2));
     const result = await this.aiServiceClient.responses.create(params);
     const answer = result.output_text;
     if (!answer) {
@@ -197,7 +199,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
       });
     }
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
-    if (includeEssay) {
+    if (includeEssay && !aiStep.editDoc) {
       inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: userEssayPromptFormat(docsPlainText),

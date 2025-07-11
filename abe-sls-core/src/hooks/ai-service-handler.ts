@@ -55,8 +55,10 @@ export class AiServiceHandler {
     for (let i = 0; i < aiSteps.length; i++) {
       const curAiStep = aiSteps[i];
       if (curAiStep.editDoc) {
-        // TODO: get the labeled version of the essay from the docHandler
-        curAiStep.responseFormat = getEditDocResponseFormat();
+        const labeledDocData = await docHandler.getLabeledDocData(docsId);
+        curAiStep.responseFormat = getEditDocResponseFormat(
+          labeledDocData.labeledDocFullText
+        );
         curAiStep.responseSchema = editDocResponseSchema;
       }
       const aiService = AiServiceFactory.getAiService(
