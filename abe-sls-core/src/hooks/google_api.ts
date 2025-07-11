@@ -8,6 +8,7 @@ import { google, drive_v3, docs_v1 } from 'googleapis';
 import axios, { AxiosRequestConfig } from 'axios';
 import { exponentialBackoff } from '../helpers.js';
 import { DocData } from '../types.js';
+import { DocTextMapping } from 'doc_services/abstract-doc-service.js';
 
 export interface GoogleDocVersion {
   id: string;
@@ -103,118 +104,40 @@ interface SubstringPosition {
   endIndex: number;
 }
 
-export function findSubstringInParagraphs(
-  paragraphData: InspectParagraph[],
-  substring: string,
-  nthOccurence: number
+export function findSubstringInParagraphMapping(
+  paragraphMapping: DocTextMapping,
+  substring: string
 ): SubstringPosition {
-  let occurrenceCount = 0;
-
-  // Loop through each paragraph
-  for (let i = 0; i < paragraphData.length; i++) {
-    const paragraph = paragraphData[i];
-
-    // Find all occurrences of substring in this paragraph
-    let searchIndex = 0;
-    while (searchIndex < paragraph.allText.length) {
-      const foundIndex = paragraph.allText.indexOf(substring, searchIndex);
-      if (foundIndex === -1) break;
-
-      occurrenceCount++;
-
-      // If this is the nth occurrence, return its position
-      if (occurrenceCount === nthOccurence) {
-        const startIndex = paragraph.startIndex + foundIndex;
-        const endIndex = startIndex + substring.length;
-        return {
-          startIndex,
-          endIndex,
-        };
-      }
-
-      searchIndex = foundIndex + 1;
-    }
-  }
-
-  // nth occurrence not found
+  const startIndex =
+    paragraphMapping.paragraphStartIndex +
+    paragraphMapping.paragraphText.indexOf(substring);
+  const endIndex = startIndex + substring.length;
   return {
-    startIndex: -1,
-    endIndex: -1,
+    startIndex: startIndex,
+    endIndex: endIndex,
   };
 }
 
-export function findSubstringAfterSubstring(
+export function findSubstringInParagraphs(
   paragraphData: InspectParagraph[],
-  targetSubstring: string,
-  afterSubstring: string,
-  nthOccurrence: number
+  substring: string
 ): SubstringPosition {
-  let occurrenceCount = 0;
-
-  // Loop through each paragraph
-  for (let i = 0; i < paragraphData.length; i++) {
-    const paragraph = paragraphData[i];
-
-    // Find all occurrences of afterSubstring in this paragraph
-    let searchIndex = 0;
-    while (searchIndex < paragraph.allText.length) {
-      const foundIndex = paragraph.allText.indexOf(afterSubstring, searchIndex);
-      if (foundIndex === -1) break;
-
-      occurrenceCount++;
-
-      // If this is the nth occurrence, check for targetSubstring after it
-      if (occurrenceCount === nthOccurrence) {
-        const afterSubstringEndIndex = foundIndex + afterSubstring.length;
-        const remainingText = paragraph.allText.substring(
-          afterSubstringEndIndex
-        );
-        const targetIndexInRemaining = remainingText.indexOf(targetSubstring);
-
-        if (targetIndexInRemaining !== -1) {
-          const startIndex =
-            paragraph.startIndex +
-            afterSubstringEndIndex +
-            targetIndexInRemaining;
-          const endIndex = startIndex + targetSubstring.length;
-          return {
-            startIndex,
-            endIndex,
-          };
-        }
-
-        // If targetSubstring not found after nth occurrence in this paragraph,
-        // search all subsequent paragraphs for targetSubstring
-        for (let j = i + 1; j < paragraphData.length; j++) {
-          const subsequentParagraph = paragraphData[j];
-          const targetIndex =
-            subsequentParagraph.allText.indexOf(targetSubstring);
-
-          if (targetIndex !== -1) {
-            const startIndex = subsequentParagraph.startIndex + targetIndex;
-            const endIndex = startIndex + targetSubstring.length;
-            return {
-              startIndex,
-              endIndex,
-            };
-          }
-        }
-
-        // targetSubstring not found in any subsequent paragraph
-        return {
-          startIndex: -1,
-          endIndex: -1,
-        };
-      }
-
-      searchIndex = foundIndex + 1;
-    }
+  const paragraph = paragraphData.find((p) => {
+    return p.allText.includes(substring);
+  });
+  if (!paragraph) {
+    return {
+      startIndex: -1,
+      endIndex: -1,
+    };
   }
 
-  // nth occurrence of afterSubstring not found
+  const startIndex =
+    paragraph.startIndex + paragraph.allText.indexOf(substring);
+  const endIndex = startIndex + substring.length;
   return {
-    startIndex: -1,
-    endIndex: -1,
+    startIndex,
+    endIndex,
   };
 }
 
@@ -404,8 +327,7 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      textToHighlight,
-      1
+      textToHighlight
     );
 
     if (startIndex == -1 || endIndex == -1) {
@@ -452,8 +374,7 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      textToRemove,
-      1
+      textToRemove
     );
 
     if (startIndex == -1 || endIndex == -1) {
@@ -489,8 +410,7 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      insertAfterText,
-      1
+      insertAfterText
     );
 
     if (startIndex == -1 || endIndex == -1) {

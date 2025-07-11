@@ -55,6 +55,7 @@ export class AiServiceHandler {
     for (let i = 0; i < aiSteps.length; i++) {
       const curAiStep = aiSteps[i];
       if (curAiStep.editDoc) {
+        // TODO: get the labeled version of the essay from the docHandler
         curAiStep.responseFormat = getEditDocResponseFormat();
         curAiStep.responseSchema = editDocResponseSchema;
       }
@@ -72,7 +73,7 @@ export class AiServiceHandler {
 
       if (curAiStep.editDoc) {
         const editDocResponse = JSON.parse(answer) as EditDocResponse;
-        await docHandler.handleDocEdits(docsId, editDocResponse.edits);
+        await docHandler.handleDocEdits(docsId, editDocResponse.actions);
         answer = editDocResponse.responseMessage;
       }
 

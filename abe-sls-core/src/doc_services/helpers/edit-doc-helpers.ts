@@ -6,92 +6,80 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { Schema } from 'jsonschema';
 
-export enum DocEditAction {
-  INSERT = 'insert',
-  REPLACE = 'replace',
-  REMOVE = 'remove',
-  REPLACE_ALL = 'replaceAll',
-  HIGHLIGHT = 'highlight',
+export enum DocEditActions {
+  INSERT_PARAGRAPH = 'insert_paragraph',
+  MODIFY_PARAGRAPH = 'modify_paragraph',
+  HIGHLIGHT_PHRASE_IN_PARAGRAPH = 'highlight_phrase_in_paragraph',
 }
 
-export interface InsertTextAction {
-  textToInsert: string;
-  insertAfterText: string;
-  nthInsertAfterTextOccurrence: number;
+export interface DocEditAction {
+  action: DocEditActions;
 }
 
-export interface ModifyTextAction {
-  targetText: string;
-  newText?: string;
-  nthTargetTextOccurrence: number;
+export interface InsertParagraphAction extends DocEditAction {
+  action: DocEditActions.INSERT_PARAGRAPH;
+  location: {
+    where: 'start_of_document' | 'end_of_document' | 'after_paragraph';
+    afterParagraphId?: string;
+  };
+  newParagraphText: string;
 }
 
-export interface DocEdit {
-  action: DocEditAction;
-  insertTextAction?: InsertTextAction;
-  modifyTextAction?: ModifyTextAction;
+export interface ModifyParagraphAction extends DocEditAction {
+  action: DocEditActions.MODIFY_PARAGRAPH;
+  paragraphId: string;
+  newParagraphText: string;
+}
+
+export interface HighlightPhraseInParagraphAction extends DocEditAction {
+  action: DocEditActions.HIGHLIGHT_PHRASE_IN_PARAGRAPH;
+  paragraphId: string;
+  phrase: string;
 }
 
 export interface EditDocResponse {
-  edits: DocEdit[];
+  actions: DocEditAction[];
   responseMessage: string;
 }
 
 export function getEditDocResponseFormat(): string {
   return `
-YOUR ROLE:
-You are an expert in analyzing text documents and proposing document edits via a list of supported actions.
+    YOUR ROLE:
+    You are an expert in analyzing text documents and determining the location of text in the document.
 
-YOUR TASK:
-1. Analyze the users requested document changes.
-2. Analyze the users essay.
-3. Determine what exact edits need to be made to the essay (if any) to satisfy the users request.
+    SUPPORTED ACTIONS:
+    - insert_paragraph: Insert a new paragraph at a specified location.
+    - modify_paragraph: Modify an existing paragraph.
+    - highlight_phrase_in_paragraph: Highlight a specific phrase in a paragraph.
 
-SUPPORTED ACTIONS:
-    - insert: Insert new text at a specified location. Use the "location" field to specify where.
-    - replace: Replace exact text ("textToReplace") with new text ("text"). To remove text, set "text" to an empty string.
-    - remove: Remove exact text ("text”).
-    - highlight: Highlight specified text (“text”).
-
-IMPORTANT RULES:
-    - If the user asks a question, do not edit the document, leave the edits array empty, just respond with a message to the user (in the responseMessage field).
-    - For any "replace" action, the "targetText" must NOT contain newline characters. Replacements must be single-line.
-    - Insertions can contain newlines.
-    - If a user requests to replace/remove multi-line text, split it into multiple "replace" or "remove" actions, each handling one line at a time.
-
-RESPONSE FORMAT:
-Respond in JSON. Validate that your response is valid JSON. Do NOT include JSON markdown. Your JSON MUST follow this format:
+    Your Task:
+    1. Determine which paragraph(s) must be modified to satisfy the users request.
+    2. Modify the relevant paragraphs.
+      - When you need to alter the text of a paragraph (removal, replacement, inserting new text into paragraph, etc.), you must use the "modify_paragraph" action.
+    3. Output JSON:
     {
-      "edits": [
+      "actions": [
         {
-          "action": string,
-          "insertTextAction": { // if action is "insert", this object is required, else leave empty
-            "textToInsert": string,
-            "insertAfterText": string,
-            "nthInsertAfterTextOccurrence": number
+          "action": string, // one of the following: "insert_paragraph", "modify_paragraph", "highlight_phrase_in_paragraph"
+          "insert_paragraph": {
+            "location": {
+              "where": string, // one of the following: "start_of_document", "end_of_document", "after_paragraph"
+              "afterParagraphId": string?, // OPTIONAL: If inserting after a paragraph, the id of the paragraph to insert after
+            },
+            "newParagraphText": string,
           },
-          "modifyTextAction": { // if action is "replace", "remove", or "highlight", this object is required, else leave empty
-            "newText": string,
-            "targetText": string,
-            "nthTargetTextOccurrence": number,
-          }
+          "modify_paragraph": {
+            "paragraphId": string,
+            "newParagraphText": string,
+          },
+          "highlight_phrase_in_paragraph": {
+            "paragraphId": string,
+            "phrase": string,
+          },
         }
       ],
-      "responseMessage": string
+      "responseMessage": string // simple message containing info about the edits you performed
     }
-
-JSON FIELD DEFINITIONS:
-edits: The list of edits to make to the document, if any. Leave this array empty if the user asks a question.
-action: The supported action that we are executing. Values: "insert", "replace", "remove", "highlight"
-insertTextAction: ONLY for when the "action" is "insert". This object contains information for the insert action.
-  - textToInsert: The text to insert into the document. Do NOT include markdown formatting.
-  - insertAfterText: This is a text to insert after. If we are inserting at the start of the document, then leave empty. The insertAfterText must be exact text from the user's essay. ENSURE that the after text in the location makes sense, i.e. if adding a new item to a list, the after text should be the last item in the list. Or if inserting at the end of the document, the after text should be the last text in the document.
-  - nthInsertAfterTextOccurrence: The nth occurrence of the "insertAfterText" text to insert after. For example, if the insertAfterText appears 3 times in the document, and you want to insert after the 2nd occurrence, set nthInsertAfterTextOccurrence to 2.
-modifyTextAction: ONLY for when the "action" is "replace", "remove", or "highlight". This object contains information for the modify action.
-  - newText: ONLY used when "action" is "replace". The text to replace the "targetText" with.
-  - targetText: The exact text to remove, replace, or highlight. Must contain exact text from the essay. IMPORTANT: MUST NOT INCLUDE NEWLINES, handle separate lines as separate text.
-  - nthTargetTextOccurrence: CRITICALLY IMPORTANT: The nth occurrence of the "targetText" text to remove, replace, or highlight. For example, if the targetText appears 3 times in the document, and you want to remove/replace/highlight the 2nd occurrence, set nthTargetTextOccurrence to 2. ENSURE you count the occurrences of the "targetText" correctly.
-responseMessage: Short, clear explanation of the edits made, no JSON here.
     `;
 }
 
@@ -99,22 +87,58 @@ export const editDocResponseSchema: Schema = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   type: 'object',
   properties: {
-    edits: {
+    actions: {
       type: 'array',
       items: {
         type: 'object',
         properties: {
-          action: { type: 'string', enum: Object.values(DocEditAction) },
-          text: { type: 'string' },
-          textToReplace: { type: 'string' },
+          action: { type: 'string', enum: Object.values(DocEditActions) },
+          insert_paragraph: {
+            type: 'object',
+            properties: {
+              location: {
+                type: 'object',
+                properties: {
+                  where: {
+                    type: 'string',
+                    enum: [
+                      'start_of_document',
+                      'end_of_document',
+                      'after_paragraph',
+                    ],
+                  },
+                  afterParagraphId: { type: 'string' },
+                },
+                required: ['where'],
+              },
+              newParagraphText: { type: 'string' },
+            },
+            required: ['location', 'newParagraphText'],
+          },
+          modify_paragraph: {
+            type: 'object',
+            properties: {
+              paragraphId: { type: 'string' },
+              newParagraphText: { type: 'string' },
+            },
+            required: ['paragraphId', 'newParagraphText'],
+          },
+          highlight_phrase_in_paragraph: {
+            type: 'object',
+            properties: {
+              paragraphId: { type: 'string' },
+              phrase: { type: 'string' },
+            },
+            required: ['paragraphId', 'phrase'],
+          },
         },
-        required: ['action', 'text'],
+        required: ['action'],
         additionalProperties: false,
       },
       additionalProperties: false,
     },
     responseMessage: { type: 'string' },
   },
-  required: ['edits', 'responseMessage'],
+  required: ['actions', 'responseMessage'],
   additionalProperties: false,
 };

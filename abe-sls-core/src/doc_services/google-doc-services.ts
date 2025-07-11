@@ -6,25 +6,32 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { docs_v1, drive_v3 } from 'googleapis';
 import { DocData } from '../types.js';
-import { DocService } from './abstract-doc-service.js';
+import {
+  DocService,
+  DocTextMapping,
+  LabeledDocData,
+  LabeledDocDataRecord,
+} from './abstract-doc-service.js';
 import { getDocData as _getDocData } from '../api.js';
 import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import {
   GoogleAPIs,
   UseWithGoogleApi,
   useWithGoogleApi as _useWithGoogleApi,
-  findSubstringInParagraphs,
+  findSubstringInParagraphMapping,
   inspectDocContent,
 } from '../hooks/google_api.js';
 import { IGDocVersion } from '../timeline-generation/types.js';
 import { exponentialBackoff } from '../helpers.js';
 import { AxiosRequestConfig } from 'axios';
 import {
-  DocEdit,
   DocEditAction,
-  InsertTextAction,
-  ModifyTextAction,
+  InsertParagraphAction,
+  ModifyParagraphAction,
+  HighlightPhraseInParagraphAction,
+  DocEditActions,
 } from './helpers/edit-doc-helpers.js';
+import { v4 as uuidv4 } from 'uuid';
 
 type GoogleDocVersion = drive_v3.Schema$Revision;
 
@@ -33,6 +40,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
   private static instance: GoogleDocService;
   useWithGoogleApi: UseWithGoogleApi;
   googleApi?: GoogleAPIs;
+  labeledDocData: LabeledDocDataRecord = {};
 
   constructor(authHeaders: AuthHeaders) {
     super();
@@ -133,18 +141,26 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
 
   async buildHighlightRequest(
     docId: string,
-    edit: ModifyTextAction
+    edit: HighlightPhraseInParagraphAction
   ): Promise<docs_v1.Schema$Request> {
-    const docContent = await this.getDocContent(docId);
-    const paragraphData = inspectDocContent(docContent).paragraphData;
-    const { startIndex, endIndex } = findSubstringInParagraphs(
-      paragraphData,
-      edit.targetText,
-      edit.nthTargetTextOccurrence
+    const paragraphId = edit.paragraphId;
+    const paragraph = this.labeledDocData[docId]?.docTextMappings.find((p) => {
+      return p.paragraphId === paragraphId;
+    }) as DocTextMapping;
+    if (!paragraph) {
+      throw new Error(
+        `Could not find paragraph ${paragraphId} in mappings for doc ${docId}`
+      );
+    }
+    const { startIndex, endIndex } = findSubstringInParagraphMapping(
+      paragraph,
+      edit.phrase
     );
 
     if (startIndex == -1 || endIndex == -1) {
-      throw new Error(`Could not find text ${edit.targetText} in doc ${docId}`);
+      throw new Error(
+        `Could not find text ${edit.phrase} in doc ${docId} at paragraph ${edit.paragraphId}`
+      );
     }
 
     const highlightRequest: docs_v1.Schema$Request = {
@@ -204,99 +220,72 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     return appendRequest;
   }
 
-  async buildInsertAfterRequest(
+  async buildInsertAfterParagraphRequest(
     docId: string,
-    edit: InsertTextAction
+    edit: InsertParagraphAction
   ): Promise<docs_v1.Schema$Request> {
-    if (!edit.insertAfterText) {
-      throw new Error(`insertAfterText is required for insert after action`);
-    }
-    const docContent = await this.getDocContent(docId);
-    const paragraphData = inspectDocContent(docContent).paragraphData;
-    const { startIndex: insertAfterStartIndex, endIndex: insertAfterEndIndex } =
-      findSubstringInParagraphs(
-        paragraphData,
-        edit.insertAfterText,
-        edit.nthInsertAfterTextOccurrence
-      );
-    if (insertAfterStartIndex == -1 || insertAfterEndIndex == -1) {
+    const paragraph = this.labeledDocData[docId]?.docTextMappings.find((p) => {
+      return p.paragraphId === edit.location.afterParagraphId;
+    }) as DocTextMapping;
+    if (!paragraph) {
       throw new Error(
-        `Could not find text ${edit.insertAfterText} in doc ${docId}`
+        `Could not find paragraph ${edit.location.afterParagraphId} in mappings for doc ${docId}`
+      );
+    }
+    const { paragraphStartIndex, paragraphEndIndex } = paragraph;
+    if (paragraphStartIndex == -1 || paragraphEndIndex == -1) {
+      throw new Error(
+        `Could not find paragraph ${edit.location.afterParagraphId} in doc ${docId}`
       );
     }
     const insertAfterRequest: docs_v1.Schema$Request = {
       insertText: {
-        text: edit.textToInsert,
+        text: edit.newParagraphText,
         location: {
-          index: insertAfterEndIndex,
+          index: paragraphEndIndex,
         },
       },
     };
     return insertAfterRequest;
   }
 
-  async buildRemoveRequest(
+  async buildModifyParagraphRequest(
     docId: string,
-    edit: ModifyTextAction
-  ): Promise<docs_v1.Schema$Request> {
-    const docContent = await this.getDocContent(docId);
-    const paragraphData = inspectDocContent(docContent).paragraphData;
-    const { startIndex, endIndex } = findSubstringInParagraphs(
-      paragraphData,
-      edit.targetText,
-      edit.nthTargetTextOccurrence
-    );
-    if (startIndex == -1 || endIndex == -1) {
-      throw new Error(`Could not find text ${edit.targetText} in doc ${docId}`);
-    }
-    const removeRequest: docs_v1.Schema$Request = {
-      deleteContentRange: {
-        range: {
-          startIndex: startIndex,
-          endIndex: endIndex,
-        },
-      },
-    };
-    return removeRequest;
-  }
-
-  async buildReplaceRequest(
-    docId: string,
-    edit: ModifyTextAction
+    edit: ModifyParagraphAction
   ): Promise<docs_v1.Schema$Request[]> {
-    if (!edit.newText) {
-      throw new Error(`newText is required for replace action`);
+    const paragraph = this.labeledDocData[docId]?.docTextMappings.find((p) => {
+      return p.paragraphId === edit.paragraphId;
+    }) as DocTextMapping;
+    if (!paragraph) {
+      throw new Error(
+        `Could not find paragraph ${edit.paragraphId} in mappings for doc ${docId}`
+      );
     }
-    const textToReplace = edit.targetText;
-    const docContent = await this.getDocContent(docId);
-    const paragraphData = inspectDocContent(docContent).paragraphData;
-    const { startIndex, endIndex } = findSubstringInParagraphs(
-      paragraphData,
-      edit.targetText,
-      edit.nthTargetTextOccurrence
-    );
-    if (startIndex == -1 || endIndex == -1) {
-      throw new Error(`Could not find text ${textToReplace} in doc ${docId}`);
+    const { paragraphStartIndex, paragraphEndIndex } = paragraph;
+    if (paragraphStartIndex == -1 || paragraphEndIndex == -1) {
+      throw new Error(
+        `Could not find paragraph ${edit.paragraphId} in doc ${docId}`
+      );
     }
-    const replaceRequest: docs_v1.Schema$Request[] = [
+    const modifyRequest: docs_v1.Schema$Request[] = [
       {
         deleteContentRange: {
           range: {
-            startIndex: startIndex,
-            endIndex: endIndex,
+            startIndex: paragraphStartIndex,
+            endIndex: paragraphEndIndex,
           },
         },
       },
       {
         insertText: {
-          text: edit.newText,
+          text: edit.newParagraphText,
           location: {
-            index: startIndex,
+            index: paragraphStartIndex,
           },
         },
       },
     ];
-    return replaceRequest;
+    return modifyRequest;
   }
 
   async executeBatchUpdate(
@@ -312,66 +301,84 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     });
   }
 
-  async handleDocEdits(docId: string, edits: DocEdit[]): Promise<void> {
+  async handleDocEdits(docId: string, edits: DocEditAction[]): Promise<void> {
     const { docs } = await this.getGoogleAPIs();
     console.log('edits', JSON.stringify(edits, null, 2));
     console.log(JSON.stringify(edits, null, 2));
     for (const edit of edits) {
       console.log(`executing edit: ${edit.action}`);
       switch (edit.action) {
-        case DocEditAction.INSERT:
-          if (!edit.insertTextAction) {
-            throw new Error(`Insert text action is required for insert action`);
-          }
-          if (edit.insertTextAction.insertAfterText === '') {
-            // insert at the start of the document
-            const insertAtStartRequest = await this.buildInsertAtStartRequest(
-              edit.insertTextAction.textToInsert
-            );
-            await this.executeBatchUpdate(docs, docId, [insertAtStartRequest]);
-          } else {
-            const insertAfterRequest = await this.buildInsertAfterRequest(
-              docId,
-              edit.insertTextAction
-            );
-            await this.executeBatchUpdate(docs, docId, [insertAfterRequest]);
-          }
-          break;
-        case DocEditAction.HIGHLIGHT:
-          if (!edit.modifyTextAction) {
-            throw new Error(
-              `modifyTextAction is required for highlight action`
-            );
-          }
+        case DocEditActions.HIGHLIGHT_PHRASE_IN_PARAGRAPH:
+          const highlightAction = edit as HighlightPhraseInParagraphAction;
           const highlightRequest = await this.buildHighlightRequest(
             docId,
-            edit.modifyTextAction
+            highlightAction
           );
           await this.executeBatchUpdate(docs, docId, [highlightRequest]);
           break;
-        case DocEditAction.REMOVE:
-          if (!edit.modifyTextAction) {
-            throw new Error(`modifyTextAction is required for remove action`);
+        case DocEditActions.INSERT_PARAGRAPH:
+          const action = edit as InsertParagraphAction;
+          if (action.location.where === 'start_of_document') {
+            // insert at the start of the document
+            const insertAtStartRequest = await this.buildInsertAtStartRequest(
+              action.newParagraphText
+            );
+            await this.executeBatchUpdate(docs, docId, [insertAtStartRequest]);
+          } else if (action.location.where === 'end_of_document') {
+            const insertAtEndRequest = await this.buildInsertAtEndRequest(
+              action.newParagraphText
+            );
+            await this.executeBatchUpdate(docs, docId, [insertAtEndRequest]);
+          } else if (action.location.where === 'after_paragraph') {
+            const insertAfterRequest =
+              await this.buildInsertAfterParagraphRequest(docId, action);
+            await this.executeBatchUpdate(docs, docId, [insertAfterRequest]);
+          } else {
+            throw new Error(`Unknown location: ${action.location.where}`);
           }
-          const removeRequest = await this.buildRemoveRequest(
-            docId,
-            edit.modifyTextAction
-          );
-          await this.executeBatchUpdate(docs, docId, [removeRequest]);
           break;
-        case DocEditAction.REPLACE:
-          if (!edit.modifyTextAction) {
-            throw new Error(`modifyTextAction is required for replace action`);
-          }
-          const replaceRequest = await this.buildReplaceRequest(
+        case DocEditActions.MODIFY_PARAGRAPH:
+          const modifyAction = edit as ModifyParagraphAction;
+          const modifyRequest = await this.buildModifyParagraphRequest(
             docId,
-            edit.modifyTextAction
+            modifyAction
           );
-          await this.executeBatchUpdate(docs, docId, replaceRequest);
+          await this.executeBatchUpdate(docs, docId, modifyRequest);
           break;
         default:
-          throw new Error(`Unknown edit action: ${edit.action}`);
+          throw new Error(`Unknown edit action: ${edit}`);
       }
     }
+  }
+
+  async getLabeledDocData(docId: string): Promise<LabeledDocData> {
+    const { docs } = await this.getGoogleAPIs();
+    const doc = await docs.documents.get({ documentId: docId });
+    const docContent = doc.data.body?.content || [];
+
+    const paragraphData = inspectDocContent(docContent).paragraphData;
+    const docTextMappings: DocTextMapping[] = paragraphData.map(
+      (paragraph, i) => {
+        return {
+          paragraphId: `PARAGRAPH_${uuidv4()}`,
+          paragraphIndex: i,
+          paragraphText: paragraph.allText,
+          paragraphStartIndex: paragraph.startIndex,
+          paragraphEndIndex: paragraph.endIndex,
+        };
+      }
+    );
+    const labeledDocFullText = docTextMappings
+      .map((paragraph) => {
+        return `${paragraph.paragraphId}\n${paragraph.paragraphText}`;
+      })
+      .join('\n');
+    const labeledDocData: LabeledDocData = {
+      docId: docId,
+      docTextMappings: docTextMappings,
+      labeledDocFullText: labeledDocFullText,
+    };
+    this.labeledDocData[docId] = labeledDocData;
+    return labeledDocData;
   }
 }
