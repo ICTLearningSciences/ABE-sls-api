@@ -7,18 +7,13 @@ describe("find substrings in paragraphs", ()=>{
         const paragraphData = [
             {allText: "This is a test", startIndex: 0, endIndex: 14},
             {allText: "Hello, world!", startIndex: 15, endIndex: 28},
-            {allText: "This is a test", startIndex: 29, endIndex: 43},
-            {allText: "Hello, world!", startIndex: 44, endIndex: 57},
-            {allText: "This is a test", startIndex: 58, endIndex: 72},
-            {allText: "Hello, world!", startIndex: 73, endIndex: 86},
         ];
         const location: InsertTextAction = {
             textToInsert: "Hello, world!",
             insertAfterText: "This is a test",
-            nthInsertAfterTextOccurrence: 2,
         }
-        const result = findSubstringInParagraphs(paragraphData, location.insertAfterText, location.nthInsertAfterTextOccurrence);
-        expect(result).to.deep.equal({startIndex: 29, endIndex: 43});
+        const result = findSubstringInParagraphs(paragraphData, location.insertAfterText);
+        expect(result).to.deep.equal({startIndex: 0, endIndex: 14});
     });
 
     it("can find a target substring after a given substring in a single paragraph", ()=>{
@@ -26,12 +21,11 @@ describe("find substrings in paragraphs", ()=>{
             {allText: "This is a test. Hello, world! This is a test. Hello, world! This is a test. Hello, world! This is a test. Hello, world!", startIndex: 0, endIndex: 14},
         ];
         const location: InsertTextAction = {
-            textToInsert: "Hello, world!",
-            insertAfterText: "This is a test",
-            nthInsertAfterTextOccurrence: 2,
-            }
-            const result = findSubstringInParagraphs(paragraphData, location.insertAfterText, location.nthInsertAfterTextOccurrence);
-        expect(result).to.deep.equal({startIndex: 30, endIndex: 44});
+            textToInsert: "This is a test",
+            insertAfterText: "Hello, world!",
+        }
+        const result = findSubstringInParagraphs(paragraphData, location.insertAfterText);
+        expect(result).to.deep.equal({startIndex: 16, endIndex: 29});
     });
     
     it("returns -1 if the target substring occurrence is not found", ()=>{
@@ -40,10 +34,9 @@ describe("find substrings in paragraphs", ()=>{
         ];
         const location: InsertTextAction = {
             textToInsert: "Hello, world!",
-            insertAfterText: "This is a test",
-            nthInsertAfterTextOccurrence: 2,
+            insertAfterText: "Hello, world!",
         }
-        const result = findSubstringInParagraphs(paragraphData, location.insertAfterText, location.nthInsertAfterTextOccurrence);
+        const result = findSubstringInParagraphs(paragraphData, location.insertAfterText);
         expect(result).to.deep.equal({startIndex: -1, endIndex: -1});
     })
 
@@ -54,9 +47,8 @@ describe("find substrings in paragraphs", ()=>{
         const location: InsertTextAction = {
             textToInsert: "Hello, world!",
             insertAfterText: "This is a missing substring",
-            nthInsertAfterTextOccurrence: 1,
         }
-        const result = findSubstringInParagraphs(paragraphData, location.insertAfterText, location.nthInsertAfterTextOccurrence);
+        const result = findSubstringInParagraphs(paragraphData, location.insertAfterText);
         expect(result).to.deep.equal({startIndex: -1, endIndex: -1});
     })
 

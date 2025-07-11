@@ -107,15 +107,19 @@ export function findSubstringInParagraphs(
   paragraphData: InspectParagraph[],
   substring: string
 ): SubstringPosition {
-  const firstOccurrence = paragraphData.find((p) => {
+  const firstParagraph = paragraphData.find((p) => {
     return p.allText.includes(substring);
   });
-  if (!firstOccurrence) {
+  if (!firstParagraph) {
+    return { startIndex: -1, endIndex: -1 };
+  }
+  const substringIndex = firstParagraph.allText.indexOf(substring);
+  if (substringIndex === -1) {
     return { startIndex: -1, endIndex: -1 };
   }
   return {
-    startIndex: firstOccurrence.startIndex,
-    endIndex: firstOccurrence.endIndex,
+    startIndex: firstParagraph.startIndex + substringIndex,
+    endIndex: firstParagraph.startIndex + substringIndex + substring.length,
   };
 }
 
@@ -380,7 +384,7 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      textToHighlight,
+      textToHighlight
     );
 
     if (startIndex == -1 || endIndex == -1) {
@@ -427,7 +431,7 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      textToRemove,
+      textToRemove
     );
 
     if (startIndex == -1 || endIndex == -1) {
@@ -463,7 +467,7 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const paragraphData = inspectDocContent(docContent).paragraphData;
     const { startIndex, endIndex } = findSubstringInParagraphs(
       paragraphData,
-      insertAfterText,
+      insertAfterText
     );
 
     if (startIndex == -1 || endIndex == -1) {
