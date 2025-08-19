@@ -15,7 +15,8 @@ export const createGoogleDoc = async (
   copyFromDocId: string,
   newDocTitle: string,
   isAdminDoc: string,
-  userId: string
+  userId: string,
+  courseAssignmentId: string
 ) => {
   const { getGoogleAPIs, createGoogleDoc } = useWithGoogleApi();
   const { drive, docs } = await getGoogleAPIs();
@@ -31,7 +32,13 @@ export const createGoogleDoc = async (
     copyFromDocId || '',
     newDocTitle || ''
   );
-  await storeGoogleDoc(docId, userId, isAdminDoc === 'true', newDocTitle);
+  await storeGoogleDoc(
+    docId,
+    userId,
+    isAdminDoc === 'true',
+    newDocTitle,
+    courseAssignmentId
+  );
   return {
     docId: docId,
     userId: userId,

@@ -32,6 +32,10 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
       : '';
   const isAdminDoc =
     queryParams && 'isAdminDoc' in queryParams ? queryParams['isAdminDoc'] : '';
+  const courseAssignmentId =
+    queryParams && 'courseAssignmentId' in queryParams
+      ? queryParams['courseAssignmentId']
+      : '';
   if (!userId) {
     return createResponseJson(400, { error: 'userId is required' });
   }
@@ -43,7 +47,8 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
     copyFromDocId || '',
     newDocTitle || '',
     isAdminDoc || '',
-    userId
+    userId,
+    courseAssignmentId || ''
   );
   return createResponseJson(200, {
     docId: docId,

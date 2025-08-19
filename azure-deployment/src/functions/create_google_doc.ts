@@ -17,6 +17,7 @@ export async function _createGoogleDoc(
   const copyFromDocId = request.query.get("copyFromDocId")
   const newDocTitle = request.query.get("newDocTitle")
   const isAdminDoc = request.query.get("isAdminDoc")
+  const courseAssignmentId = request.query.get("courseAssignmentId")
   if (!userId) {
     return createResponseJson(400, { error: 'userId is required' });
   }
@@ -29,7 +30,8 @@ export async function _createGoogleDoc(
     copyFromDocId || '',
     newDocTitle || '',
     isAdminDoc || '',
-    userId
+    userId,
+    courseAssignmentId || ''
   );
   return createResponseJson(200, {
     data: {
