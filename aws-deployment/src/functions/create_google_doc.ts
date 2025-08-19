@@ -5,16 +5,19 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { APIGatewayEvent } from 'aws-lambda';
-import { createResponseJson } from '../helpers.js';
+import { createResponseJson, getAccessTokenFromEvent } from '../helpers.js';
 import { wrapHandler } from '../sentry-helpers.js';
-import { createGoogleDoc } from 'abe-sls-core-2';
+import { createGoogleDoc, fetchInstructorEmails } from 'abe-sls-core-2';
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   const queryParams = event['queryStringParameters'];
+  const accessToken = getAccessTokenFromEvent(event);
   const adminEmails: string[] = process.env.ADMIN_EMAILS
     ? process.env.ADMIN_EMAILS.split(',')
     : [];
   const userId =
     queryParams && 'userId' in queryParams ? queryParams['userId'] : '';
+  const courseId =
+    queryParams && 'courseId' in queryParams ? queryParams['courseId'] : '';
   const userEmails =
     queryParams && 'emails' in queryParams && queryParams['emails']
       ? queryParams['emails'].split(',').filter((e: string) => e)
@@ -32,9 +35,11 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   if (!userId) {
     return createResponseJson(400, { error: 'userId is required' });
   }
+  const instructorEmails = courseId ? await fetchInstructorEmails(courseId, accessToken) : [];
   const { docId, docUrl, createdTime } = await createGoogleDoc(
     adminEmails,
     userEmails,
+    instructorEmails,
     copyFromDocId || '',
     newDocTitle || '',
     isAdminDoc || '',

@@ -11,6 +11,7 @@ import { storeGoogleDoc } from '../hooks/graphql_api.js';
 export const createGoogleDoc = async (
   adminEmails: string[],
   userEmails: string[],
+  instructorEmails: string[],
   copyFromDocId: string,
   newDocTitle: string,
   isAdminDoc: string,
@@ -21,9 +22,12 @@ export const createGoogleDoc = async (
   if (!userId) {
     throw new Error('userId is required');
   }
+  const allEmails = Array.from(
+    new Set([...adminEmails, ...userEmails, ...instructorEmails])
+  );
   const { docId, webViewLink, createdTime } = await createGoogleDoc(
     drive,
-    [...adminEmails, ...userEmails],
+    allEmails,
     copyFromDocId || '',
     newDocTitle || ''
   );

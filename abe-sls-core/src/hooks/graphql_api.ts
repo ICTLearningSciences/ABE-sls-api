@@ -354,3 +354,39 @@ export function fetchAiServiceModelConfigs(): Promise<AiServiceModelConfigs[]> {
     }
   );
 }
+
+export interface FetchInstructorEmailsResponse {
+  userData: {
+    email: string;
+  };
+}
+
+export async function fetchInstructorEmails(
+  courseId: string,
+  accessToken: string
+): Promise<string[]> {
+  const res = await execGql<FetchInstructorEmailsResponse[]>(
+    {
+      query: `query FindInstructorsForCourse($courseId: ID!){
+            findInstructorsForCourse(courseId: $courseId) {
+                userData {
+                    email
+                }
+            }
+        }`,
+      variables: {
+        courseId: courseId,
+      },
+    },
+    {
+      dataPath: ['findInstructorsForCourse'],
+      axiosConfig: {
+        headers: {
+          [SECRET_HEADER_NAME]: SECRET_HEADER_VALUE,
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    }
+  );
+  return res.map((user) => user.userData.email).filter((email) => email);
+}
