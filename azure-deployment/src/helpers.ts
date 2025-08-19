@@ -109,3 +109,14 @@ export async function extractOpenAiRequestData(
         : DocServices.GOOGLE_DOCS,
     };
   }
+
+  export function getAccessTokenFromRequest(request: HttpRequest): string {
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader) {
+      return "";
+    }
+    if(authHeader.toLowerCase().startsWith('bearer ') && authHeader.split(' ').length > 1) {
+      return authHeader.split(' ')[1];
+    }
+    return "";
+  }

@@ -104,3 +104,17 @@ export function createResponseJson(statusCode: number, body: any) {
         : types.DocServices.GOOGLE_DOCS,
     };
   }
+
+  export function getAccessTokenFromEvent(event: APIGatewayEvent): string {
+    const authHeader =
+    'headers' in event && 'Authorization' in event['headers']
+      ? event['headers']['Authorization']
+      : null;
+    if (!authHeader) {
+     return "";
+    }
+    if(authHeader.toLowerCase().startsWith('bearer ') && authHeader.split(' ').length > 1) {
+      return authHeader.split(' ')[1];
+    }
+    return "";
+  }

@@ -20,6 +20,7 @@ export { genericRequestStatus } from './generic_llm_request/generic_request_stat
 
 export { OpenAiService } from '../ai_services/openai/open-ai-service.js';
 export { AskSageService } from '../ai_services/ask-sage/ask-sage-service.js';
+export { fetchInstructorEmails } from '../hooks/graphql_api.js';
 
 export * as types from '../types.js';
 export * as aiStepHelpers from './ai_steps_request/helpers.js';
