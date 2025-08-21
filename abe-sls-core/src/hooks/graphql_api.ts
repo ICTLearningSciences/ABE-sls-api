@@ -24,7 +24,8 @@ export async function storeGoogleDoc(
   docId: string,
   userId: string,
   isAdminDoc: boolean,
-  title?: string
+  title?: string,
+  courseAssignmentId?: string
 ): Promise<void> {
   const res = await axios
     .post(
@@ -42,6 +43,7 @@ export async function storeGoogleDoc(
             user: userId,
             admin: isAdminDoc,
             title: title,
+            courseAssignmentId: courseAssignmentId,
           },
         },
       },
