@@ -43,7 +43,9 @@ export async function storeGoogleDoc(
             user: userId,
             admin: isAdminDoc,
             title: title,
-            courseAssignmentId: courseAssignmentId,
+            ...(courseAssignmentId
+              ? { courseAssignmentId: courseAssignmentId }
+              : {}),
           },
         },
       },
@@ -57,6 +59,7 @@ export async function storeGoogleDoc(
       console.log(err.response.data);
       throw err;
     });
+  console.log(JSON.stringify(res.data));
   return;
 }
 
