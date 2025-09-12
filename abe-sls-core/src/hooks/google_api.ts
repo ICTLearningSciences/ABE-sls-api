@@ -316,6 +316,7 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     const permissionPromises = emailsToGiveAccess.map(async (email) => {
       try {
         const res = await driveAPI.permissions.create({
+          sendNotificationEmail: false,
           fileId: docId,
           requestBody: {
             role: 'writer',
@@ -332,6 +333,7 @@ export function useWithGoogleApi(): UseWithGoogleApi {
       return new Promise<void>((resolve, reject) => {
         driveAPI.permissions.create(
           {
+            sendNotificationEmail: false,
             fileId: docId,
             requestBody: {
               role: 'reader',
