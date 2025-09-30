@@ -184,18 +184,18 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
 
     let contextText = '';
 
+    const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
+
+    if (includeEssay) {
+      contextText += userEssayPromptFormat(docsPlainText);
+    }
+
     if (!canUseSystemInstruction && aiStep.systemRole) {
       contextText += `You must respond according to this role: ${aiStep.systemRole}\n\n`;
     }
 
     if (previousOutput) {
       contextText += `Here is the previous Output:\n${previousOutput}\n\n`;
-    }
-
-    const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
-
-    if (includeEssay) {
-      contextText += userEssayPromptFormat(docsPlainText);
     }
 
     chatParams.history?.push({

@@ -155,6 +155,11 @@ export class AnthropicService extends AiService<
     let systemMessage =
       aiStep.systemRole || DefaultAnthropicConfig.DEFAULT_SYSTEM_ROLE;
 
+    const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
+    if (includeEssay) {
+      systemMessage += `\n\nHere is the users essay: -----------\n\n${docsPlainText}`;
+    }
+
     if (aiStep.responseFormat) {
       systemMessage += `\n\nPlease format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`;
     }
@@ -163,10 +168,6 @@ export class AnthropicService extends AiService<
     }
     if (previousOutput) {
       systemMessage += `\n\nHere is the previous output: ---------- \n\n ${previousOutput}`;
-    }
-    const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
-    if (includeEssay) {
-      systemMessage += `\n\nHere is the users essay: -----------\n\n${docsPlainText}`;
     }
 
     aiStep.prompts.forEach((prompt) => {

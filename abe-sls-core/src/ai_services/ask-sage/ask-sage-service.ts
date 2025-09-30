@@ -174,6 +174,15 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
 
     requestData.system_prompt += '\n';
 
+    const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
+    if (includeEssay) {
+      requestData.system_prompt += JSON.stringify({
+        role: PromptRoles.USER,
+        content: userEssayPromptFormat(docsPlainText),
+      });
+      requestData.system_prompt += '\n';
+    }
+
     if (aiStep.responseFormat) {
       requestData.system_prompt += JSON.stringify({
         role: PromptRoles.USER,
@@ -192,14 +201,6 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
       requestData.system_prompt += JSON.stringify({
         role: PromptRoles.USER,
         content: `Here is the previous output: ---------- \n\n ${previousOutput}`,
-      });
-      requestData.system_prompt += '\n';
-    }
-    const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
-    if (includeEssay) {
-      requestData.system_prompt += JSON.stringify({
-        role: PromptRoles.USER,
-        content: userEssayPromptFormat(docsPlainText),
       });
       requestData.system_prompt += '\n';
     }

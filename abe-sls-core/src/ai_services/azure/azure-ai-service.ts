@@ -165,6 +165,16 @@ export class AzureOpenAiService extends AiService<
       content:
         aiStep.systemRole || DefaultAzureOpenAiConfig.DEFAULT_SYSTEM_ROLE,
     });
+
+    const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
+
+    if (includeEssay) {
+      inputMessages.push({
+        role: PromptRoles.SYSTEM,
+        content: userEssayPromptFormat(docsPlainText),
+      });
+    }
+
     if (aiStep.responseFormat) {
       inputMessages.push({
         role: PromptRoles.SYSTEM,
@@ -183,15 +193,6 @@ export class AzureOpenAiService extends AiService<
       inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: `Here is the previous output: ---------- \n\n ${previousOutput}`,
-      });
-    }
-
-    const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
-
-    if (includeEssay) {
-      inputMessages.push({
-        role: PromptRoles.SYSTEM,
-        content: userEssayPromptFormat(docsPlainText),
       });
     }
 

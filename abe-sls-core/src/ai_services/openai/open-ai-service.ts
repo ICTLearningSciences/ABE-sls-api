@@ -178,6 +178,13 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
       role: PromptRoles.SYSTEM,
       content: aiStep.systemRole || DefaultOpenAiConfig.DEFAULT_SYSTEM_ROLE,
     });
+    const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
+    if (includeEssay) {
+      inputMessages.push({
+        role: PromptRoles.SYSTEM,
+        content: userEssayPromptFormat(docsPlainText),
+      });
+    }
     if (aiStep.responseFormat) {
       inputMessages.push({
         role: PromptRoles.SYSTEM,
@@ -194,13 +201,6 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
       inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: `Here is the previous output: ---------- \n\n ${previousOutput}`,
-      });
-    }
-    const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
-    if (includeEssay) {
-      inputMessages.push({
-        role: PromptRoles.SYSTEM,
-        content: userEssayPromptFormat(docsPlainText),
       });
     }
     aiStep.prompts.forEach((prompt) => {
