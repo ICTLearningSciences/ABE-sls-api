@@ -6,6 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 import { AiService } from '../abstract-classes/abstract-ai-service.js';
 import {
+  AiPromptStep,
   AiRequestContext,
   DefaultGptModels,
   PromptOutputTypes,
@@ -43,6 +44,11 @@ export type AzureOpenAiPromptResponse = AiServiceResponse<
   AzureOpenAiReqType,
   AzureOpenAiResType
 >;
+
+interface Message {
+  role: PromptRoles;
+  content: string;
+}
 
 export const DefaultAzureOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:
@@ -144,6 +150,23 @@ export class AzureOpenAiService extends AiService<
     return res;
   }
 
+  getResponseFormatMessages(aiStep: AiPromptStep): Message[] {
+    const messages: Message[] = [];
+    if (aiStep.responseFormat) {
+      messages.push({
+        role: PromptRoles.USER,
+        content: `Please format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`,
+      });
+    }
+    if (aiStep.outputDataType === PromptOutputTypes.JSON) {
+      messages.push({
+        role: PromptRoles.USER,
+        content: `\n\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA`,
+      });
+    }
+    return messages;
+  }
+
   convertContextDataToServiceParams(
     requestContext: AiRequestContext
   ): AzureOpenAiReqType {
@@ -159,12 +182,14 @@ export class AzureOpenAiService extends AiService<
       max_output_tokens: llmModelInfo.maxTokens,
       store: false,
     };
-    const inputMessages = [];
+    const inputMessages: Message[] = [];
     inputMessages.push({
       role: PromptRoles.SYSTEM,
       content:
         aiStep.systemRole || DefaultAzureOpenAiConfig.DEFAULT_SYSTEM_ROLE,
     });
+
+    inputMessages.push(...this.getResponseFormatMessages(aiStep));
 
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
 
@@ -172,20 +197,6 @@ export class AzureOpenAiService extends AiService<
       inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: userEssayPromptFormat(docsPlainText),
-      });
-    }
-
-    if (aiStep.responseFormat) {
-      inputMessages.push({
-        role: PromptRoles.SYSTEM,
-        content: `Please format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`,
-      });
-    }
-
-    if (aiStep.outputDataType === PromptOutputTypes.JSON) {
-      inputMessages.push({
-        role: PromptRoles.SYSTEM,
-        content: `\n\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA`,
       });
     }
 
@@ -203,6 +214,9 @@ export class AzureOpenAiService extends AiService<
         content: text,
       });
     });
+
+    // re-apply responseFormat for recency bias
+    inputMessages.push(...this.getResponseFormatMessages(aiStep));
 
     // //   TODO: re-enable if web search tool is ever added for Azure OpenAI
     // if (aiStep.webSearch) {

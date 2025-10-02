@@ -14,7 +14,7 @@ import {
   validateJsonResponse,
 } from '../../helpers.js';
 import axios from 'axios';
-import { PromptOutputTypes } from '../../types.js';
+import { AiPromptStep, PromptOutputTypes } from '../../types.js';
 import { AiService } from '../abstract-classes/abstract-ai-service.js';
 import {
   AiRequestContext,
@@ -175,6 +175,23 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
     return response.data;
   }
 
+  getResponseFormatMessages(aiStep: AiPromptStep): Message[] {
+    const messages: Message[] = [];
+    if (aiStep.responseFormat) {
+      messages.push({
+        role: PromptRoles.USER,
+        content: `Please format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`,
+      });
+    }
+    if (aiStep.outputDataType === PromptOutputTypes.JSON) {
+      messages.push({
+        role: PromptRoles.USER,
+        content: `\n\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA`,
+      });
+    }
+    return messages;
+  }
+
   convertContextDataToServiceParams(
     requestContext: AiRequestContext
   ): CamoGptReqType {
@@ -189,6 +206,9 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
       role: PromptRoles.SYSTEM,
       content: aiStep.systemRole || DefaultCamoGptConfig.DEFAULT_SYSTEM_ROLE,
     });
+
+    inputMessages.push(...this.getResponseFormatMessages(aiStep));
+
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
     if (includeEssay) {
       inputMessages.push({
@@ -196,18 +216,7 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
         content: userEssayPromptFormat(docsPlainText),
       });
     }
-    if (aiStep.responseFormat) {
-      inputMessages.push({
-        role: PromptRoles.SYSTEM,
-        content: `Please format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`,
-      });
-    }
-    if (aiStep.outputDataType === PromptOutputTypes.JSON) {
-      inputMessages.push({
-        role: PromptRoles.SYSTEM,
-        content: `\n\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA`,
-      });
-    }
+
     if (previousOutput) {
       inputMessages.push({
         role: PromptRoles.SYSTEM,
@@ -220,6 +229,10 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
         content: prompt.promptText,
       });
     });
+
+    // re-apply responseFormat for recency bias
+    inputMessages.push(...this.getResponseFormatMessages(aiStep));
+
     // TODO: add web search
     // if (aiStep.webSearch) {
     //   newReq.tools = [{ type: 'web_search_preview' }];

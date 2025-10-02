@@ -12,7 +12,7 @@ import {
   validateJsonResponse,
 } from '../../helpers.js';
 import axios from 'axios';
-import { PromptOutputTypes } from '../../types.js';
+import { AiPromptStep, PromptOutputTypes } from '../../types.js';
 import { AiService } from '../abstract-classes/abstract-ai-service.js';
 import {
   AiRequestContext,
@@ -150,6 +150,18 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
     return result;
   }
 
+  getResponseFormatString(aiStep: AiPromptStep): string {
+    let string = '';
+    if (aiStep.responseFormat) {
+      string += `Please format your response in accordance to this guideline: ---------- \n${aiStep.responseFormat}`;
+      string += '\n';
+    }
+    if (aiStep.outputDataType === PromptOutputTypes.JSON) {
+      string += `\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA\n`;
+    }
+    return string;
+  }
+
   convertContextDataToServiceParams(
     requestContext: AiRequestContext
   ): SageReqType {
@@ -174,6 +186,8 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
 
     requestData.system_prompt += '\n';
 
+    requestData.system_prompt += this.getResponseFormatString(aiStep);
+
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
     if (includeEssay) {
       requestData.system_prompt += JSON.stringify({
@@ -183,20 +197,6 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
       requestData.system_prompt += '\n';
     }
 
-    if (aiStep.responseFormat) {
-      requestData.system_prompt += JSON.stringify({
-        role: PromptRoles.USER,
-        content: `Please format your response in accordance to this guideline: ---------- \n\n ${aiStep.responseFormat}`,
-      });
-      requestData.system_prompt += '\n';
-    }
-    if (aiStep.outputDataType === PromptOutputTypes.JSON) {
-      requestData.system_prompt += JSON.stringify({
-        role: PromptRoles.USER,
-        content: `\n\nDO NOT INCLUDE ANY JSON MARKDOWN IN RESPONSE, ONLY JSON DATA`,
-      });
-      requestData.system_prompt += '\n';
-    }
     if (previousOutput) {
       requestData.system_prompt += JSON.stringify({
         role: PromptRoles.USER,
@@ -208,6 +208,9 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
       requestData.message += prompt.promptText;
       requestData.message += '\n';
     });
+
+    // re-apply responseFormat to user message for recency bias
+    requestData.message += this.getResponseFormatString(aiStep);
 
     if (aiStep.webSearch && llmModelInfo.supportsWebSearch) {
       requestData.tools = [{ type: 'web_search_preview' }];
