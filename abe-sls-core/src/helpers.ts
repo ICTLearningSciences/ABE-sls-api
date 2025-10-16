@@ -10,15 +10,15 @@ import { diffWords } from 'diff';
 import { CloudServices } from './cloud_services/generic_classes/types.js';
 
 export function numWordsInString(text: string): number {
-  return text.trim().split(' ').length;
+  return (text || '').trim().split(' ').length;
 }
 
 export function percentageChangeUsingDiffWords(
   text1: string,
   text2: string
 ): number {
-  const cleanedText1 = text1.trim().replace(/\s+/g, ' ');
-  const cleanedText2 = text2.trim().replace(/\s+/g, ' ');
+  const cleanedText1 = (text1 || '').trim().replace(/\s+/g, ' ');
+  const cleanedText2 = (text2 || '').trim().replace(/\s+/g, ' ');
 
   const changes = diffWords(cleanedText1, cleanedText2);
   let totalChanges = 0;
@@ -38,8 +38,8 @@ export function numberChangesUsingDiffWords(
   text1: string,
   text2: string
 ): number {
-  const cleanedText1 = text1.trim().replace(/\s+/g, ' ');
-  const cleanedText2 = text2.trim().replace(/\s+/g, ' ');
+  const cleanedText1 = (text1 || '').trim().replace(/\s+/g, ' ');
+  const cleanedText2 = (text2 || '').trim().replace(/\s+/g, ' ');
 
   const changes = diffWords(cleanedText1, cleanedText2);
   let totalChanges = 0;
@@ -157,14 +157,14 @@ export function isJsonMarkdown(jsonMarkdown: string): boolean {
 }
 
 export function convertMarkdownToJsonString(jsonMarkdown: string): string {
-  const trimmedMarkdown = jsonMarkdown.trim();
+  const trimmedMarkdown = (jsonMarkdown || '').trim();
   const withoutStart = trimmedMarkdown.startsWith('```json\n')
     ? trimmedMarkdown.slice(7) // Length of "```json\n"
     : trimmedMarkdown;
   const withoutEnd = withoutStart.endsWith('```')
     ? withoutStart.slice(0, -3) // Length of "```"
     : withoutStart;
-  return withoutEnd.trim();
+  return (withoutEnd || '').trim();
 }
 
 export function isProperJson(str: string, jsonSchema?: Schema): boolean {
