@@ -101,12 +101,13 @@ export async function storePromptRun(
 }
 
 export async function fetchGoogleDocVersion(
-  docId: string
+  docId: string,
+  timelinePointsOnly: boolean = false
 ): Promise<IGDocVersion[]> {
   return await execGql<IGDocVersion[]>(
     {
-      query: `query FetchGoogleDocVersions($googleDocId: String!) {
-        fetchGoogleDocVersions(googleDocId: $googleDocId) {
+      query: `query FetchGoogleDocVersions($googleDocId: String!, $timelinePointsOnly: Boolean!) {
+        fetchGoogleDocVersions(googleDocId: $googleDocId, timelinePointsOnly: $timelinePointsOnly) {
           _id
           docId
           markdownText
@@ -140,6 +141,7 @@ export async function fetchGoogleDocVersion(
     }`,
       variables: {
         googleDocId: docId,
+        timelinePointsOnly: timelinePointsOnly,
       },
     },
     {

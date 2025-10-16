@@ -383,7 +383,7 @@ export class DocumentTimelineGenerator {
     docService: DocService<any>
   ): Promise<GQLDocumentTimeline> {
     const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
-    const docVersions = await fetchGoogleDocVersion(docId);
+    const docVersions = await fetchGoogleDocVersion(docId, true);
     const docTimelineSlices = await createSlices(
       docVersions,
       externalDocVersions,
