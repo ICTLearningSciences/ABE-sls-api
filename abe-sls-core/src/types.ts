@@ -80,6 +80,7 @@ export interface AiPromptStep {
   responseFormat?: string;
   webSearch?: boolean;
   editDoc?: boolean;
+  streaming?: boolean;
 }
 
 export type AiRequestContextPrompt = Omit<PromptConfiguration, 'includeEssay'>;
@@ -88,6 +89,7 @@ export interface AiRequestContext {
   aiStep: AiPromptStep;
   docsPlainText: string;
   previousOutput: string;
+  onProgress?: (partialAnswer: string) => Promise<void>;
 }
 
 export enum PromptOutputTypes {

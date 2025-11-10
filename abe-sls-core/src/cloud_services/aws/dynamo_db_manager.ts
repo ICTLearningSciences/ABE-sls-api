@@ -84,6 +84,30 @@ export class DynamoDBManager extends DocumentDBManager {
     };
   }
 
+  async stepsProcessProgress(
+    jobId: string,
+    partialAnswer: string
+  ): Promise<void> {
+    const tableRequest: UpdateItemCommandInput = {
+      TableName: this.jobsTableName,
+      Key: {
+        id: {
+          S: jobId,
+        },
+      },
+      UpdateExpression: 'set answer = :answer, job_status = :job_status',
+      ExpressionAttributeValues: {
+        ':answer': {
+          S: partialAnswer,
+        },
+        ':job_status': {
+          S: AiAsyncJobStatus.IN_PROGRESS,
+        },
+      },
+    };
+    await this.dynamoDbClient.updateItem(tableRequest);
+  }
+
   async stepsProcessFinished(
     jobId: string,
     aiServiceResponse: AiServiceFinalResponseType
@@ -181,6 +205,30 @@ export class DynamoDBManager extends DocumentDBManager {
       jobStatus: jobStatus as AiAsyncJobStatus,
       apiError,
     };
+  }
+
+  async genericProcessProgress(
+    jobId: string,
+    partialAnswer: string
+  ): Promise<void> {
+    const tableRequest: UpdateItemCommandInput = {
+      TableName: this.jobsTableName,
+      Key: {
+        id: {
+          S: jobId,
+        },
+      },
+      UpdateExpression: 'set answer = :answer, job_status = :job_status',
+      ExpressionAttributeValues: {
+        ':answer': {
+          S: partialAnswer,
+        },
+        ':job_status': {
+          S: AiAsyncJobStatus.IN_PROGRESS,
+        },
+      },
+    };
+    await this.dynamoDbClient.updateItem(tableRequest);
   }
 
   async genericProcessFinished(

@@ -77,6 +77,10 @@ export abstract class DocumentDBManager {
     openAiRequestData: ExtractedOpenAiRequestData
   ): Promise<void>;
   abstract stepsStatusRequest(jobId: string): Promise<StepStatusRes>;
+  abstract stepsProcessProgress(
+    jobId: string,
+    partialAnswer: string
+  ): Promise<void>;
   abstract stepsProcessFinished(
     jobId: string,
     aiServiceResponse: AiServiceFinalResponseType
@@ -88,6 +92,10 @@ export abstract class DocumentDBManager {
     llmRequest: GenericLlmRequest
   ): Promise<void>;
   abstract genericStatusRequest(jobId: string): Promise<GenericStatusRes>;
+  abstract genericProcessProgress(
+    jobId: string,
+    partialAnswer: string
+  ): Promise<void>;
   abstract genericProcessFinished(
     jobId: string,
     aiServiceResponse: AiServiceFinalResponseType

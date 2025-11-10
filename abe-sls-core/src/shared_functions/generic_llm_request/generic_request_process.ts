@@ -23,9 +23,16 @@ export const genericRequestProcess = async (
     const aiModelConfigs = AiModelConfigs.getInstance();
     await aiModelConfigs.initialize();
     const llmModelConfigs = aiModelConfigs.getAllConfigs();
+
+    // Create progress callback for streaming updates
+    const onProgress = async (partialAnswer: string) => {
+      await documentDBManager.genericProcessProgress(jobId, partialAnswer);
+    };
+
     const aiServiceResponse = await aiServiceHandler.executeGenericLlmRequest(
       llmRequest,
-      llmModelConfigs
+      llmModelConfigs,
+      onProgress
     );
     await documentDBManager.genericProcessFinished(jobId, aiServiceResponse);
   } catch (err) {

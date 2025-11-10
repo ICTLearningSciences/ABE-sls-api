@@ -89,6 +89,19 @@ export class CosmosDBManager extends DocumentDBManager {
     };
   }
 
+  async stepsProcessProgress(
+    jobId: string,
+    partialAnswer: string
+  ): Promise<void> {
+    await this.aiStepContainer
+      .item(jobId, jobId)
+      .replace<DocumentDBStepsRequestItem>({
+        id: jobId,
+        job_status: AiAsyncJobStatus.IN_PROGRESS,
+        answer: partialAnswer,
+      });
+  }
+
   async stepsProcessFinished(
     jobId: string,
     aiServiceResponse: AiServiceFinalResponseType
@@ -148,6 +161,19 @@ export class CosmosDBManager extends DocumentDBManager {
       answer: answer || '',
       apiError: apiError || '',
     };
+  }
+
+  async genericProcessProgress(
+    jobId: string,
+    partialAnswer: string
+  ): Promise<void> {
+    await this.genericRequestContainer
+      .item(jobId, jobId)
+      .replace<DocumentDBGenericRequestItem>({
+        id: jobId,
+        job_status: AiAsyncJobStatus.IN_PROGRESS,
+        answer: partialAnswer,
+      });
   }
 
   async genericProcessFinished(

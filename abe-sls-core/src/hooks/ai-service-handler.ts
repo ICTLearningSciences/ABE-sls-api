@@ -36,7 +36,8 @@ export class AiServiceHandler {
     userId: string,
     authHeaders: AuthHeaders,
     targetDocService: DocServices,
-    llmModelConfigs: AiServiceModelConfigs[]
+    llmModelConfigs: AiServiceModelConfigs[],
+    onProgress?: (partialAnswer: string) => Promise<void>
   ): Promise<AiServiceFinalResponseType> {
     if (aiSteps.length >= MAX_OPEN_AI_CHAIN_REQUESTS) {
       throw new Error(
@@ -66,6 +67,7 @@ export class AiServiceHandler {
         aiStep: curAiStep,
         docsPlainText,
         previousOutput,
+        onProgress,
       });
       let { aiStepData, answer } = res;
       allStepsData.push(aiStepData);
@@ -94,7 +96,8 @@ export class AiServiceHandler {
 
   async executeGenericLlmRequest(
     llmRequest: GenericLlmRequest,
-    llmModelConfigs: AiServiceModelConfigs[]
+    llmModelConfigs: AiServiceModelConfigs[],
+    onProgress?: (partialAnswer: string) => Promise<void>
   ): Promise<AiServiceFinalResponseType> {
     if (
       !Object.values(AvailableAiServiceNames).includes(
@@ -116,6 +119,7 @@ export class AiServiceHandler {
       responseSchema: llmRequest.responseSchema,
       responseFormat: llmRequest.responseFormat,
       systemRole: llmRequest.systemRole,
+      streaming: llmRequest.streaming,
     };
     const allStepsData: AiServiceStepDataTypes[] = [];
     const aiService = AiServiceFactory.getAiService(
@@ -126,6 +130,7 @@ export class AiServiceHandler {
       aiStep: curAiStep,
       docsPlainText: '',
       previousOutput: '',
+      onProgress,
     });
     const { aiStepData, answer } = res;
     allStepsData.push(aiStepData);

@@ -22,7 +22,11 @@ import {
   userEssayPromptFormat,
   validateJsonResponse,
 } from '../../helpers.js';
-import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
+import {
+  AI_DEFAULT_TEMP,
+  RETRY_ATTEMPTS,
+  UPDATE_DYNAMO_ANSWER_THRESHOLD,
+} from '../../constants.js';
 import {
   AiStepData,
   AiServiceResponse,
@@ -31,6 +35,7 @@ import {
 import {
   ResponseCreateParamsNonStreaming,
   Response,
+  ResponseCreateParamsStreaming,
 } from 'openai/resources/responses/responses.js';
 import { AiModelConfigs } from '../../hooks/ai-model-configs.js';
 import { AiServiceModelConfigs } from '../../gql_types.js';
@@ -46,7 +51,7 @@ interface InputMessageType {
   content: string;
 }
 
-export type OpenAiReqType = ResponseCreateParamsNonStreaming;
+export type OpenAiReqType = ResponseCreateParamsNonStreaming | ResponseCreateParamsStreaming;
 export type OpenAiResType = Response;
 
 export type OpenAiStepDataType = AiStepData<OpenAiReqType, OpenAiResType>;
@@ -128,12 +133,12 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     return [result, answer || ''];
   }
 
-  async executeOpenAi(params: OpenAiReqType) {
+  async executeOpenAi(params: OpenAiReqType): Promise<OpenAiResType> {
     let id = uuid();
     console.log(
       `Executing OpenAI request ${id} starting at ${new Date().toISOString()}`
     );
-    const result = await this.aiServiceClient.responses.create(params);
+    const result = await this.aiServiceClient.responses.create(params as ResponseCreateParamsNonStreaming);
     const answer = result.output_text;
     if (!answer) {
       throw new Error('OpenAI API Error: No response message content.');
@@ -142,6 +147,84 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
       `Executing OpenAI request ${id} ending at ${new Date().toISOString()}`
     );
     return result;
+  }
+
+  async executeOpenAiStreaming(
+    params: OpenAiReqType,
+    onProgress?: (partialAnswer: string) => Promise<void>
+  ): Promise<OpenAiResType> {
+    let id = uuid();
+    console.log(
+      `Executing OpenAI streaming request ${id} starting at ${new Date().toISOString()}`
+    );
+
+    const streamParams = {
+      ...params,
+      stream: true,
+    };
+
+    const stream =
+      await this.aiServiceClient.responses.create(streamParams as ResponseCreateParamsStreaming);
+
+    let accumulatedText = '';
+    let lastUpdateLength = 0;
+
+    for await (const event of stream) {
+      // - `response.created`
+      // - `response.output_text.delta`
+      // - `response.completed`
+      // - `error`
+
+      if (event.type === 'response.created') {
+        console.log('response.created', event);
+        continue;
+      }
+
+      if (event.type === 'response.output_text.delta') {
+        console.log('response.output_text.delta', event);
+        accumulatedText += event.delta;
+
+        // Update progress every UPDATE_DYNAMO_ANSWER_THRESHOLD characters
+        if (
+          onProgress &&
+          accumulatedText.length - lastUpdateLength >=
+            UPDATE_DYNAMO_ANSWER_THRESHOLD
+        ) {
+          await onProgress(accumulatedText);
+          lastUpdateLength = accumulatedText.length;
+        }
+      }
+
+      if (event.type === 'response.completed') {
+        console.log('response.completed', event);
+        if (onProgress) {
+          await onProgress(accumulatedText);
+        }
+        break;
+      }
+
+      if (event.type === 'error') {
+        throw new Error(`OpenAI API Error: ${event.message}`);
+      }
+    }
+
+    console.log(
+      `Executing OpenAI streaming request ${id} ending at ${new Date().toISOString()}`
+    );
+
+    // Return a response object that matches the non-streaming format
+    // We need to construct this from the final accumulated text
+    const finalResponse: OpenAiResType = {
+      id: id,
+      output_text: accumulatedText,
+      usage: {
+        input_tokens: -1, // Not available in streaming mode
+        output_tokens: -1, // Not available in streaming mode
+        total_tokens: -1, // Not available in streaming mode
+      },
+    } as OpenAiResType;
+
+    return finalResponse;
   }
 
   applyWebSearchTool(req: OpenAiReqType) {
@@ -231,9 +314,61 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
 
   async completeChat(context: AiRequestContext): Promise<OpenAiPromptResponse> {
     const params = this.convertContextDataToServiceParams(context);
+    const isJsonOutput = context.aiStep.outputDataType == PromptOutputTypes.JSON;
+    const isStreamingEnabled = context.aiStep.streaming || false;
+
+    // Check if both streaming and JSON output are requested
+    if (isStreamingEnabled && isJsonOutput) {
+      console.error(
+        'Streaming is not supported with JSON output. Falling back to non-streaming mode.'
+      );
+      const [chatCompleteResponse, answer] =
+        await this.executeAiUntilProperData(
+          params,
+          isJsonOutput,
+          context.aiStep.responseSchema
+        );
+
+      return {
+        aiStepData: {
+          aiServiceRequestParams: params,
+          aiServiceResponse: chatCompleteResponse,
+          tokenUsage: {
+            promptUsage: chatCompleteResponse.usage?.input_tokens || -1,
+            completionUsage: chatCompleteResponse.usage?.output_tokens || -1,
+            totalUsage: chatCompleteResponse.usage?.total_tokens || -1,
+          },
+        },
+        answer: answer,
+      };
+    }
+
+    // Use streaming if enabled
+    if (isStreamingEnabled) {
+      const chatCompleteResponse = await this.executeOpenAiStreaming(
+        params,
+        context.onProgress
+      );
+      const answer = chatCompleteResponse.output_text || '';
+
+      return {
+        aiStepData: {
+          aiServiceRequestParams: params,
+          aiServiceResponse: chatCompleteResponse,
+          tokenUsage: {
+            promptUsage: chatCompleteResponse.usage?.input_tokens || -1,
+            completionUsage: chatCompleteResponse.usage?.output_tokens || -1,
+            totalUsage: chatCompleteResponse.usage?.total_tokens || -1,
+          },
+        },
+        answer: answer,
+      };
+    }
+
+    // Default non-streaming behavior
     const [chatCompleteResponse, answer] = await this.executeAiUntilProperData(
       params,
-      context.aiStep.outputDataType == PromptOutputTypes.JSON,
+      isJsonOutput,
       context.aiStep.responseSchema
     );
 

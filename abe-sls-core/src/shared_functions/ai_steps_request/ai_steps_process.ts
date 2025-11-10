@@ -25,13 +25,20 @@ export const aiStepsProcess = async (
     await aiModelConfigs.initialize();
     const llmModelConfigs = aiModelConfigs.getAllConfigs();
     await documentDBManager.setStepsJobInProgress(jobId);
+
+    // Create progress callback for streaming updates
+    const onProgress = async (partialAnswer: string) => {
+      await documentDBManager.stepsProcessProgress(jobId, partialAnswer);
+    };
+
     const aiServiceResponse = await aiServiceHandler.executeAiSteps(
       aiPromptSteps,
       docsId,
       userId,
       authHeaders,
       docService,
-      llmModelConfigs
+      llmModelConfigs,
+      onProgress
     );
     await documentDBManager.stepsProcessFinished(jobId, aiServiceResponse);
   } catch (err) {

@@ -23,6 +23,7 @@ export interface GenericLlmRequest {
   systemRole?: string;
   responseSchema?: Schema;
   responseFormat?: string;
+  streaming?: boolean;
 }
 
 export interface GenericLlmRequestData {
