@@ -8,6 +8,7 @@ import * as https from 'https';
 import dotenv from 'dotenv';
 import {
   convertMarkdownToJsonString,
+  convertRagDataToPrompt,
   isJsonMarkdown,
   isJsonString,
   userEssayPromptFormat,
@@ -214,6 +215,13 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
       inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: userEssayPromptFormat(docsPlainText),
+      });
+    }
+
+    if (requestContext.ragData && requestContext.ragData.length > 0) {
+      inputMessages.push({
+        role: PromptRoles.SYSTEM,
+        content: convertRagDataToPrompt(requestContext.ragData),
       });
     }
 

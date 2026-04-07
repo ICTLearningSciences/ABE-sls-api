@@ -4,6 +4,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
+import { RagSearchResult } from 'cloud_services/generic_classes/rag/rag_fetch';
 import { Schema } from 'jsonschema';
 
 export interface DocData {
@@ -75,6 +76,7 @@ export interface AiPromptStep {
   prompts: PromptConfiguration[];
   targetAiServiceModel: TargetAiModelServiceType;
   systemRole?: string;
+  ragConfiguration?: RagStoreConfiguration;
   outputDataType: PromptOutputTypes;
   responseSchema?: Schema;
   responseFormat?: string;
@@ -88,6 +90,7 @@ export interface AiRequestContext {
   aiStep: AiPromptStep;
   docsPlainText: string;
   previousOutput: string;
+  ragData?: RagSearchResult[];
 }
 
 export enum PromptOutputTypes {
@@ -110,4 +113,14 @@ export enum DocServices {
   GOOGLE_DOCS = 'GOOGLE_DOCS',
   MICROSOFT_WORD = 'MICROSOFT_WORD',
   RAW_TEXT = 'RAW_TEXT',
+}
+
+export enum RagStore {
+  AZURE_RAG = 'AZURE_RAG',
+  AWS_RAG = 'AWS_RAG',
+}
+
+export interface RagStoreConfiguration {
+  ragQuery: string;
+  topN: number;
 }

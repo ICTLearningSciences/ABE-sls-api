@@ -69,6 +69,11 @@ custom:
       SECRET_HEADER_NAME: ${ssm:/abewriting-abe/secret_header_name, ''}
       SECRET_HEADER_VALUE: ${ssm:/abewriting-abe/secret_header_value, ''}
       JWT_SECRET: ${ssm:/ABE/dev/jwt_secret, ''}
+      VECTOR_SEARCH_ENDPOINT: ${ssm:/ABE/azure/dev/vector-search-endpoint, ''}
+      VECTOR_SEARCH_INDEX_NAME: ${ssm:/ABE/azure/dev/vector-search-index, ''}
+      VECTOR_SEARCH_API_KEY: ${ssm:/ABE/azure/dev/vector-search-api-key, ''}
+      SEMANTIC_CONFIGURATION_NAME: ${ssm:/ABE/azure/dev/semantic-configuration-name, ''}
+      EMBEDDING_MODEL: ${ssm:/ABE/azure/dev/embedding-model, ''}
     qa:
       ADMIN_EMAILS: ${ssm:/ABE/admin_emails, ''}
       OPENAI_API_KEY: ${ssm:/ABE/openai_api_key, ''}
@@ -81,6 +86,11 @@ custom:
       JWT_SECRET: ${ssm:/ABE/qa/jwt_secret, ''}
       GOOGLE_SERVICE_CREDS: ${ssm:/ABE/google_service_account_creds, ''}
       GOOGLE_DRIVE_FOLDER_ID: ${ssm:/ABE/qa/google_drive_folder_id, ''}
+      VECTOR_SEARCH_ENDPOINT: ${ssm:/ABE/azure/qa/vector-search-endpoint, ''}
+      VECTOR_SEARCH_INDEX_NAME: ${ssm:/ABE/azure/qa/vector-search-index, ''}
+      VECTOR_SEARCH_API_KEY: ${ssm:/ABE/azure/qa/vector-search-api-key, ''}
+      SEMANTIC_CONFIGURATION_NAME: ${ssm:/ABE/azure/qa/semantic-configuration-name, ''}
+      EMBEDDING_MODEL: ${ssm:/ABE/azure/qa/embedding-model, ''}
     prod:
       ADMIN_EMAILS: ${ssm:/ABE/admin_emails, ''}
       OPENAI_API_KEY: ${ssm:/ABE/openai_api_key, ''}
@@ -93,7 +103,11 @@ custom:
       JWT_SECRET: ${ssm:/ABE/prod/jwt_secret, ''}
       GOOGLE_SERVICE_CREDS: ${ssm:/ABE/google_service_account_creds, ''}
       GOOGLE_DRIVE_FOLDER_ID: ${ssm:/ABE/prod/google_drive_folder_id, ''}
-
+      VECTOR_SEARCH_ENDPOINT: ${ssm:/ABE/azure/prod/vector-search-endpoint, ''}
+      VECTOR_SEARCH_INDEX_NAME: ${ssm:/ABE/azure/prod/vector-search-index, ''}
+      VECTOR_SEARCH_API_KEY: ${ssm:/ABE/azure/prod/vector-search-api-key, ''}
+      SEMANTIC_CONFIGURATION_NAME: ${ssm:/ABE/azure/prod/semantic-configuration-name, ''}
+      EMBEDDING_MODEL: ${ssm:/ABE/azure/prod/embedding-model, ''}
   serverlessPluginTypescript:
     tsConfigFileLocation: './tsconfig.json'
 
@@ -118,6 +132,11 @@ provider:
     OPENAI_API_KEY: ${self:custom.stages.${self:provider.stage}.OPENAI_API_KEY}
     AZURE_OPENAI_ENDPOINT: ${ssm:/ABE/azure_api_endpoint, ''}
     AZURE_OPENAI_API_KEY: ${ssm:/ABE/azure_api_key, ''}
+    VECTOR_SEARCH_ENDPOINT: ${self:custom.stages.${self:provider.stage}.VECTOR_SEARCH_ENDPOINT}
+    VECTOR_SEARCH_INDEX_NAME: ${self:custom.stages.${self:provider.stage}.VECTOR_SEARCH_INDEX_NAME}
+    VECTOR_SEARCH_API_KEY: ${self:custom.stages.${self:provider.stage}.VECTOR_SEARCH_API_KEY}
+    SEMANTIC_CONFIGURATION_NAME: ${self:custom.stages.${self:provider.stage}.SEMANTIC_CONFIGURATION_NAME}
+    EMBEDDING_MODEL: ${self:custom.stages.${self:provider.stage}.EMBEDDING_MODEL}
     GEMINI_API_KEY: ${ssm:/ABE/gemini_api_key, ''}
     ANTHROPIC_API_KEY: ${self:custom.stages.${self:provider.stage}.ANTHROPIC_API_KEY}
     GOOGLE_API_ENDPOINT: ${self:custom.stages.${self:provider.stage}.GOOGLE_API_ENDPOINT}
