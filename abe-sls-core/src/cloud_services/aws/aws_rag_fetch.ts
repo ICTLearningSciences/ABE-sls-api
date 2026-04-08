@@ -29,8 +29,9 @@ export class AwsRagFetch extends RagFetch {
 
   async queryRagStore(
     queryString: string,
-    topN: number
+    topN: number,
+    filters: Record<string, string | string[]>
   ): Promise<RagSearchResult[]> {
-    return this.azureRagFetch.queryRagStore(queryString, topN);
+    return this.azureRagFetch.queryRagStore(queryString, topN, filters);
   }
 }

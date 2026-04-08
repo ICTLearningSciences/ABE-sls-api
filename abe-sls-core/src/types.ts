@@ -123,4 +123,5 @@ export enum RagStore {
 export interface RagStoreConfiguration {
   ragQuery: string;
   topN: number;
+  filters?: Record<string, string | string[]>;
 }

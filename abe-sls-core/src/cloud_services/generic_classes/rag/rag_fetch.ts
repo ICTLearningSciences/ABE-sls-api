@@ -15,6 +15,7 @@ export abstract class RagFetch {
 
   abstract queryRagStore(
     queryString: string,
-    topN: number
+    topN: number,
+    filters: Record<string, string | string[]>
   ): Promise<RagSearchResult[]>;
 }

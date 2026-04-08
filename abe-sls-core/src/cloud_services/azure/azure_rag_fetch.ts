@@ -21,6 +21,7 @@ import {
 import { RagFetch, RagSearchResult } from '../generic_classes/rag/rag_fetch.js';
 import { CloudServices } from '../generic_classes/types.js';
 import requireEnv from '../../helpers.js';
+import { buildFilter } from './helpers.js';
 
 export class AzureRagFetch extends RagFetch {
   cloudService: CloudServices = CloudServices.AZURE;
@@ -54,13 +55,16 @@ export class AzureRagFetch extends RagFetch {
 
   async queryRagStore(
     queryString: string,
-    topN: number
+    topN: number,
+    filters: Record<string, string | string[]>
   ): Promise<RagSearchResult[]> {
     // Generate embedding for the query
     const embedding = await this.openai.embeddings.create({
       model: this.embeddingModel,
       input: queryString,
     });
+
+    const filter = buildFilter(filters);
 
     // Create vector query
     const vectorQuery: VectorQuery<any> = {
@@ -76,6 +80,7 @@ export class AzureRagFetch extends RagFetch {
       top: topN,
       select: ['title', 'chunk'] as const,
       includeTotalCount: true,
+      ...(filter && { filter }),
       queryType: 'semantic' as const,
       semanticSearchOptions: {
         configurationName: this.semanticConfigurationName,

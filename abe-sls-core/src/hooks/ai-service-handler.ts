@@ -68,7 +68,8 @@ export class AiServiceHandler {
       if (curAiStep.ragConfiguration) {
         ragData = await ragService.queryRagStore(
           curAiStep.ragConfiguration.ragQuery,
-          curAiStep.ragConfiguration.topN
+          curAiStep.ragConfiguration.topN,
+          curAiStep.ragConfiguration.filters || {}
         );
       }
 
