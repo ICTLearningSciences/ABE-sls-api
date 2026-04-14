@@ -132,6 +132,7 @@ provider:
     OPENAI_API_KEY: ${self:custom.stages.${self:provider.stage}.OPENAI_API_KEY}
     AZURE_OPENAI_ENDPOINT: ${ssm:/ABE/azure_api_endpoint, ''}
     AZURE_OPENAI_API_KEY: ${ssm:/ABE/azure_api_key, ''}
+    AWS_KNOWLEDGE_BASE_ID: ${ssm:/ABE/aws/knowledge-base-id, ''}
     VECTOR_SEARCH_ENDPOINT: ${self:custom.stages.${self:provider.stage}.VECTOR_SEARCH_ENDPOINT}
     VECTOR_SEARCH_INDEX_NAME: ${self:custom.stages.${self:provider.stage}.VECTOR_SEARCH_INDEX_NAME}
     VECTOR_SEARCH_API_KEY: ${self:custom.stages.${self:provider.stage}.VECTOR_SEARCH_API_KEY}
@@ -182,6 +183,11 @@ provider:
           Action:
             - secretsmanager:GetSecretValue
           Resource: "arn:aws:secretsmanager:${aws:region}:${aws:accountId}:secret:*"
+        - Effect: "Allow"
+          Action:
+            - bedrock:Retrieve
+            - bedrock:RetrieveAndGenerate
+          Resource: "arn:aws:bedrock:${aws:region}:${aws:accountId}:knowledge-base/*"
 
 functions:
   authorizer_func:

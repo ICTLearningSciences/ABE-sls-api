@@ -10,21 +10,32 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
+import {
+  BedrockAgentRuntimeClient,
+  RetrieveCommand,
+  RetrieveCommandInput,
+} from '@aws-sdk/client-bedrock-agent-runtime';
 import { RagFetch, RagSearchResult } from '../generic_classes/rag/rag_fetch.js';
 import { CloudServices } from '../generic_classes/types.js';
-import { AzureRagFetch } from '../azure/azure_rag_fetch.js';
+import requireEnv from '../../helpers.js';
+import { buildFilter } from './helpers.js';
 
 /**
- * AWS RAG implementation currently delegates to Azure implementation.
- * TODO: Implement native AWS RAG solutionn
+ * AWS RAG implementation using Amazon Bedrock Knowledge Bases.
  */
 export class AwsRagFetch extends RagFetch {
   cloudService: CloudServices = CloudServices.AWS;
-  private azureRagFetch: AzureRagFetch;
+
+  private knowledgeBaseId = requireEnv('AWS_KNOWLEDGE_BASE_ID');
+  private region = 'us-east-1';
+
+  private bedrockClient: BedrockAgentRuntimeClient;
 
   constructor() {
     super();
-    this.azureRagFetch = new AzureRagFetch();
+    this.bedrockClient = new BedrockAgentRuntimeClient({
+      region: this.region,
+    });
   }
 
   async queryRagStore(
@@ -32,6 +43,46 @@ export class AwsRagFetch extends RagFetch {
     topN: number,
     filters: Record<string, string | string[]>
   ): Promise<RagSearchResult[]> {
-    return this.azureRagFetch.queryRagStore(queryString, topN, filters);
+    const filter = buildFilter(filters);
+
+    const input: RetrieveCommandInput = {
+      knowledgeBaseId: this.knowledgeBaseId,
+      retrievalQuery: {
+        text: queryString,
+      },
+      retrievalConfiguration: {
+        vectorSearchConfiguration: {
+          numberOfResults: topN,
+          ...(filter && { filter }),
+        },
+      },
+    };
+
+    const command = new RetrieveCommand(input);
+    const response = await this.bedrockClient.send(command);
+
+    const ragResults: RagSearchResult[] = [];
+
+    if (response.retrievalResults) {
+      for (const result of response.retrievalResults) {
+        const titleMetadata = result.metadata?.['title'];
+        const title =
+          typeof titleMetadata === 'string'
+            ? titleMetadata
+            : result.location?.s3Location?.uri || 'Untitled';
+
+        const chunk = result.content?.text || '';
+
+        const score = result.score || 0;
+
+        ragResults.push({
+          title,
+          chunk,
+          score,
+        });
+      }
+    }
+
+    return ragResults;
   }
 }
