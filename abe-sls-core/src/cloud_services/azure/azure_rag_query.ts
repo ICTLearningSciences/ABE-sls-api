@@ -18,12 +18,12 @@ import {
   VectorQuery,
   AzureKeyCredential,
 } from '@azure/search-documents';
-import { RagFetch, RagSearchResult } from '../generic_classes/rag/rag_fetch.js';
+import { RagQuery, RagSearchResult } from '../generic_classes/rag/rag_query.js';
 import { CloudServices } from '../generic_classes/types.js';
 import requireEnv from '../../helpers.js';
 import { buildFilter } from './helpers.js';
 
-export class AzureRagFetch extends RagFetch {
+export class AzureRagQuery extends RagQuery {
   cloudService: CloudServices = CloudServices.AZURE;
 
   private azureOpenAiEndpoint = requireEnv('AZURE_OPENAI_ENDPOINT');
@@ -56,7 +56,7 @@ export class AzureRagFetch extends RagFetch {
   async queryRagStore(
     queryString: string,
     topN: number,
-    filters: Record<string, string | string[]>
+    metadataFilters: Record<string, string | string[]>
   ): Promise<RagSearchResult[]> {
     // Generate embedding for the query
     const embedding = await this.openai.embeddings.create({
@@ -64,7 +64,7 @@ export class AzureRagFetch extends RagFetch {
       input: queryString,
     });
 
-    const filter = buildFilter(filters);
+    const filter = buildFilter(metadataFilters);
 
     // Create vector query
     const vectorQuery: VectorQuery<any> = {

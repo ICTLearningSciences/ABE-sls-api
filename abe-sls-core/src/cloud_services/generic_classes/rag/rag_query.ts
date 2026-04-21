@@ -9,13 +9,13 @@ export interface RagSearchResult {
 /**
  * Handles querying RAG stores.
  */
-export abstract class RagFetch {
+export abstract class RagQuery {
   private static instance: any = null;
   abstract cloudService: CloudServices;
 
   abstract queryRagStore(
     queryString: string,
     topN: number,
-    filters: Record<string, string | string[]>
+    metadataFilters: Record<string, string | string[]>
   ): Promise<RagSearchResult[]>;
 }

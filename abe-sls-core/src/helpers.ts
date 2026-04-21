@@ -8,7 +8,7 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import Validator, { Schema } from 'jsonschema';
 import { diffWords } from 'diff';
 import { CloudServices } from './cloud_services/generic_classes/types.js';
-import { RagSearchResult } from './cloud_services/generic_classes/rag/rag_fetch.js';
+import { RagSearchResult } from './cloud_services/generic_classes/rag/rag_query.js';
 
 export function numWordsInString(text: string): number {
   return (text || '').trim().split(' ').length;

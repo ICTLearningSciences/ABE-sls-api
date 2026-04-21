@@ -15,7 +15,7 @@ import {
   RetrieveCommand,
   RetrieveCommandInput,
 } from '@aws-sdk/client-bedrock-agent-runtime';
-import { RagFetch, RagSearchResult } from '../generic_classes/rag/rag_fetch.js';
+import { RagQuery, RagSearchResult } from '../generic_classes/rag/rag_query.js';
 import { CloudServices } from '../generic_classes/types.js';
 import requireEnv from '../../helpers.js';
 import { buildFilter } from './helpers.js';
@@ -23,7 +23,7 @@ import { buildFilter } from './helpers.js';
 /**
  * AWS RAG implementation using Amazon Bedrock Knowledge Bases.
  */
-export class AwsRagFetch extends RagFetch {
+export class AwsRagQuery extends RagQuery {
   cloudService: CloudServices = CloudServices.AWS;
 
   private knowledgeBaseId = requireEnv('AWS_KNOWLEDGE_BASE_ID');
@@ -41,9 +41,9 @@ export class AwsRagFetch extends RagFetch {
   async queryRagStore(
     queryString: string,
     topN: number,
-    filters: Record<string, string | string[]>
+    metadataFilters: Record<string, string | string[]>
   ): Promise<RagSearchResult[]> {
-    const filter = buildFilter(filters);
+    const filter = buildFilter(metadataFilters);
 
     const input: RetrieveCommandInput = {
       knowledgeBaseId: this.knowledgeBaseId,

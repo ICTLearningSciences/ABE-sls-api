@@ -25,7 +25,7 @@ import {
 import {
   RagFetch,
   RagSearchResult,
-} from '../cloud_services/generic_classes/rag/rag_fetch.js';
+} from '../cloud_services/generic_classes/rag/rag_query.js';
 
 export class AiServiceHandler {
   constructor() {}

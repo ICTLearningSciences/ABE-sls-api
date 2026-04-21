@@ -1,25 +1,25 @@
-import { RagFetch } from './rag_fetch.js';
+import { RagQuery } from './rag_query.js';
 import { CloudServices } from '../types.js';
 import { getCloudService } from '../../../helpers.js';
-import { AzureRagFetch } from '../../azure/azure_rag_fetch.js';
-import { AwsRagFetch } from '../../aws/aws_rag_fetch.js';
+import { AzureRagQuery } from '../../azure/azure_rag_query.js';
+import { AwsRagQuery } from '../../aws/aws_rag_query.js';
 
 export class RagFetchFactory {
-  private static ragFetch: RagFetch;
+  private static ragQuery: RagQuery;
 
   static getRagFetchInstance() {
-    if (!this.ragFetch) {
-      this.ragFetch = this.getRagFetch(getCloudService());
+    if (!this.ragQuery) {
+      this.ragQuery = this.getRagFetch(getCloudService());
     }
-    return this.ragFetch;
+    return this.ragQuery;
   }
 
   static getRagFetch(cloudService: CloudServices) {
     switch (cloudService) {
       case CloudServices.AWS:
-        return new AwsRagFetch();
+        return new AwsRagQuery();
       case CloudServices.AZURE:
-        return new AzureRagFetch();
+        return new AzureRagQuery();
       default:
         throw new Error('Cloud service not supported for RAG fetch');
     }
