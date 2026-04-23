@@ -11,6 +11,7 @@ import { AiServiceHandler } from '../../hooks/ai-service-handler.js';
 import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
 import { ExtractedOpenAiRequestData } from '../../shared_functions/ai_steps_request/helpers.js';
 import { AiModelConfigs } from '../../hooks/ai-model-configs.js';
+import { RagQueryFactory } from '../../cloud_services/generic_classes/rag/rag_query_factory.js';
 
 export const aiStepsProcess = async (
   jobId: string,
@@ -20,6 +21,7 @@ export const aiStepsProcess = async (
     aiRequestData;
   const aiServiceHandler = new AiServiceHandler();
   const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
+  const ragService = RagQueryFactory.getRagQueryInstance();
   try {
     const aiModelConfigs = AiModelConfigs.getInstance();
     await aiModelConfigs.initialize();
@@ -31,6 +33,7 @@ export const aiStepsProcess = async (
       userId,
       authHeaders,
       docService,
+      ragService,
       llmModelConfigs
     );
     await documentDBManager.stepsProcessFinished(jobId, aiServiceResponse);

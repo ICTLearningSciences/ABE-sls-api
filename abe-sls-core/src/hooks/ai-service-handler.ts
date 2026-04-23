@@ -5,7 +5,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { MAX_OPEN_AI_CHAIN_REQUESTS } from '../constants.js';
-import { AiPromptStep, DocServices, PromptOutputTypes } from '../types.js';
+import { AiPromptStep, DocServices } from '../types.js';
 import { storePromptRun } from './graphql_api.js';
 import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import {
@@ -22,6 +22,10 @@ import {
   editDocResponseSchema,
   getEditDocResponseFormat,
 } from '../doc_services/helpers/edit-doc-helpers.js';
+import {
+  RagFetch,
+  RagSearchResult,
+} from '../cloud_services/generic_classes/rag/rag_query.js';
 
 export class AiServiceHandler {
   constructor() {}
@@ -36,6 +40,7 @@ export class AiServiceHandler {
     userId: string,
     authHeaders: AuthHeaders,
     targetDocService: DocServices,
+    ragService: RagFetch,
     llmModelConfigs: AiServiceModelConfigs[]
   ): Promise<AiServiceFinalResponseType> {
     if (aiSteps.length >= MAX_OPEN_AI_CHAIN_REQUESTS) {
@@ -52,12 +57,22 @@ export class AiServiceHandler {
     const docsContent = await docHandler.getDocData(docsId);
     const docsPlainText = docsContent.plainText;
     let previousOutput = '';
+    let ragData: RagSearchResult[] = [];
     for (let i = 0; i < aiSteps.length; i++) {
       const curAiStep = aiSteps[i];
       if (curAiStep.editDoc) {
         curAiStep.responseFormat = getEditDocResponseFormat();
         curAiStep.responseSchema = editDocResponseSchema;
       }
+
+      if (curAiStep.ragConfiguration) {
+        ragData = await ragService.queryRagStore(
+          curAiStep.ragConfiguration.ragQuery,
+          curAiStep.ragConfiguration.topN,
+          curAiStep.ragConfiguration.filters || {}
+        );
+      }
+
       const aiService = AiServiceFactory.getAiService(
         curAiStep.targetAiServiceModel.serviceName as AvailableAiServiceNames,
         llmModelConfigs
@@ -66,6 +81,7 @@ export class AiServiceHandler {
         aiStep: curAiStep,
         docsPlainText,
         previousOutput,
+        ragData,
       });
       let { aiStepData, answer } = res;
       allStepsData.push(aiStepData);
@@ -126,6 +142,7 @@ export class AiServiceHandler {
       aiStep: curAiStep,
       docsPlainText: '',
       previousOutput: '',
+      ragData: [],
     });
     const { aiStepData, answer } = res;
     allStepsData.push(aiStepData);
