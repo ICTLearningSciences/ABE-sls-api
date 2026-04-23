@@ -8,7 +8,6 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import Validator, { Schema } from 'jsonschema';
 import { diffWords } from 'diff';
 import { CloudServices } from './cloud_services/generic_classes/types.js';
-import { RagSearchResult } from './cloud_services/generic_classes/rag/rag_query.js';
 
 export function numWordsInString(text: string): number {
   return (text || '').trim().split(' ').length;
@@ -178,24 +177,4 @@ export function isProperJson(str: string, jsonSchema?: Schema): boolean {
 
 export function userEssayPromptFormat(essay: string): string {
   return `Here is the users essay:\n---START OF ESSAY---\n${essay}\n---END OF ESSAY---\n`;
-}
-
-export function convertRagDataToPrompt(ragData: RagSearchResult[]): string {
-  // should aggregated all the chunks for the same file title into a single string
-  const fileTitlesToChunksMap = new Map<string, string[]>();
-  ragData.forEach((rag) => {
-    fileTitlesToChunksMap.set(rag.title, [
-      ...(fileTitlesToChunksMap.get(rag.title) || []),
-      rag.chunk,
-    ]);
-  });
-  let prompt = `\n---- START OF RELEVANT EXTRACTED RAG DATA ---- \n You are given some context below. This context may or may not be relevant.
-If the context is relevant to the question, use it to inform your answer.
-If it is not relevant, ignore it completely and answer using your own knowledge.
-Context: `;
-  for (const [title, chunks] of fileTitlesToChunksMap) {
-    prompt += `File title: ${title}:\n${chunks.join('\n')}\n\n`;
-  }
-  prompt += `\n---- END OF RELEVANT EXTRACTED RAG DATA ----\n\n`;
-  return prompt;
 }

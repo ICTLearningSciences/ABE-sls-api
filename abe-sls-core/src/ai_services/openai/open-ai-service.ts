@@ -17,7 +17,6 @@ import { v4 as uuid } from 'uuid';
 import { Schema } from 'jsonschema';
 import {
   convertMarkdownToJsonString,
-  convertRagDataToPrompt,
   isJsonMarkdown,
   isJsonString,
   userEssayPromptFormat,
@@ -205,14 +204,6 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
         content: userEssayPromptFormat(docsPlainText),
       });
     }
-
-    if (requestContext.ragData && requestContext.ragData.length > 0) {
-      inputMessages.push({
-        role: PromptRoles.SYSTEM,
-        content: convertRagDataToPrompt(requestContext.ragData),
-      });
-    }
-
     if (previousOutput) {
       inputMessages.push({
         role: PromptRoles.SYSTEM,

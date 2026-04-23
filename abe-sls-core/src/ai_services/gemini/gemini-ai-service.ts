@@ -17,7 +17,6 @@ import {
 } from '../ai-service-factory.js';
 import {
   convertMarkdownToJsonString,
-  convertRagDataToPrompt,
   isJsonMarkdown,
   isJsonString,
   userEssayPromptFormat,
@@ -189,10 +188,6 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
 
     if (includeEssay) {
       contextText += userEssayPromptFormat(docsPlainText);
-    }
-
-    if (requestContext.ragData && requestContext.ragData.length > 0) {
-      contextText += convertRagDataToPrompt(requestContext.ragData);
     }
 
     if (!canUseSystemInstruction && aiStep.systemRole) {

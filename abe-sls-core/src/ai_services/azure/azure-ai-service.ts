@@ -14,7 +14,6 @@ import {
 } from '../../types.js';
 import { AzureOpenAI } from 'openai';
 import {
-  convertRagDataToPrompt,
   isJsonString,
   userEssayPromptFormat,
   validateJsonResponse,
@@ -198,13 +197,6 @@ export class AzureOpenAiService extends AiService<
       inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: userEssayPromptFormat(docsPlainText),
-      });
-    }
-
-    if (requestContext.ragData && requestContext.ragData.length > 0) {
-      inputMessages.push({
-        role: PromptRoles.SYSTEM,
-        content: convertRagDataToPrompt(requestContext.ragData),
       });
     }
 

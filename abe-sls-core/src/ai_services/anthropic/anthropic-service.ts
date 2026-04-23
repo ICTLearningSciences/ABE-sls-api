@@ -13,7 +13,7 @@ import {
 import { AiService } from '../abstract-classes/abstract-ai-service.js';
 import { v4 as uuid } from 'uuid';
 import { Schema } from 'jsonschema';
-import { convertRagDataToPrompt, isProperJson } from '../../helpers.js';
+import { isProperJson } from '../../helpers.js';
 import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
 import {
   AiStepData,
@@ -158,10 +158,6 @@ export class AnthropicService extends AiService<
     const includeEssay = aiStep.prompts.some((prompt) => prompt.includeEssay);
     if (includeEssay) {
       systemMessage += `\n\nHere is the users essay: -----------\n\n${docsPlainText}`;
-    }
-
-    if (requestContext.ragData && requestContext.ragData.length > 0) {
-      systemMessage += convertRagDataToPrompt(requestContext.ragData);
     }
 
     if (aiStep.responseFormat) {
