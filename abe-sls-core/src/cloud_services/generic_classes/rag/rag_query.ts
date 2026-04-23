@@ -18,4 +18,8 @@ export abstract class RagQuery {
     topN: number,
     metadataFilters: Record<string, string | string[]>
   ): Promise<RagSearchResult[]>;
+
+  abstract fetchRagDocument(
+    webLocation: string
+  ): Promise<string | Uint8Array>;
 }

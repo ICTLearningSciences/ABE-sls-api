@@ -23,7 +23,7 @@ import {
   getEditDocResponseFormat,
 } from '../doc_services/helpers/edit-doc-helpers.js';
 import {
-  RagFetch,
+  RagQuery,
   RagSearchResult,
 } from '../cloud_services/generic_classes/rag/rag_query.js';
 
@@ -40,7 +40,7 @@ export class AiServiceHandler {
     userId: string,
     authHeaders: AuthHeaders,
     targetDocService: DocServices,
-    ragService: RagFetch,
+    ragService: RagQuery,
     llmModelConfigs: AiServiceModelConfigs[]
   ): Promise<AiServiceFinalResponseType> {
     if (aiSteps.length >= MAX_OPEN_AI_CHAIN_REQUESTS) {

@@ -103,4 +103,10 @@ export class AzureRagQuery extends RagQuery {
 
     return ragResults;
   }
+
+  async fetchRagDocument(
+    webLocation: string
+  ): Promise<string | Uint8Array> {
+    return '' as string | Uint8Array;
+  }
 }

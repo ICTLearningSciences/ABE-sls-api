@@ -24,6 +24,7 @@
     "@anthropic-ai/sdk": "^0.54.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.1030.0",
     "@aws-sdk/client-dynamodb": "^3.515.0",
+    "@aws-sdk/client-s3": "^3.1036.0",
     "@aws-sdk/client-secrets-manager": "^3.775.0",
     "@aws-sdk/client-ssm": "^3.775.0",
     "@azure/cosmos": "^4.2.0",
