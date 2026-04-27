@@ -7,6 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 export { getDocData } from './get_doc_data.js';
 export { getDocRevisions } from './get_doc_revisions.js';
 export { googleDocTextModify } from './google_doc_text_modify.js';
+export { getRagData } from './get_rag_document.js';
 export { createGoogleDoc } from './create_google_doc.js';
 export { asyncDocumentTimelineRequest } from './timeline/async_document_timeline_request.js';
 export { asyncDocumentTimelineProcess } from './timeline/async_document_timeline_process.js';

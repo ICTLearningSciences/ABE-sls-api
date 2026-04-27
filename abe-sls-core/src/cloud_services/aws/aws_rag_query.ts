@@ -89,9 +89,7 @@ export class AwsRagQuery extends RagQuery {
     return ragResults;
   }
 
-  async fetchRagDocument(
-    webLocation: string
-  ): Promise<string | Uint8Array> {
+  async fetchRagDocument(webLocation: string): Promise<string | Uint8Array> {
     const url = new URL(webLocation.replace('s3://', 'https://'));
     const bucket = url.hostname;
     const key = url.pathname.substring(1);

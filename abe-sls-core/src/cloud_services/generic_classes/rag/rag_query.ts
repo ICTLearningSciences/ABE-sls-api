@@ -19,7 +19,5 @@ export abstract class RagQuery {
     metadataFilters: Record<string, string | string[]>
   ): Promise<RagSearchResult[]>;
 
-  abstract fetchRagDocument(
-    webLocation: string
-  ): Promise<string | Uint8Array>;
+  abstract fetchRagDocument(webLocation: string): Promise<string | Uint8Array>;
 }
