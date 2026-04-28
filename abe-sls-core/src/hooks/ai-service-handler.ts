@@ -65,7 +65,7 @@ export class AiServiceHandler {
         curAiStep.responseSchema = editDocResponseSchema;
       }
 
-      if (curAiStep.ragConfiguration) {
+      if (curAiStep.ragConfiguration && curAiStep.ragConfiguration.ragQuery) {
         ragData = await ragService.queryRagStore(
           curAiStep.ragConfiguration.ragQuery,
           curAiStep.ragConfiguration.topN,
