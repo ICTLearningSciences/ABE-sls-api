@@ -25,6 +25,7 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
   console.log(`ragDocLocation ${ragDocLocation}`);
   try {
    const ragData = await getRagData(ragDocLocation);
+   console.log(ragData)
    return createResponseBinary(200, ragData);
   } catch (e) {
     console.error(e);

@@ -189,7 +189,7 @@ provider:
             - s3:ListBucket
             - s3:PutObject
             - s3:DeleteObject
-          Resource: "arn:aws:s3::::${self.provider.environment.RAG_S3_BUCKET}"
+          Resource: "arn:aws:s3:::abe-rag-source-data-2026/*"
         - Effect: "Allow"
           Action:
             - secretsmanager:GetSecretValue
@@ -226,7 +226,7 @@ functions:
             type: token
   get_rag_document:
     handler: src/functions/get_rag_document.handler
-    timeout: 300
+    timeout: 29
     events:
       - http:
           path: /get_rag_document

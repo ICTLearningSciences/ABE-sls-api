@@ -112,7 +112,7 @@ export class AwsRagQuery extends RagQuery {
           | string
           | Uint8Array;
     } catch (err) {
-      console.info('failed to retrieve file at url  ');
+      console.info(`failed to retrieve file at url ${webLocation} `);
       throw err;
     }
   }

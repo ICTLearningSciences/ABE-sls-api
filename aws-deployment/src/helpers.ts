@@ -44,7 +44,8 @@ export function createResponseBinary(statusCode: number, body: any){
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': true,
       },
-      body: body
+      body: body.toString('base64'),
+      isBase64Encoded: true
     };
 }
 
