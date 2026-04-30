@@ -34,6 +34,20 @@ export function createResponseJson(statusCode: number, body: any) {
     };
   }
 
+export function createResponseBinary(statusCode: number, body: any){
+   if (statusCode >= 400) {
+      Sentry.captureException(`Error response: ${JSON.stringify(body)}`);
+    }
+    return {
+      statusCode: statusCode,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+      },
+      body: body
+    };
+}
+
   export function extractErrorMessageFromError(err: any | unknown): string {
     if (err instanceof Error) {
       return err.message;
