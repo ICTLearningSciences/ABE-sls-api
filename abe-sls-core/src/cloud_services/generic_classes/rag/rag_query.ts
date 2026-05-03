@@ -6,6 +6,11 @@ export interface RagSearchResult {
   score: number;
 }
 
+export interface RagDocumentResult {
+  data: string | Uint8Array;
+  mimeType?: string;
+}
+
 /**
  * Handles querying RAG stores.
  */
@@ -19,5 +24,5 @@ export abstract class RagQuery {
     metadataFilters: Record<string, string | string[]>
   ): Promise<RagSearchResult[]>;
 
-  abstract fetchRagDocument(webLocation: string): Promise<string | Uint8Array>;
+  abstract fetchRagDocument(webLocation: string): Promise<RagDocumentResult>;
 }

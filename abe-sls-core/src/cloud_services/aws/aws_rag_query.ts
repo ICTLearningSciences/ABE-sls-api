@@ -9,7 +9,11 @@ import {
   RetrieveCommand,
   RetrieveCommandInput,
 } from '@aws-sdk/client-bedrock-agent-runtime';
-import { RagQuery, RagSearchResult } from '../generic_classes/rag/rag_query.js';
+import {
+  RagDocumentResult,
+  RagQuery,
+  RagSearchResult,
+} from '../generic_classes/rag/rag_query.js';
 import { CloudServices } from '../generic_classes/types.js';
 import requireEnv from '../../helpers.js';
 import { buildFilter } from './helpers.js';
@@ -89,7 +93,7 @@ export class AwsRagQuery extends RagQuery {
     return ragResults;
   }
 
-  async fetchRagDocument(webLocation: string): Promise<string | Uint8Array> {
+  async fetchRagDocument(webLocation: string): Promise<RagDocumentResult> {
     const url = new URL(webLocation.replace('s3://', 'https://'));
     const bucket = url.hostname;
     const key = url.pathname.substring(1);
@@ -103,14 +107,23 @@ export class AwsRagQuery extends RagQuery {
       const getObjectCommmand = new GetObjectCommand(getObjectCommandInput);
       const response = await this.s3Client.send(getObjectCommmand);
 
-      if (response.ContentType?.includes('text'))
-        return (await response.Body?.transformToString()) as
-          | string
-          | Uint8Array;
-      else
-        return (await response.Body?.transformToByteArray()) as
-          | string
-          | Uint8Array;
+      if (response.ContentType?.includes('text')) {
+        const result: RagDocumentResult = {
+          data: (await response.Body?.transformToString()) as
+            | string
+            | Uint8Array,
+          mimeType: response.ContentType,
+        };
+        return result;
+      } else {
+        const result: RagDocumentResult = {
+          data: (await response.Body?.transformToByteArray()) as
+            | string
+            | Uint8Array,
+          mimeType: response.ContentType,
+        };
+        return result;
+      }
     } catch (err) {
       console.info(`failed to retrieve file at url ${webLocation} `);
       throw err;

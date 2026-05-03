@@ -34,7 +34,7 @@ export function createResponseJson(statusCode: number, body: any) {
     };
   }
 
-export function createResponseBinary(statusCode: number, body: any){
+export function createResponseBinary(statusCode: number, contentType: string | undefined, body: any){
    if (statusCode >= 400) {
       Sentry.captureException(`Error response: ${JSON.stringify(body)}`);
     }
@@ -43,6 +43,7 @@ export function createResponseBinary(statusCode: number, body: any){
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': true,
+        'Content-Type': contentType
       },
       body: body.toString('base64'),
       isBase64Encoded: true
