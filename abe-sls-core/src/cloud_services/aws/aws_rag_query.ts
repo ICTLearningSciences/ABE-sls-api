@@ -111,25 +111,6 @@ export class AwsRagQuery extends RagQuery {
         expiresIn: 3600,
       });
       return url;
-      /*       const response = await this.s3Client.send(getObjectCommmand);
-
-      if (response.ContentType?.includes('text')) {
-        const result: RagDocumentResult = {
-          data: (await response.Body?.transformToString()) as
-            | string
-            | Uint8Array,
-          mimeType: response.ContentType,
-        };
-        return result;
-      } else {
-        const result: RagDocumentResult = {
-          data: (await response.Body?.transformToByteArray()) as
-            | string
-            | Uint8Array,
-          mimeType: response.ContentType,
-        };
-        return result;
-      } */
     } catch (err) {
       console.info(`failed to retrieve file at url ${webLocation} `);
       throw err;

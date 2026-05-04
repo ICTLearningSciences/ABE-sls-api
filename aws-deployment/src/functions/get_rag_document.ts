@@ -27,15 +27,6 @@ export const handler = wrapHandler(async (event: APIGatewayEvent) => {
    const ragData = await getRagData(ragDocLocation);
    console.log(ragData)
    return createResponseJson(200, {url: ragData})
-   //if (ragData.data instanceof Uint8Array)
-   //{
-   // const base64body = Buffer.from(ragData.data).toString('base64');
-   // return createResponseBinary(200, ragData.mimeType, base64body);
-   //}
-   // else{
-   //   return createResponseBinary(200, ragData.mimeType, ragData.data);
-   // }
-   
   } catch (e) {
     console.error(e);
     return createResponseJson(500, { error: JSON.stringify(e) });
