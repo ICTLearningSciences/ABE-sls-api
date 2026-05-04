@@ -9,6 +9,7 @@ import {
   RetrieveCommand,
   RetrieveCommandInput,
 } from '@aws-sdk/client-bedrock-agent-runtime';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
   RagDocumentResult,
   RagQuery,
@@ -93,7 +94,7 @@ export class AwsRagQuery extends RagQuery {
     return ragResults;
   }
 
-  async fetchRagDocument(webLocation: string): Promise<RagDocumentResult> {
+  async fetchRagDocument(webLocation: string): Promise<string> {
     const url = new URL(webLocation.replace('s3://', 'https://'));
     const bucket = url.hostname;
     const key = url.pathname.substring(1);
@@ -105,7 +106,12 @@ export class AwsRagQuery extends RagQuery {
       };
 
       const getObjectCommmand = new GetObjectCommand(getObjectCommandInput);
-      const response = await this.s3Client.send(getObjectCommmand);
+
+      const url = await getSignedUrl(this.s3Client, getObjectCommmand, {
+        expiresIn: 3600,
+      });
+      return url;
+      /*       const response = await this.s3Client.send(getObjectCommmand);
 
       if (response.ContentType?.includes('text')) {
         const result: RagDocumentResult = {
@@ -123,7 +129,7 @@ export class AwsRagQuery extends RagQuery {
           mimeType: response.ContentType,
         };
         return result;
-      }
+      } */
     } catch (err) {
       console.info(`failed to retrieve file at url ${webLocation} `);
       throw err;

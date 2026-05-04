@@ -108,7 +108,7 @@ export class AzureRagQuery extends RagQuery {
     return ragResults;
   }
 
-  async fetchRagDocument(webLocation: string): Promise<RagDocumentResult> {
-    return { data: '' };
+  async fetchRagDocument(webLocation: string): Promise<string> {
+    return '';
   }
 }

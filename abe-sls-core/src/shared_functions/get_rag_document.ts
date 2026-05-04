@@ -14,6 +14,6 @@ export const getRagData = async (ragDocLocation?: string) => {
   }
 
   const ragHandler = RagQueryFactory.getRagQueryInstance();
-  const ragDocument = await ragHandler.fetchRagDocument(ragDocLocation);
-  return ragDocument;
+  const ragDocumentUrl = await ragHandler.fetchRagDocument(ragDocLocation);
+  return ragDocumentUrl;
 };
