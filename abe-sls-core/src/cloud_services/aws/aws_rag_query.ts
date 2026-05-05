@@ -9,10 +9,20 @@ import {
   RetrieveCommand,
   RetrieveCommandInput,
 } from '@aws-sdk/client-bedrock-agent-runtime';
-import { RagQuery, RagSearchResult } from '../generic_classes/rag/rag_query.js';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import {
+  RagDocumentResult,
+  RagQuery,
+  RagSearchResult,
+} from '../generic_classes/rag/rag_query.js';
 import { CloudServices } from '../generic_classes/types.js';
 import requireEnv from '../../helpers.js';
 import { buildFilter } from './helpers.js';
+import {
+  S3Client,
+  GetObjectCommand,
+  GetObjectCommandInput,
+} from '@aws-sdk/client-s3';
 
 /**
  * AWS RAG implementation using Amazon Bedrock Knowledge Bases.
@@ -24,10 +34,14 @@ export class AwsRagQuery extends RagQuery {
   private region = 'us-east-1';
 
   private bedrockClient: BedrockAgentRuntimeClient;
+  private s3Client: S3Client;
 
   constructor() {
     super();
     this.bedrockClient = new BedrockAgentRuntimeClient({
+      region: this.region,
+    });
+    this.s3Client = new S3Client({
       region: this.region,
     });
   }
@@ -78,5 +92,28 @@ export class AwsRagQuery extends RagQuery {
     }
 
     return ragResults;
+  }
+
+  async fetchRagDocument(webLocation: string): Promise<string> {
+    const url = new URL(webLocation.replace('s3://', 'https://'));
+    const bucket = url.hostname;
+    const key = url.pathname.substring(1);
+
+    try {
+      const getObjectCommandInput: GetObjectCommandInput = {
+        Bucket: bucket,
+        Key: key,
+      };
+
+      const getObjectCommmand = new GetObjectCommand(getObjectCommandInput);
+
+      const url = await getSignedUrl(this.s3Client, getObjectCommmand, {
+        expiresIn: 3600,
+      });
+      return url;
+    } catch (err) {
+      console.info(`failed to retrieve file at url ${webLocation} `);
+      throw err;
+    }
   }
 }

@@ -12,7 +12,11 @@ import {
   VectorQuery,
   AzureKeyCredential,
 } from '@azure/search-documents';
-import { RagQuery, RagSearchResult } from '../generic_classes/rag/rag_query.js';
+import {
+  RagDocumentResult,
+  RagQuery,
+  RagSearchResult,
+} from '../generic_classes/rag/rag_query.js';
 import { CloudServices } from '../generic_classes/types.js';
 import requireEnv from '../../helpers.js';
 import { buildFilter } from './helpers.js';
@@ -102,5 +106,9 @@ export class AzureRagQuery extends RagQuery {
     }
 
     return ragResults;
+  }
+
+  async fetchRagDocument(webLocation: string): Promise<string> {
+    return '';
   }
 }
