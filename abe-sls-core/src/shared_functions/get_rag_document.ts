@@ -8,12 +8,12 @@ import { RagQueryFactory } from '../cloud_services/generic_classes/rag/rag_query
 import { DocServices } from '../types.js';
 
 // modern module syntax
-export const getRagData = async (ragDocLocation?: string) => {
-  if (!ragDocLocation) {
-    throw new Error('RagDocLocation is empty');
+export const getRagData = async (ragDocName?: string) => {
+  if (!ragDocName) {
+    throw new Error('RagDocName is empty');
   }
 
   const ragHandler = RagQueryFactory.getRagQueryInstance();
-  const ragDocumentUrl = await ragHandler.fetchRagDocument(ragDocLocation);
+  const ragDocumentUrl = await ragHandler.fetchRagDocument(ragDocName);
   return ragDocumentUrl;
 };

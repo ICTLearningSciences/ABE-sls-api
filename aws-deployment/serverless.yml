@@ -185,6 +185,10 @@ provider:
           Resource: "arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/*"
         - Effect: "Allow"
           Action:
+            - s3:ListBucket
+          Resource: "arn:aws:s3:::abe-rag-source-data-2026"
+        - Effect: "Allow"        
+          Action:
             - s3:GetObject
             - s3:ListBucket
             - s3:PutObject
@@ -234,7 +238,21 @@ functions:
           request:
             parameters:
               querystrings:
-                ragDocLocation: true
+                ragDocName: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
+  list_rag_documents:
+    handler: src/functions/list_rag_documents.handler
+    timeout: 29
+    events:
+      - http:
+          path: /list_rag_documents
+          method: get
           cors:
             origin: '*'
           authorizer:

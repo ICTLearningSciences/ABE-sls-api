@@ -22,6 +22,8 @@ import {
   S3Client,
   GetObjectCommand,
   GetObjectCommandInput,
+  ListObjectsV2Command,
+  _Object,
 } from '@aws-sdk/client-s3';
 
 /**
@@ -30,6 +32,7 @@ import {
 export class AwsRagQuery extends RagQuery {
   cloudService: CloudServices = CloudServices.AWS;
 
+  private s3BucketName = requireEnv('RAG_S3_BUCKET');
   private knowledgeBaseId = requireEnv('AWS_KNOWLEDGE_BASE_ID');
   private region = 'us-east-1';
 
@@ -94,10 +97,9 @@ export class AwsRagQuery extends RagQuery {
     return ragResults;
   }
 
-  async fetchRagDocument(webLocation: string): Promise<string> {
-    const url = new URL(webLocation.replace('s3://', 'https://'));
-    const bucket = url.hostname;
-    const key = url.pathname.substring(1);
+  async fetchRagDocument(docName: string): Promise<string> {
+    const bucket = this.s3BucketName;
+    const key = docName;
 
     try {
       const getObjectCommandInput: GetObjectCommandInput = {
@@ -112,8 +114,27 @@ export class AwsRagQuery extends RagQuery {
       });
       return url;
     } catch (err) {
-      console.info(`failed to retrieve file at url ${webLocation} `);
+      console.info(`failed to retrieve file with name ${docName} `);
       throw err;
+    }
+  }
+
+  async listRagDocuments(): Promise<_Object[]> {
+    const s3Client = new S3Client({ region: 'us-east-1' });
+
+    const command = new ListObjectsV2Command({
+      Bucket: this.s3BucketName,
+    });
+
+    try {
+      const response = await s3Client.send(command);
+      const objects: _Object[] = response.Contents || [];
+
+      console.log(`Found ${objects.length} objects:`);
+      return objects;
+    } catch (error) {
+      console.error('Error listing objects:', error);
+      throw error;
     }
   }
 }
