@@ -8,24 +8,14 @@ The full terms of this copyright and license should always be found in the root 
 import { APIGatewayEvent } from 'aws-lambda';
 import { createResponseJson } from '../helpers.js';
 import { wrapHandler } from '../sentry-helpers.js';
-import { getRagData } from 'abe-sls-core-2';
+import { listRagDocuments } from 'abe-sls-core-2';
 
 
 // modern module syntax
 export const handler = wrapHandler(async (event: APIGatewayEvent) => {
-  const queryParams = event['queryStringParameters'];
-  const ragDocName = queryParams && 'ragDocName' in queryParams ? queryParams['ragDocName'] : '';
-
-
-  if (!ragDocName) {
-    return createResponseJson(400, {
-      error: 'ragDocName is required query parameter',
-    });
-  }
-  console.log(`ragDocName: ${ragDocName}`);
   try {
-   const ragData = await getRagData(ragDocName);
-   return createResponseJson(200, {url: ragData})
+   const ragDocuments = await listRagDocuments();
+   return createResponseJson(200, ragDocuments)
   } catch (e) {
     console.error(e);
     return createResponseJson(500, { error: JSON.stringify(e) });
