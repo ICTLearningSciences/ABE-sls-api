@@ -7,12 +7,12 @@ The full terms of this copyright and license should always be found in the root 
 import { RagQueryFactory } from '../cloud_services/generic_classes/rag/rag_query_factory';
 
 // modern module syntax
-export const getRagData = async (ragDocName?: string) => {
+export const getSignedUploadUrl = async (ragDocName?: string) => {
   if (!ragDocName) {
     throw new Error('RagDocName is empty');
   }
 
   const ragHandler = RagQueryFactory.getRagQueryInstance();
-  const ragDocumentUrl = await ragHandler.fetchRagDocument(ragDocName);
+  const ragDocumentUrl = await ragHandler.getSignedUploadUrl(ragDocName);
   return ragDocumentUrl;
 };

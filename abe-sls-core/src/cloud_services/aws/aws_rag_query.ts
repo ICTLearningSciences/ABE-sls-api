@@ -23,6 +23,8 @@ import {
   GetObjectCommand,
   GetObjectCommandInput,
   ListObjectsV2Command,
+  PutObjectCommandInput,
+  PutObjectCommand,
   _Object,
 } from '@aws-sdk/client-s3';
 
@@ -120,14 +122,12 @@ export class AwsRagQuery extends RagQuery {
   }
 
   async listRagDocuments(): Promise<_Object[]> {
-    const s3Client = new S3Client({ region: 'us-east-1' });
-
     const command = new ListObjectsV2Command({
       Bucket: this.s3BucketName,
     });
 
     try {
-      const response = await s3Client.send(command);
+      const response = await this.s3Client.send(command);
       const objects: _Object[] = response.Contents || [];
 
       console.log(`Found ${objects.length} objects:`);
@@ -135,6 +135,25 @@ export class AwsRagQuery extends RagQuery {
     } catch (error) {
       console.error('Error listing objects:', error);
       throw error;
+    }
+  }
+
+  async getSignedUploadUrl(fileName: string): Promise<string> {
+    try {
+      const putObjectCommandInput: PutObjectCommandInput = {
+        Bucket: this.s3BucketName,
+        Key: fileName,
+      };
+
+      const putObjectCommmand = new PutObjectCommand(putObjectCommandInput);
+
+      const url = await getSignedUrl(this.s3Client, putObjectCommmand, {
+        expiresIn: 3600,
+      });
+      return url;
+    } catch (err) {
+      console.info(`failed to retrieve signed url for document with name ${fileName} `);
+      throw err;
     }
   }
 }

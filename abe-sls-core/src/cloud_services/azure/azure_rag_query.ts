@@ -115,4 +115,8 @@ export class AzureRagQuery extends RagQuery {
   async listRagDocuments(): Promise<Object[]> {
     return [];
   }
+
+  async getSignedUploadUrl(fileName: string): Promise<string> {
+    return ''
+  }
 }
