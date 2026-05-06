@@ -16,7 +16,7 @@ import {
   RagSearchResult,
 } from '../generic_classes/rag/rag_query.js';
 import { CloudServices } from '../generic_classes/types.js';
-import requireEnv from '../../helpers.js';
+import requireEnv, { getSourceFileNameFromRagResult } from '../../helpers.js';
 import { buildFilter } from './helpers.js';
 import {
   S3Client,
@@ -79,22 +79,33 @@ export class AwsRagQuery extends RagQuery {
     if (response.retrievalResults) {
       for (const result of response.retrievalResults) {
         const titleMetadata = result.metadata?.['title'];
+        const sourceFileName = getSourceFileNameFromRagResult(result);
         const title =
-          typeof titleMetadata === 'string'
-            ? titleMetadata
-            : result.location?.s3Location?.uri || 'Untitled';
+          typeof titleMetadata === 'string' ? titleMetadata : sourceFileName;
 
         const chunk = result.content?.text || '';
-
         const score = result.score || 0;
+
 
         ragResults.push({
           title,
           chunk,
           score,
+          sourceFileName,
+          sourceUrl: ""
         });
       }
     }
+
+    // get the source url for each rag result in parallel, ignoring errors
+    const sourceUrls = await Promise.all(
+      ragResults.map((rag) =>
+        this.fetchRagDocument(rag.sourceFileName).catch(() => '')
+      )
+    );
+    sourceUrls.forEach((url, i) => {
+      ragResults[i].sourceUrl = url;
+    });
 
     return ragResults;
   }

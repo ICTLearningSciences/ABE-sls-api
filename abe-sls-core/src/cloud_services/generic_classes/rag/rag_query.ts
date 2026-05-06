@@ -4,6 +4,8 @@ export interface RagSearchResult {
   title: string;
   chunk: string;
   score: number;
+  sourceFileName: string;
+  sourceUrl: string;
 }
 
 export interface RagDocumentResult {

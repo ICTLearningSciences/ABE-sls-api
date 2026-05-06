@@ -51,9 +51,16 @@ export interface AiServiceResponse<ReqType, ResType> {
   answer: string;
 }
 
+export interface RagSourcesResponse {
+  title: string;
+  fileName: string;
+  url: string;
+}
+
 export interface AiServiceFinalResponseType {
   aiAllStepsData: AiServiceStepDataTypes[];
   answer: string;
+  sources: RagSourcesResponse[];
 }
 
 /**
