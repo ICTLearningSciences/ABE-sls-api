@@ -86,13 +86,12 @@ export class AwsRagQuery extends RagQuery {
         const chunk = result.content?.text || '';
         const score = result.score || 0;
 
-
         ragResults.push({
           title,
           chunk,
           score,
           sourceFileName,
-          sourceUrl: ""
+          sourceUrl: '',
         });
       }
     }
@@ -163,7 +162,9 @@ export class AwsRagQuery extends RagQuery {
       });
       return url;
     } catch (err) {
-      console.info(`failed to retrieve signed url for document with name ${fileName} `);
+      console.info(
+        `failed to retrieve signed url for document with name ${fileName} `
+      );
       throw err;
     }
   }
