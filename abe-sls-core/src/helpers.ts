@@ -9,6 +9,7 @@ import Validator, { Schema } from 'jsonschema';
 import { diffWords } from 'diff';
 import { CloudServices } from './cloud_services/generic_classes/types.js';
 import { RagSearchResult } from './cloud_services/generic_classes/rag/rag_query.js';
+import { KnowledgeBaseRetrievalResult } from '@aws-sdk/client-bedrock-agent-runtime';
 
 export function numWordsInString(text: string): number {
   return (text || '').trim().split(' ').length;
@@ -198,4 +199,12 @@ Context: `;
   }
   prompt += `\n---- END OF RELEVANT EXTRACTED RAG DATA ----\n\n`;
   return prompt;
+}
+
+export function getSourceFileNameFromRagResult(
+  ragResult: KnowledgeBaseRetrievalResult
+): string {
+  // s3://bucket_name/**/file_name.ext
+  const match = ragResult.location?.s3Location?.uri?.split('/').pop();
+  return match || 'Untitled';
 }

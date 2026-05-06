@@ -102,6 +102,8 @@ export class AzureRagQuery extends RagQuery {
         title: result.document.title,
         chunk: result.document.chunk,
         score: result.score || 0,
+        sourceFileName: result.document.title,
+        sourceUrl: ""
       });
     }
 

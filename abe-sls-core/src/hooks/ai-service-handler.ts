@@ -104,6 +104,11 @@ export class AiServiceHandler {
       return {
         aiAllStepsData: allStepsData,
         answer: finalAnswer,
+        sources: ragData.map((rag) => ({
+          title: rag.title,
+          fileName: rag.sourceFileName,
+          url: rag.sourceUrl,
+        })),
       };
     }
   }
@@ -149,6 +154,7 @@ export class AiServiceHandler {
     return {
       aiAllStepsData: allStepsData,
       answer: answer,
+      sources: [],
     };
   }
 }
