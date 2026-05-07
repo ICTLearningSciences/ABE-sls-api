@@ -103,7 +103,7 @@ export class AzureRagQuery extends RagQuery {
         chunk: result.document.chunk,
         score: result.score || 0,
         sourceFileName: result.document.title,
-        sourceUrl: ""
+        sourceUrl: '',
       });
     }
 
@@ -116,5 +116,9 @@ export class AzureRagQuery extends RagQuery {
 
   async listRagDocuments(): Promise<Object[]> {
     return [];
+  }
+
+  async getSignedUploadUrl(fileName: string): Promise<string> {
+    return '';
   }
 }

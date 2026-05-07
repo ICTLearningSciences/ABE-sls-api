@@ -246,6 +246,24 @@ functions:
             resultTtlInSeconds: 300
             identitySource: method.request.header.Authorization
             type: token
+  get_signed_upload_url:
+    handler: src/functions/get_signed_upload_url.handler
+    timeout: 29
+    events:
+      - http:
+          path: /get_signed_upload_url
+          method: get
+          request:
+            parameters:
+              querystrings:
+                ragDocName: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
   list_rag_documents:
     handler: src/functions/list_rag_documents.handler
     timeout: 29

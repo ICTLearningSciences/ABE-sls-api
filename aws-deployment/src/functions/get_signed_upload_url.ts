@@ -4,15 +4,31 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { RagQueryFactory } from '../cloud_services/generic_classes/rag/rag_query_factory';
+// Note: had to add .js to find this file in serverless
+import { APIGatewayEvent } from 'aws-lambda';
+import { createResponseJson } from '../helpers.js';
+import { wrapHandler } from '../sentry-helpers.js';
+import { getSignedUploadUrl } from 'abe-sls-core-2';
+
 
 // modern module syntax
-export const getRagData = async (ragDocName?: string) => {
+export const handler = wrapHandler(async (event: APIGatewayEvent) => {
+  const queryParams = event['queryStringParameters'];
+  const ragDocName = queryParams && 'ragDocName' in queryParams ? queryParams['ragDocName'] : '';
+
+
   if (!ragDocName) {
-    throw new Error('RagDocName is empty');
+    return createResponseJson(400, {
+      error: 'ragDocName is required query parameter',
+    });
+  }
+  console.log(`ragDocName: ${ragDocName}`);
+  try {
+   const ragData = await getSignedUploadUrl(ragDocName);
+   return createResponseJson(200, {url: ragData})
+  } catch (e) {
+    console.error(e);
+    return createResponseJson(500, { error: JSON.stringify(e) });
   }
 
-  const ragHandler = RagQueryFactory.getRagQueryInstance();
-  const ragDocumentUrl = await ragHandler.fetchRagDocument(ragDocName);
-  return ragDocumentUrl;
-};
+});
