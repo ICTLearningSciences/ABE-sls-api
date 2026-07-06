@@ -5,7 +5,7 @@
   "main": "handler.js",
   "scripts": {
     "build": "tsc",
-    "deploy:dev": "npx sls deploy -s dev --debug",
+    "deploy:dev": "npx sls deploy -s dev",
     "deploy:qa": "npx sls deploy -s qa",
     "deploy:prod": "npx sls deploy -s prod"
   },

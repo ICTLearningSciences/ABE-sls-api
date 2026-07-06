@@ -34,8 +34,6 @@ build:
 #   esbuild: false
 
 custom:
-  esbuild:
-    buildConcurrency: 1
   prune:
     automatic: true
     number: 10
@@ -125,7 +123,7 @@ package:
 
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs22.x
   region: ${opt:region, 'us-east-1'}
   stage: ${opt:stage, 'dev'}
 
