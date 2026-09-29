@@ -29,6 +29,7 @@ export interface PromptConfiguration {
 }
 
 export enum DefaultGptModels {
+  OPEN_AI_GPT_6_LUNA = 'gpt-6-luna',
   OPEN_AI_GPT_4 = 'gpt-4',
   OPEN_AI_GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
   OPEN_AI_GPT_4o_MINI = 'gpt-4o-mini',

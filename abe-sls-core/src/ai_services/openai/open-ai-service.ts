@@ -66,7 +66,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   constructor(llmModelConfigs: AiServiceModelConfigs[]) {
     super(
       AvailableAiServiceNames.OPEN_AI,
-      DefaultGptModels.OPEN_AI_GPT_4,
+      DefaultGptModels.OPEN_AI_GPT_6_LUNA,
       llmModelConfigs
     );
     this.aiServiceClient = new OpenAI({
