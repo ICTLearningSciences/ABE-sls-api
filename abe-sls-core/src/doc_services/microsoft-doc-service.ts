@@ -32,6 +32,7 @@ export class MicrosoftDocService extends DocService<MicrosoftDocVersion> {
     return Promise.resolve({
       plainText: version?.plainText || '',
       markdownText: version?.markdownText || '',
+      uriEncoded: version?.uriEncoded || false,
       lastChangedId: version?.lastChangedId || '',
       title: version?.title || '',
       lastModifyingUser: version?.lastModifyingUser || '',

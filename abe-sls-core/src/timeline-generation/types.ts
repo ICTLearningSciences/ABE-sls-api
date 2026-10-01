@@ -74,6 +74,7 @@ export interface IGDocVersion {
   docId: string;
   plainText: string;
   markdownText: string;
+  uriEncoded?: boolean;
   lastChangedId: string;
   sessionId: string;
   sessionIntention?: IIntention;

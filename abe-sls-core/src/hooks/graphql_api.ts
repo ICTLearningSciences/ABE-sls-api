@@ -165,6 +165,7 @@ export async function fetchMostRecentVersion(
           docId
           markdownText
           plainText
+          uriEncoded
           lastChangedId
           sessionId
           sessionIntention{

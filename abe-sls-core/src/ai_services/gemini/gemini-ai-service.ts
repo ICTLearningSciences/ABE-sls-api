@@ -74,7 +74,7 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
   constructor(llmModelConfigs: AiServiceModelConfigs[]) {
     super(
       AvailableAiServiceNames.GEMINI,
-      DefaultGptModels.GEMINI_1_PRO,
+      DefaultGptModels.GEMINI_2_0_PREVIEW,
       llmModelConfigs
     );
     const geminiApiKey = process.env.GEMINI_API_KEY || '';
@@ -142,7 +142,7 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
       this.llmModelConfigs
     );
     const canUseSystemInstruction =
-      aiStep.targetAiServiceModel.model === DefaultGptModels.GEMINI_1_5_PREVIEW;
+      aiStep.targetAiServiceModel.model === DefaultGptModels.GEMINI_2_0_PREVIEW;
     let customSystemInstructions = '';
 
     if (aiStep.systemRole) {
