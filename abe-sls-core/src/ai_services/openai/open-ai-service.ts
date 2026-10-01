@@ -39,7 +39,7 @@ import { AiServiceModelConfigs } from '../../gql_types.js';
 export const DefaultOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:
     'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture. Knowledge cutoff: 2021-09.',
-  DEFAULT_GPT_MODEL: DefaultGptModels.OPEN_AI_GPT_4,
+  DEFAULT_GPT_MODEL: DefaultGptModels.OPEN_AI_GPT_6_LUNA,
 };
 
 interface InputMessageType {
