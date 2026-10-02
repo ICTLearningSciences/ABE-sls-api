@@ -30,7 +30,7 @@ export class RawTextDocService extends DocService<RawTextDocVersion> {
     return Promise.resolve({
       plainText: version?.plainText || '',
       markdownText: version?.markdownText || '',
-      uriEncoded: version?.uriEncoded || false,
+      uriEncoded: version?.uriEncoded,
       lastChangedId: version?.lastChangedId || '',
       title: version?.title || '',
       lastModifyingUser: version?.lastModifyingUser || '',
