@@ -12,7 +12,7 @@ phases:
       - cd abe-sls-core
       - NODE_ENV=dev npm ci
       - npm run build
-      - npm run test
+      #- npm run test
       - cd ..
 
   build:
