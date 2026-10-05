@@ -55,6 +55,9 @@ export class AiServiceHandler {
     );
     const allStepsData: AiServiceStepDataTypes[] = [];
     const docsContent = await docHandler.getDocData(docsId);
+    if (docsContent.uriEncoded) {
+      docsContent.plainText = decodeURI(docsContent.plainText);
+    }
     const docsPlainText = docsContent.plainText;
     let previousOutput = '';
     let ragData: RagSearchResult[] = [];

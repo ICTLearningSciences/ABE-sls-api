@@ -10,6 +10,7 @@ import { Schema } from 'jsonschema';
 export interface DocData {
   plainText: string;
   markdownText: string;
+  uriEncoded?: boolean;
   lastChangedId: string;
   title: string;
   lastModifyingUser: string;
