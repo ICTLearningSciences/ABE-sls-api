@@ -8,6 +8,7 @@ import * as https from 'https';
 import dotenv from 'dotenv';
 import {
   convertMarkdownToJsonString,
+  convertRagDataToPrompt,
   isJsonMarkdown,
   isJsonString,
   userEssayPromptFormat,
@@ -57,7 +58,7 @@ interface ChatResponse {
 }
 
 export const DefaultCamoGptConfig = {
-  DEFAULT_GPT_MODEL: DefaultGptModels.CAMO_GPT_MISTRAL_7B,
+  DEFAULT_GPT_MODEL: DefaultGptModels.OPEN_AI_GPT_6_LUNA,
   DEFAULT_SYSTEM_ROLE:
     'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture. Knowledge cutoff: 2021-09.',
 };
@@ -81,8 +82,8 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
 
   constructor(llmModelConfigs: AiServiceModelConfigs[]) {
     super(
-      AvailableAiServiceNames.CAMO_GPT,
-      DefaultGptModels.CAMO_GPT_MISTRAL_7B,
+      AvailableAiServiceNames.OPEN_AI,
+      DefaultGptModels.OPEN_AI_GPT_6_LUNA,
       llmModelConfigs
     );
   }
@@ -214,6 +215,13 @@ export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
       inputMessages.push({
         role: PromptRoles.SYSTEM,
         content: userEssayPromptFormat(docsPlainText),
+      });
+    }
+
+    if (requestContext.ragData && requestContext.ragData.length > 0) {
+      inputMessages.push({
+        role: PromptRoles.SYSTEM,
+        content: convertRagDataToPrompt(requestContext.ragData),
       });
     }
 

@@ -7,6 +7,7 @@ The full terms of this copyright and license should always be found in the root 
 import * as https from 'https';
 import dotenv from 'dotenv';
 import {
+  convertRagDataToPrompt,
   isJsonString,
   userEssayPromptFormat,
   validateJsonResponse,
@@ -193,6 +194,14 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
       requestData.system_prompt += JSON.stringify({
         role: PromptRoles.USER,
         content: userEssayPromptFormat(docsPlainText),
+      });
+      requestData.system_prompt += '\n';
+    }
+
+    if (requestContext.ragData && requestContext.ragData.length > 0) {
+      requestData.system_prompt += JSON.stringify({
+        role: PromptRoles.USER,
+        content: convertRagDataToPrompt(requestContext.ragData),
       });
       requestData.system_prompt += '\n';
     }

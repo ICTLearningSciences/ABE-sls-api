@@ -4,6 +4,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
+import { RagSearchResult } from 'cloud_services/generic_classes/rag/rag_query';
 import { Schema } from 'jsonschema';
 
 export interface DocData {
@@ -28,16 +29,13 @@ export interface PromptConfiguration {
 }
 
 export enum DefaultGptModels {
-  OPEN_AI_GPT_4 = 'gpt-4',
-  OPEN_AI_GPT_4_TURBO_PREVIEW = 'gpt-4-turbo-preview',
+  OPEN_AI_GPT_6_LUNA = 'gpt-6-luna',
   OPEN_AI_GPT_4o_MINI = 'gpt-4o-mini',
   OPEN_AI_GPT_4o = 'gpt-4o',
   AZURE_GPT_4_TURBO_PREVIEW = 'ABE-gpt-4o',
   AZURE_GPT_4_TURBO_PREVIEW_MINI = 'ABE-gpt-4o-mini',
   GEMINI_1_PRO = 'gemini-pro',
-  GEMINI_1_5_PREVIEW = 'gemini-1.5-pro-latest',
   GEMINI_2_0_PREVIEW = 'gemini-2.0-flash',
-  CAMO_GPT_MISTRAL_7B = 'Mistral7B',
   SAGE_GPT_4O_MINI = 'gpt-4o-mini',
   SAGE_GPT_4 = 'gpt4',
   SAGE_GPT_4_GOV = 'gpt4-gov',
@@ -75,6 +73,7 @@ export interface AiPromptStep {
   prompts: PromptConfiguration[];
   targetAiServiceModel: TargetAiModelServiceType;
   systemRole?: string;
+  ragConfiguration?: RagStoreConfiguration;
   outputDataType: PromptOutputTypes;
   responseSchema?: Schema;
   responseFormat?: string;
@@ -88,6 +87,7 @@ export interface AiRequestContext {
   aiStep: AiPromptStep;
   docsPlainText: string;
   previousOutput: string;
+  ragData?: RagSearchResult[];
 }
 
 export enum PromptOutputTypes {
@@ -110,4 +110,15 @@ export enum DocServices {
   GOOGLE_DOCS = 'GOOGLE_DOCS',
   MICROSOFT_WORD = 'MICROSOFT_WORD',
   RAW_TEXT = 'RAW_TEXT',
+}
+
+export enum RagStore {
+  AZURE_RAG = 'AZURE_RAG',
+  AWS_RAG = 'AWS_RAG',
+}
+
+export interface RagStoreConfiguration {
+  ragQuery: string;
+  topN: number;
+  filters?: Record<string, string | string[]>;
 }

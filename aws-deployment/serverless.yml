@@ -6,7 +6,6 @@ frameworkVersion: "4"
 
 plugins:
   - serverless-domain-manager
-  - serverless-prune-plugin
 
 build:
   esbuild:
@@ -69,6 +68,12 @@ custom:
       SECRET_HEADER_NAME: ${ssm:/abewriting-abe/secret_header_name, ''}
       SECRET_HEADER_VALUE: ${ssm:/abewriting-abe/secret_header_value, ''}
       JWT_SECRET: ${ssm:/ABE/dev/jwt_secret, ''}
+      VECTOR_SEARCH_ENDPOINT: ${ssm:/ABE/azure/dev/vector-search-endpoint, ''}
+      VECTOR_SEARCH_INDEX_NAME: ${ssm:/ABE/azure/dev/vector-search-index, ''}
+      VECTOR_SEARCH_API_KEY: ${ssm:/ABE/azure/dev/vector-search-api-key, ''}
+      SEMANTIC_CONFIGURATION_NAME: ${ssm:/ABE/azure/dev/semantic-configuration-name, ''}
+      EMBEDDING_MODEL: ${ssm:/ABE/azure/dev/embedding-model, ''}
+      RAG_S3_BUCKET: ${ssm:/ABE/aws/RAG_S3_BUCKET_NAME, ''}
     qa:
       ADMIN_EMAILS: ${ssm:/ABE/admin_emails, ''}
       OPENAI_API_KEY: ${ssm:/ABE/openai_api_key, ''}
@@ -81,6 +86,12 @@ custom:
       JWT_SECRET: ${ssm:/ABE/qa/jwt_secret, ''}
       GOOGLE_SERVICE_CREDS: ${ssm:/ABE/google_service_account_creds, ''}
       GOOGLE_DRIVE_FOLDER_ID: ${ssm:/ABE/qa/google_drive_folder_id, ''}
+      VECTOR_SEARCH_ENDPOINT: ${ssm:/ABE/azure/qa/vector-search-endpoint, ''}
+      VECTOR_SEARCH_INDEX_NAME: ${ssm:/ABE/azure/qa/vector-search-index, ''}
+      VECTOR_SEARCH_API_KEY: ${ssm:/ABE/azure/qa/vector-search-api-key, ''}
+      SEMANTIC_CONFIGURATION_NAME: ${ssm:/ABE/azure/qa/semantic-configuration-name, ''}
+      EMBEDDING_MODEL: ${ssm:/ABE/azure/qa/embedding-model, ''}
+      RAG_S3_BUCKET: ${ssm:/ABE/aws/RAG_S3_BUCKET_NAME, ''}
     prod:
       ADMIN_EMAILS: ${ssm:/ABE/admin_emails, ''}
       OPENAI_API_KEY: ${ssm:/ABE/openai_api_key, ''}
@@ -93,7 +104,12 @@ custom:
       JWT_SECRET: ${ssm:/ABE/prod/jwt_secret, ''}
       GOOGLE_SERVICE_CREDS: ${ssm:/ABE/google_service_account_creds, ''}
       GOOGLE_DRIVE_FOLDER_ID: ${ssm:/ABE/prod/google_drive_folder_id, ''}
-
+      VECTOR_SEARCH_ENDPOINT: ${ssm:/ABE/azure/prod/vector-search-endpoint, ''}
+      VECTOR_SEARCH_INDEX_NAME: ${ssm:/ABE/azure/prod/vector-search-index, ''}
+      VECTOR_SEARCH_API_KEY: ${ssm:/ABE/azure/prod/vector-search-api-key, ''}
+      SEMANTIC_CONFIGURATION_NAME: ${ssm:/ABE/azure/prod/semantic-configuration-name, ''}
+      EMBEDDING_MODEL: ${ssm:/ABE/azure/prod/embedding-model, ''}
+      RAG_S3_BUCKET: ${ssm:/ABE/aws/RAG_S3_BUCKET_NAME, ''}
   serverlessPluginTypescript:
     tsConfigFileLocation: './tsconfig.json'
 
@@ -107,7 +123,7 @@ package:
 
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs22.x
   region: ${opt:region, 'us-east-1'}
   stage: ${opt:stage, 'dev'}
 
@@ -118,6 +134,12 @@ provider:
     OPENAI_API_KEY: ${self:custom.stages.${self:provider.stage}.OPENAI_API_KEY}
     AZURE_OPENAI_ENDPOINT: ${ssm:/ABE/azure_api_endpoint, ''}
     AZURE_OPENAI_API_KEY: ${ssm:/ABE/azure_api_key, ''}
+    AWS_KNOWLEDGE_BASE_ID: ${ssm:/ABE/aws/knowledge-base-id, ''}
+    VECTOR_SEARCH_ENDPOINT: ${self:custom.stages.${self:provider.stage}.VECTOR_SEARCH_ENDPOINT}
+    VECTOR_SEARCH_INDEX_NAME: ${self:custom.stages.${self:provider.stage}.VECTOR_SEARCH_INDEX_NAME}
+    VECTOR_SEARCH_API_KEY: ${self:custom.stages.${self:provider.stage}.VECTOR_SEARCH_API_KEY}
+    SEMANTIC_CONFIGURATION_NAME: ${self:custom.stages.${self:provider.stage}.SEMANTIC_CONFIGURATION_NAME}
+    EMBEDDING_MODEL: ${self:custom.stages.${self:provider.stage}.EMBEDDING_MODEL}
     GEMINI_API_KEY: ${ssm:/ABE/gemini_api_key, ''}
     ANTHROPIC_API_KEY: ${self:custom.stages.${self:provider.stage}.ANTHROPIC_API_KEY}
     GOOGLE_API_ENDPOINT: ${self:custom.stages.${self:provider.stage}.GOOGLE_API_ENDPOINT}
@@ -127,9 +149,7 @@ provider:
     SENTRY_DSN: ${ssm:/ABE/sentry_dsn_sls_api, ''}
     STAGE: ${self:provider.stage}
     CLOUD_SERVICE: "aws"
-    CAMO_GPT_API_URL: ${ssm:/ABE/CAMO_GPT_API_URL, ''}
-    CAMO_GPT_API_KEY: ${ssm:/ABE/CAMO_GPT_API_KEY, ''}
-    SAGE_API_KEY: ${ssm:/ABE/SAGE_API_KEY, ''}
+    RAG_S3_BUCKET: ${ssm:/ABE/aws/RAG_S3_BUCKET_NAME, ''}
   # iam permissions for all lambda functions
   iam:
     role:
@@ -161,8 +181,24 @@ provider:
           Resource: "arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/*"
         - Effect: "Allow"
           Action:
+            - s3:ListBucket
+          Resource: "arn:aws:s3:::${ssm:/ABE/aws/RAG_S3_BUCKET_NAME, ''}"
+        - Effect: "Allow"        
+          Action:
+            - s3:GetObject
+            - s3:ListBucket
+            - s3:PutObject
+            - s3:DeleteObject
+          Resource: "arn:aws:s3:::${ssm:/ABE/aws/RAG_S3_BUCKET_NAME, ''}/*"
+        - Effect: "Allow"
+          Action:
             - secretsmanager:GetSecretValue
           Resource: "arn:aws:secretsmanager:${aws:region}:${aws:accountId}:secret:*"
+        - Effect: "Allow"
+          Action:
+            - bedrock:Retrieve
+            - bedrock:RetrieveAndGenerate
+          Resource: "arn:aws:bedrock:${aws:region}:${aws:accountId}:knowledge-base/*"
 
 functions:
   authorizer_func:
@@ -181,6 +217,56 @@ functions:
               querystrings:
                 emails: false
                 userId: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
+  get_rag_document:
+    handler: src/functions/get_rag_document.handler
+    timeout: 29
+    events:
+      - http:
+          path: /get_rag_document
+          method: get
+          request:
+            parameters:
+              querystrings:
+                ragDocName: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
+  get_signed_upload_url:
+    handler: src/functions/get_signed_upload_url.handler
+    timeout: 29
+    events:
+      - http:
+          path: /get_signed_upload_url
+          method: get
+          request:
+            parameters:
+              querystrings:
+                ragDocName: true
+          cors:
+            origin: '*'
+          authorizer:
+            name: authorizer_func
+            resultTtlInSeconds: 300
+            identitySource: method.request.header.Authorization
+            type: token
+  list_rag_documents:
+    handler: src/functions/list_rag_documents.handler
+    timeout: 29
+    events:
+      - http:
+          path: /list_rag_documents
+          method: get
           cors:
             origin: '*'
           authorizer:

@@ -34,6 +34,22 @@ export function createResponseJson(statusCode: number, body: any) {
     };
   }
 
+export function createResponseBinary(statusCode: number, contentType: string | undefined, body: any){
+   if (statusCode >= 400) {
+      Sentry.captureException(`Error response: ${JSON.stringify(body)}`);
+    }
+    return {
+      statusCode: statusCode,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true,
+        'Content-Type': contentType
+      },
+      body: body.toString('base64'),
+      isBase64Encoded: true
+    };
+}
+
   export function extractErrorMessageFromError(err: any | unknown): string {
     if (err instanceof Error) {
       return err.message;
