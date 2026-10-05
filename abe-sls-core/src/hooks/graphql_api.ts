@@ -112,6 +112,7 @@ export async function fetchGoogleDocVersion(
           docId
           markdownText
           plainText
+          uriEncoded
           lastChangedId
           sessionId
           sessionIntention{
@@ -165,6 +166,7 @@ export async function fetchMostRecentVersion(
           docId
           markdownText
           plainText
+          uriEncoded
           lastChangedId
           sessionId
           sessionIntention{
