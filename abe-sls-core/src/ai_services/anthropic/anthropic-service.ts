@@ -128,7 +128,7 @@ export class AnthropicService extends AiService<
   }
 
   async executeAnthropic(params: AnthropicReqType) {
-    let id = uuid();
+    const id = uuid();
     console.log(
       `Executing Anthropic request ${id} starting at ${new Date().toISOString()}`
     );

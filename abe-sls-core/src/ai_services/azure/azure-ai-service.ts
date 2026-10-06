@@ -133,7 +133,7 @@ export class AzureOpenAiService extends AiService<
   }
 
   async executeAzureOpenAi(params: AzureOpenAiReqType) {
-    let id = uuid();
+    const id = uuid();
     console.log(
       `Executing Azure OpenAI request ${id} starting at ${new Date().toISOString()} with params: ${JSON.stringify(params, null, 2)}`
     );
@@ -216,7 +216,7 @@ export class AzureOpenAiService extends AiService<
     }
 
     aiStep.prompts.forEach((prompt) => {
-      let text = prompt.promptText;
+      const text = prompt.promptText;
       inputMessages.push({
         role: prompt.promptRole || PromptRoles.USER,
         content: text,

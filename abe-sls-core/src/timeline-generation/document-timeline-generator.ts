@@ -409,7 +409,7 @@ export class DocumentTimelineGenerator {
     });
     // CURRENT: what is fetchDocTimline returning?
     // Current: issue for subsequent timeline requests because of existing document timeline
-    let _existingDocumentTimeline = await fetchDocTimeline(userId, docId);
+    const _existingDocumentTimeline = await fetchDocTimeline(userId, docId);
     let existingDocumentTimeline: GQLDocumentTimeline | undefined;
     if (_existingDocumentTimeline) {
       existingDocumentTimeline = await this.hydrateGQLDocumentTimeline(

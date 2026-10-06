@@ -37,7 +37,6 @@
     "axios": "^1.4.0",
     "diff": "^5.2.0",
     "dotenv": "^16.4.5",
-    "eslint": "^9.0.0",
     "google-auth-library": "^8.9.0",
     "googleapis": "^122.0.0",
     "jsonschema": "^1.4.1",
@@ -47,6 +46,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/chai": "^4.3.14",
     "@types/diff": "^5.2.1",
     "@types/expect": "^24.3.0",
@@ -58,6 +58,9 @@
     "@types/uuid": "^9.0.8",
     "aws-sdk-client-mock": "^4.0.0",
     "chai": "^5.1.0",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "jiti": "^2.7.0",
     "license-check-and-add": "^4.0.5",
     "mocha": "^10.4.0",
     "nock": "^13.5.4",
@@ -65,7 +68,8 @@
     "supertest": "^6.3.4",
     "ts-mocha": "^10.0.0",
     "tsx": "^4.7.2",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "typescript-eslint": "^8.71.1"
   },
   "type": "module",
   "files": [

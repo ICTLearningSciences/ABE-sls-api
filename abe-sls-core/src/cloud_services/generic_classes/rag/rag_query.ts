@@ -28,7 +28,7 @@ export abstract class RagQuery {
 
   abstract fetchRagDocument(docName: string): Promise<string>;
 
-  abstract listRagDocuments(): Promise<Object[]>;
+  abstract listRagDocuments(): Promise<object[]>;
 
   abstract getSignedUploadUrl(fileName: string): Promise<string>;
 }

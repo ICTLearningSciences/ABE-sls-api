@@ -130,7 +130,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
   }
 
   async executeOpenAi(params: OpenAiReqType) {
-    let id = uuid();
+    const id = uuid();
     console.log(
       `Executing OpenAI request ${id} starting at ${new Date().toISOString()}`
     );
