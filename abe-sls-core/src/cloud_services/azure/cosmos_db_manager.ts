@@ -18,10 +18,7 @@ import {
 } from '../generic_classes/document_db/document_db.js';
 import { CloudServices } from '../generic_classes/types.js';
 import { AiServiceFinalResponseType } from '../../ai_services/ai-service-factory.js';
-import {
-  GQLDocumentTimeline,
-  StoredDocumentTimeline,
-} from '../../timeline-generation/types.js';
+import { StoredDocumentTimeline } from '../../timeline-generation/types.js';
 import requireEnv from '../../helpers.js';
 import { CosmosClient } from '@azure/cosmos';
 import { AiAsyncJobStatus } from '../../types.js';

@@ -37,7 +37,6 @@ export enum DefaultGptModels {
   AZURE_GPT_4_TURBO_PREVIEW_MINI = 'ABE-gpt-4o-mini',
   GEMINI_1_PRO = 'gemini-pro',
   GEMINI_2_0_PREVIEW = 'gemini-2.0-flash',
-  SAGE_GPT_4O_MINI = 'gpt-4o-mini',
   SAGE_GPT_4 = 'gpt4',
   SAGE_GPT_4_GOV = 'gpt4-gov',
   SAGE_GPT_4O_GOV = 'gpt-4o-gov',

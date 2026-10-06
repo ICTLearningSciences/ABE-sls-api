@@ -12,10 +12,10 @@ import {
   StoredDocumentTimeline,
 } from '../timeline-generation/types.js';
 import { execGql } from '../api.js';
-import pkg from 'lodash';
+//import pkg from 'lodash';
 import { AiServiceModelConfigs, GQLAiStep } from '../gql_types.js';
 import { AiServiceStepDataTypes } from '../ai_services/ai-service-factory.js';
-const { omit } = pkg;
+//const { omit } = pkg;
 const GRAPHQL_ENDPOINT = process.env.GRAPHQL_ENDPOINT || '';
 const SECRET_HEADER_NAME = process.env.SECRET_HEADER_NAME || '';
 const SECRET_HEADER_VALUE = process.env.SECRET_HEADER_VALUE || '';

@@ -22,7 +22,7 @@ import {
 import { collectGoogleDocSlicesOutsideOfSessions } from './google-doc-version-handlers.js';
 import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import { changeSummaryPromptRequest } from './change-summary.js';
-import { AiAsyncJobStatus, TargetAiModelServiceType } from '../types.js';
+import { TargetAiModelServiceType } from '../types.js';
 import {
   AiServiceFactory,
   AvailableAiServiceNames,
@@ -77,7 +77,7 @@ function fillInExistingReverseOutlines(
       };
     }
   );
-  timelinePoints.forEach((timelinePoint, i) => {
+  timelinePoints.forEach((timelinePoint, _i) => {
     if (!timelinePoint.reverseOutline) {
       const existingTextOutline = docTextOutlines.find(
         (docTextOutline) =>
@@ -106,7 +106,7 @@ function mergeExistingTimelinePoints(
   if (!existingTimelinePoints || existingTimelinePoints.length === 0) {
     return timelinePoints;
   }
-  return timelinePoints.map((timelinePoint, i) => {
+  return timelinePoints.map((timelinePoint, _i) => {
     const existingTimelinePoint = existingTimelinePoints.find(
       (existingTimelinePoint) =>
         existingTimelinePoint.version.docId === timelinePoint.version.docId &&

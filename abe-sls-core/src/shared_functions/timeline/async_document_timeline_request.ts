@@ -6,11 +6,7 @@ The full terms of this copyright and license should always be found in the root 
 */
 // Note: had to add .js to find this file in serverless
 
-import {
-  AiAsyncJobStatus,
-  DocServices,
-  TargetAiModelServiceType,
-} from '../../types.js';
+import { DocServices, TargetAiModelServiceType } from '../../types.js';
 import { v4 as uuid } from 'uuid';
 import { DocumentDBFactory } from '../../cloud_services/generic_classes/document_db/document_db_factory.js';
 

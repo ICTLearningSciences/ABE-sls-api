@@ -12,7 +12,7 @@ export const getDocRevisions = async (docsId: string) => {
     throw new Error('Google Doc ID is empty');
   }
   const { getGoogleAPIs, getGoogleDocVersions } = useWithGoogleApi();
-  const { drive, docs, accessToken } = await getGoogleAPIs();
+  const { drive, accessToken } = await getGoogleAPIs();
   const revisions = await getGoogleDocVersions(
     drive,
     docsId,
