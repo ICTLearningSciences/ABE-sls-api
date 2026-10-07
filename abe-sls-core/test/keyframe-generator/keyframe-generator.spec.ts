@@ -14,7 +14,7 @@ import { GoogleDocService } from "../../src/doc_services/google-doc-services";
 
 export const targetAiService = {
     serviceName:AvailableAiServiceNames.OPEN_AI,
-    model: DefaultGptModels.OPEN_AI_GPT_4
+    model: DefaultGptModels.OPEN_AI_GPT_6_LUNA
 }
 
 export const llmModelConfigs = [
@@ -22,7 +22,7 @@ export const llmModelConfigs = [
         serviceName: AvailableAiServiceNames.OPEN_AI,
         modelList: [
             {
-                name: DefaultGptModels.OPEN_AI_GPT_4,
+                name: DefaultGptModels.OPEN_AI_GPT_6_LUNA,
                 maxTokens: 0,
                 supportsWebSearch: false
             }
