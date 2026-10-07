@@ -11,20 +11,14 @@ import {
   StepStatusRes,
   TimelineStatusRes,
 } from '../generic_classes/document_db/document_db.js';
-import requireEnv, { extractErrorMessageFromError } from '../../helpers.js';
+import requireEnv from '../../helpers.js';
 import { CloudServices } from '../generic_classes/types.js';
-import { AiAsyncJobStatus, DocServices } from '../../types.js';
-import {
-  AuthHeaders,
-  ExtractedOpenAiRequestData,
-} from '../../shared_functions/ai_steps_request/helpers.js';
+import { AiAsyncJobStatus } from '../../types.js';
+import { ExtractedOpenAiRequestData } from '../../shared_functions/ai_steps_request/helpers.js';
 import { AiServiceFinalResponseType } from '../../ai_services/ai-service-factory.js';
 import { GenericLlmRequest } from '../../generic_llm_request/helpers.js';
 import { TimelineRequestData } from '../../shared_functions/timeline/async_document_timeline_request.js';
-import {
-  GQLDocumentTimeline,
-  StoredDocumentTimeline,
-} from '../../timeline-generation/types.js';
+import { StoredDocumentTimeline } from '../../timeline-generation/types.js';
 export class DynamoDBManager extends DocumentDBManager {
   private readonly jobsTableName = requireEnv('JOBS_TABLE_NAME');
   dynamoDbClient: DynamoDB;

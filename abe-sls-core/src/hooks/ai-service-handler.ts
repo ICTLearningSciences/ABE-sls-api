@@ -86,17 +86,19 @@ export class AiServiceHandler {
         previousOutput,
         ragData,
       });
-      let { aiStepData, answer } = res;
+      const { aiStepData, answer } = res;
       allStepsData.push(aiStepData);
+
+      let editedAnswer = answer;
 
       if (curAiStep.editDoc) {
         const editDocResponse = JSON.parse(answer) as EditDocResponse;
         await docHandler.handleDocEdits(docsId, editDocResponse.edits);
-        answer = editDocResponse.responseMessage;
+        editedAnswer = editDocResponse.responseMessage;
       }
 
-      previousOutput = answer;
-      finalAnswer = answer;
+      previousOutput = editedAnswer;
+      finalAnswer = editedAnswer;
     }
     try {
       await storePromptRun(docsId, userId, aiSteps, allStepsData);
