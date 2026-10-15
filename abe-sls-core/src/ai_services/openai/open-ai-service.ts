@@ -18,6 +18,7 @@ import { Schema } from 'jsonschema';
 import {
   convertMarkdownToJsonString,
   convertRagDataToPrompt,
+  incrementTemperature,
   isJsonMarkdown,
   isJsonString,
   userEssayPromptFormat,
@@ -108,9 +109,15 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
           if (isJsonResponse) {
             break;
           }
+          const newTemperature = incrementTemperature(
+            j * 0.1,
+            params.temperature
+          );
           const newParams: OpenAiReqType = {
             ...params,
-            temperature: AI_DEFAULT_TEMP + j * 0.1,
+            ...(newTemperature !== undefined
+              ? { temperature: newTemperature }
+              : {}),
           };
           result = await this.executeOpenAi(newParams);
           answer = result.output_text || '';
@@ -191,6 +198,9 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
       model: llmModelInfo.name,
       input: [],
       max_output_tokens: llmModelInfo.maxTokens,
+      ...(llmModelInfo.temperature !== undefined
+        ? { temperature: llmModelInfo.temperature }
+        : {}),
     };
     const inputMessages: InputMessageType[] = [];
     inputMessages.push({

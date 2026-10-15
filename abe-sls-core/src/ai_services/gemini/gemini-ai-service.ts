@@ -18,6 +18,7 @@ import {
 import {
   convertMarkdownToJsonString,
   convertRagDataToPrompt,
+  incrementTemperature,
   isJsonMarkdown,
   isJsonString,
   userEssayPromptFormat,
@@ -74,7 +75,7 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
   constructor(llmModelConfigs: AiServiceModelConfigs[]) {
     super(
       AvailableAiServiceNames.GEMINI,
-      DefaultGptModels.GEMINI_2_0_PREVIEW,
+      DefaultGptModels.GEMINI_4_ARGON,
       llmModelConfigs
     );
     const geminiApiKey = process.env.GEMINI_API_KEY || '';
@@ -142,7 +143,7 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
       this.llmModelConfigs
     );
     const canUseSystemInstruction =
-      aiStep.targetAiServiceModel.model === DefaultGptModels.GEMINI_2_0_PREVIEW;
+      aiStep.targetAiServiceModel.model === DefaultGptModels.GEMINI_4_ARGON;
     let customSystemInstructions = '';
 
     if (aiStep.systemRole) {
@@ -264,8 +265,14 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
     const model = this.aiServiceClient.getGenerativeModel({
       model: requestData.model,
     });
-    async function getResponse(numAttempts: number) {
-      model.generationConfig.temperature = AI_DEFAULT_TEMP + numAttempts * 0.1;
+    async function getResponse(numAttempts: number, modelTemperature?: number) {
+      const newTemperature = incrementTemperature(
+        numAttempts * 0.1,
+        modelTemperature
+      );
+      if (newTemperature !== undefined) {
+        model.generationConfig.temperature = newTemperature;
+      }
 
       const chat = model.startChat(requestData.startChatParams);
       const result = await chat.sendMessage(requestData.requestText);

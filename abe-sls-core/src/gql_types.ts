@@ -16,6 +16,7 @@ export interface ServiceModelInfo {
   name: string;
   maxTokens: number;
   supportsWebSearch: boolean;
+  temperature?: number;
 }
 
 export type AiServiceModelConfigs = {

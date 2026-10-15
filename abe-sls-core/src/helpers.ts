@@ -208,3 +208,13 @@ export function getSourceFileNameFromRagResult(
   const match = ragResult.location?.s3Location?.uri?.split('/').pop();
   return match || 'Untitled';
 }
+
+export function incrementTemperature(
+  tempToAdd: number,
+  temperature: number | undefined | null
+): number | undefined {
+  if (temperature === undefined || temperature === null) {
+    return undefined;
+  }
+  return Math.max(temperature + tempToAdd, 1);
+}

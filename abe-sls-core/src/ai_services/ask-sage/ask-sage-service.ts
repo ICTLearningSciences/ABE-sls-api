@@ -8,6 +8,7 @@ import * as https from 'https';
 import dotenv from 'dotenv';
 import {
   convertRagDataToPrompt,
+  incrementTemperature,
   isJsonString,
   userEssayPromptFormat,
   validateJsonResponse,
@@ -21,7 +22,7 @@ import {
   PromptRoles,
 } from '../../types.js';
 import { Schema } from 'jsonschema';
-import { RETRY_ATTEMPTS, AI_DEFAULT_TEMP } from '../../constants.js';
+import { RETRY_ATTEMPTS } from '../../constants.js';
 import {
   AiServiceResponse,
   AiStepData,
@@ -112,9 +113,13 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
           if (isJsonResponse) {
             break;
           }
+          const newTemperature = incrementTemperature(
+            j * 0.1,
+            params.temperature
+          );
           const newParams: SageReqType = {
             ...params,
-            temperature: AI_DEFAULT_TEMP + j * 0.1,
+            ...(newTemperature ? { temperature: newTemperature } : {}),
           };
           result = await this.executeAskSage(newParams);
           answer = result.message || '';
@@ -176,6 +181,9 @@ export class AskSageService extends AiService<SageReqType, SageResType> {
       message: '',
       persona: '',
       system_prompt: '',
+      ...(llmModelInfo.temperature !== undefined
+        ? { temperature: llmModelInfo.temperature }
+        : {}),
     };
 
     if (aiStep.systemRole) {
