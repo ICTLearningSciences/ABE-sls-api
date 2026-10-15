@@ -31,39 +31,20 @@ export interface PromptConfiguration {
 
 export enum DefaultGptModels {
   OPEN_AI_GPT_6_LUNA = 'gpt-6-luna',
-  OPEN_AI_GPT_4o_MINI = 'gpt-4o-mini',
-  OPEN_AI_GPT_4o = 'gpt-4o',
-  AZURE_GPT_4_TURBO_PREVIEW = 'ABE-gpt-4o',
-  AZURE_GPT_4_TURBO_PREVIEW_MINI = 'ABE-gpt-4o-mini',
-  GEMINI_1_PRO = 'gemini-pro',
-  GEMINI_2_0_PREVIEW = 'gemini-2.0-flash',
+  AZURE_GPT_6_LUNA = 'ABE-gpt-6-luna',
+  GEMINI_4_ARGON = 'gemini-4-argon',
+  GEMINI_3_8_FLASH = 'gemini-3.8-flash',
   SAGE_GPT_4O_MINI = 'gpt-4o-mini',
   SAGE_GPT_4 = 'gpt4',
   SAGE_GPT_4_GOV = 'gpt4-gov',
   SAGE_GPT_4O_GOV = 'gpt-4o-gov',
 
-  ANTHROPIC_CLAUDE_3_5_SONNET_LATEST = 'claude-3-5-sonnet-latest',
-  ANTHROPIC_CLAUDE_3_7_SONNET_LATEST = 'claude-3-7-sonnet-latest',
-  ANTHROPIC_CLAUDE_4_SONNET_LATEST = 'claude-sonnet-4-0',
+  ANTHROPIC_CLAUDE_5_5_SONNET = 'claude-sonnet-5-5',
 
-  ANTHROPIC_CLAUDE_3_HAIKU_20240307 = 'claude-3-haiku-20240307',
-  ANTHROPIC_CLAUDE_3_5_HAIKU_LATEST = 'claude-3-5-haiku-latest',
+  ANTHROPIC_CLAUDE_HAIKU_4_5 = 'claude-haiku-4-5-20251001',
 
-  ANTHROPIC_CLAUDE_3_OPUS_LATEST = 'claude-3-opus-latest',
-  ANTHROPIC_CLAUDE_4_OPUS_20250514 = 'claude-opus-4-20250514',
+  ANTHROPIC_CLAUDE_OPUS_4_8 = 'claude-opus-4-8',
 }
-
-export const AnthropicModelMaxTokens = {
-  [DefaultGptModels.ANTHROPIC_CLAUDE_3_5_SONNET_LATEST]: 8192,
-  [DefaultGptModels.ANTHROPIC_CLAUDE_3_7_SONNET_LATEST]: 64000,
-  [DefaultGptModels.ANTHROPIC_CLAUDE_4_SONNET_LATEST]: 64000,
-
-  [DefaultGptModels.ANTHROPIC_CLAUDE_3_HAIKU_20240307]: 4096,
-  [DefaultGptModels.ANTHROPIC_CLAUDE_3_5_HAIKU_LATEST]: 8192,
-
-  [DefaultGptModels.ANTHROPIC_CLAUDE_3_OPUS_LATEST]: 4096,
-  [DefaultGptModels.ANTHROPIC_CLAUDE_4_OPUS_20250514]: 32000,
-};
 
 export interface TargetAiModelServiceType {
   serviceName: string;

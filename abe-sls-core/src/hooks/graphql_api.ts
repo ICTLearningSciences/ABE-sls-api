@@ -348,6 +348,7 @@ export function fetchAiServiceModelConfigs(): Promise<AiServiceModelConfigs[]> {
                 name
                 maxTokens
                 supportsWebSearch
+                temperature
               }
             }
           }
