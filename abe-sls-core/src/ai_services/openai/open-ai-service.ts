@@ -154,8 +154,10 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
 
   applyWebSearchTool(req: OpenAiReqType) {
     req.tools = [{ type: 'web_search' }];
-    // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
-    req.tool_choice = { type: 'web_search' };
+    // Forces the model to use the web_search tool, 'web_search' is a valid tool type, but not yet defined in the OpenAI API for tool_choice.
+    req.tool_choice = {
+      type: 'web_search' as any,
+    };
     req.input = (req.input as InputMessageType[]).map((message) => {
       // convert system instructions to user instructions
       if (message.role === PromptRoles.SYSTEM) {
