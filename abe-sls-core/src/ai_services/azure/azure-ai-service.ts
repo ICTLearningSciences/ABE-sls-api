@@ -233,12 +233,11 @@ export class AzureOpenAiService extends AiService<
     // re-apply responseFormat for recency bias
     inputMessages.push(...this.getResponseFormatMessages(aiStep));
 
-    // //   TODO: re-enable if web search tool is ever added for Azure OpenAI
-    // if (aiStep.webSearch) {
-    //   request.tools = [{ type: 'web_search_preview' }];
-    //   // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
-    //   request.tool_choice = { type: 'web_search_preview' };
-    // }
+    if (aiStep.webSearch && llmModelInfo.supportsWebSearch) {
+      request.tools = [{ type: 'web_search' }];
+      // Forces the model to use the web_search tool, 'web_search' is a valid tool type, but not yet defined in the Azure OpenAI API for tool_choice.
+      request.tool_choice = { type: 'web_search' as any };
+    }
 
     request.input = inputMessages;
     return request;
