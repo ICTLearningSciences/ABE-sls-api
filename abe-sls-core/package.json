@@ -42,7 +42,7 @@
     "jsonschema": "^1.4.1",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
-    "openai": "^4.94.0",
+    "openai": "^7.39.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
@@ -63,7 +63,7 @@
     "jiti": "^2.7.0",
     "license-check-and-add": "^4.0.5",
     "mocha": "^10.4.0",
-    "nock": "^13.5.4",
+    "nock": "^14.0.17",
     "prettier": "^3.2.5",
     "supertest": "^6.3.4",
     "ts-mocha": "^10.0.0",

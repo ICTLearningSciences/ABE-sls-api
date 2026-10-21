@@ -15,6 +15,7 @@ import {
 import { AzureOpenAI } from 'openai';
 import {
   convertRagDataToPrompt,
+  incrementTemperature,
   isJsonString,
   userEssayPromptFormat,
   validateJsonResponse,
@@ -54,7 +55,7 @@ interface Message {
 export const DefaultAzureOpenAiConfig = {
   DEFAULT_SYSTEM_ROLE:
     'You are ChatGPT, a large language model trained by OpenAI, based on the GPT-3.5 architecture. Knowledge cutoff: 2021-09.',
-  DEFAULT_GPT_MODEL: DefaultGptModels.AZURE_GPT_4_TURBO_PREVIEW,
+  DEFAULT_GPT_MODEL: DefaultGptModels.AZURE_GPT_6_LUNA,
 };
 
 /**
@@ -70,7 +71,7 @@ export class AzureOpenAiService extends AiService<
   constructor(llmModelConfigs: AiServiceModelConfigs[]) {
     super(
       AvailableAiServiceNames.AZURE_OPEN_AI,
-      DefaultGptModels.AZURE_GPT_4_TURBO_PREVIEW,
+      DefaultGptModels.AZURE_GPT_6_LUNA,
       llmModelConfigs
     );
     this.aiServiceClient = new AzureOpenAI({
@@ -109,9 +110,13 @@ export class AzureOpenAiService extends AiService<
           if (isJsonResponse) {
             break;
           }
-          const newParams = {
+          const newTemperature = incrementTemperature(
+            j * 0.1,
+            params.temperature
+          );
+          const newParams: AzureOpenAiReqType = {
             ...params,
-            temperature: AI_DEFAULT_TEMP + j * 0.1,
+            ...(newTemperature ? { temperature: newTemperature } : {}),
           };
           result = await this.executeAzureOpenAi(newParams);
           answer = result.output_text || '';
@@ -179,7 +184,9 @@ export class AzureOpenAiService extends AiService<
     const request: AzureOpenAiReqType = {
       model: llmModelInfo.name,
       input: [],
-      temperature: AI_DEFAULT_TEMP,
+      ...(llmModelInfo.temperature !== undefined
+        ? { temperature: llmModelInfo.temperature }
+        : {}),
       max_output_tokens: llmModelInfo.maxTokens,
       store: false,
     };
@@ -226,12 +233,11 @@ export class AzureOpenAiService extends AiService<
     // re-apply responseFormat for recency bias
     inputMessages.push(...this.getResponseFormatMessages(aiStep));
 
-    // //   TODO: re-enable if web search tool is ever added for Azure OpenAI
-    // if (aiStep.webSearch) {
-    //   request.tools = [{ type: 'web_search_preview' }];
-    //   // forces the model to use the web_search_preview tool, whereas it would otherwise determine if it really needs to use the tool based on the prompt
-    //   request.tool_choice = { type: 'web_search_preview' };
-    // }
+    if (aiStep.webSearch && llmModelInfo.supportsWebSearch) {
+      request.tools = [{ type: 'web_search' }];
+      // Forces the model to use the web_search tool, 'web_search' is a valid tool type, but not yet defined in the Azure OpenAI API for tool_choice.
+      request.tool_choice = { type: 'web_search' as any };
+    }
 
     request.input = inputMessages;
     return request;

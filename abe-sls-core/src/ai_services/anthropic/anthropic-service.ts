@@ -14,7 +14,7 @@ import { AiService } from '../abstract-classes/abstract-ai-service.js';
 import { v4 as uuid } from 'uuid';
 import { Schema } from 'jsonschema';
 import { convertRagDataToPrompt, isProperJson } from '../../helpers.js';
-import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
+import { RETRY_ATTEMPTS } from '../../constants.js';
 import {
   AiStepData,
   AiServiceResponse,
@@ -26,7 +26,7 @@ import { AiServiceModelConfigs } from '../../gql_types.js';
 export const DefaultAnthropicConfig = {
   DEFAULT_SYSTEM_ROLE:
     'You are Claude, an AI assistant created by Anthropic. You are helpful, harmless, and honest.',
-  DEFAULT_CLAUDE_MODEL: DefaultGptModels.ANTHROPIC_CLAUDE_3_5_SONNET_LATEST,
+  DEFAULT_CLAUDE_MODEL: DefaultGptModels.ANTHROPIC_CLAUDE_5_5_SONNET,
 };
 
 // Library does not provide enum for roles, so we define it ourselves
@@ -61,7 +61,7 @@ export class AnthropicService extends AiService<
   constructor(llmModelConfigs: AiServiceModelConfigs[]) {
     super(
       AvailableAiServiceNames.ANTHROPIC,
-      DefaultGptModels.ANTHROPIC_CLAUDE_3_5_SONNET_LATEST,
+      DefaultGptModels.ANTHROPIC_CLAUDE_5_5_SONNET,
       llmModelConfigs
     );
     this.aiServiceClient = new Anthropic({
@@ -96,7 +96,6 @@ export class AnthropicService extends AiService<
           }
           const newParams: AnthropicReqType = {
             ...params,
-            temperature: AI_DEFAULT_TEMP + j * 0.1,
           };
           result = await this.executeAnthropic(newParams);
           answer = this.extractTextFromResponse(result);
@@ -192,7 +191,6 @@ export class AnthropicService extends AiService<
       max_tokens: llmModelInfo.maxTokens,
       system: systemMessage,
       messages: messages,
-      temperature: AI_DEFAULT_TEMP,
       tools:
         llmModelInfo.supportsWebSearch && aiStep.webSearch
           ? [webSearchTool]
