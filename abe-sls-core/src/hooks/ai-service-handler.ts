@@ -105,17 +105,16 @@ export class AiServiceHandler {
     } catch (err) {
       console.error('Failed to store prompt run in gql');
       console.log(err);
-    } finally {
-      return {
-        aiAllStepsData: allStepsData,
-        answer: finalAnswer,
-        sources: ragData.map((rag) => ({
-          title: rag.title,
-          fileName: rag.sourceFileName,
-          url: rag.sourceUrl,
-        })),
-      };
     }
+    return {
+      aiAllStepsData: allStepsData,
+      answer: finalAnswer,
+      sources: ragData.map((rag) => ({
+        title: rag.title,
+        fileName: rag.sourceFileName,
+        url: rag.sourceUrl,
+      })),
+    };
   }
 
   async executeGenericLlmRequest(

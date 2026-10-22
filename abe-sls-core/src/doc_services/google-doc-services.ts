@@ -7,7 +7,6 @@ The full terms of this copyright and license should always be found in the root 
 import { docs_v1, drive_v3 } from 'googleapis';
 import { DocData } from '../types.js';
 import { DocService } from './abstract-doc-service.js';
-import { getDocData as _getDocData } from '../api.js';
 import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import {
   GoogleAPIs,
@@ -64,7 +63,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
     return GoogleDocService.instance;
   }
 
-  fetchExternalDocVersion(docId: string): Promise<GoogleDocVersion[]> {
+  fetchExternalDocVersion(_docId: string): Promise<GoogleDocVersion[]> {
     return Promise.resolve([]);
   }
 
@@ -331,7 +330,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
             await this.executeBatchUpdate(docs, docId, [insertAfterRequest]);
           }
           break;
-        case DocEditAction.HIGHLIGHT:
+        case DocEditAction.HIGHLIGHT: {
           if (!edit.modifyTextAction) {
             throw new Error(
               `modifyTextAction is required for highlight action`
@@ -343,7 +342,8 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
           );
           await this.executeBatchUpdate(docs, docId, [highlightRequest]);
           break;
-        case DocEditAction.REMOVE:
+        }
+        case DocEditAction.REMOVE: {
           if (!edit.modifyTextAction) {
             throw new Error(`modifyTextAction is required for remove action`);
           }
@@ -353,7 +353,8 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
           );
           await this.executeBatchUpdate(docs, docId, [removeRequest]);
           break;
-        case DocEditAction.REPLACE:
+        }
+        case DocEditAction.REPLACE: {
           if (!edit.modifyTextAction) {
             throw new Error(`modifyTextAction is required for replace action`);
           }
@@ -363,6 +364,7 @@ export class GoogleDocService extends DocService<GoogleDocVersion> {
           );
           await this.executeBatchUpdate(docs, docId, replaceRequest);
           break;
+        }
         default:
           throw new Error(`Unknown edit action: ${edit.action}`);
       }

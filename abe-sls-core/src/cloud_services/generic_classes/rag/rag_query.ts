@@ -17,7 +17,6 @@ export interface RagDocumentResult {
  * Handles querying RAG stores.
  */
 export abstract class RagQuery {
-  private static instance: any = null;
   abstract cloudService: CloudServices;
 
   abstract queryRagStore(

@@ -51,10 +51,7 @@ export type AnthropicPromptResponse = AiServiceResponse<
 /**
  * Required: ANTHROPIC_API_KEY environment variable
  */
-export class AnthropicService extends AiService<
-  AnthropicReqType,
-  AnthropicResType
-> {
+export class AnthropicService extends AiService<AnthropicReqType, Anthropic> {
   private static instance: AnthropicService;
   aiServiceClient: Anthropic;
 
