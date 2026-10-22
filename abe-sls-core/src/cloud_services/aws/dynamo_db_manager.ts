@@ -319,7 +319,7 @@ export class DynamoDBManager extends DocumentDBManager {
     await this.dynamoDbClient.updateItem(tableRequest);
   }
 
-  async timelineProcessFailed(jobId: string, error: string): Promise<void> {
+  async timelineProcessFailed(jobId: string, _error: string): Promise<void> {
     const tableRequest: UpdateItemCommandInput = {
       TableName: this.jobsTableName,
       Key: {

@@ -45,20 +45,20 @@ export class RawTextDocService extends DocService<RawTextDocVersion> {
     return RawTextDocService.instance;
   }
 
-  fetchExternalDocVersion(docId: string): Promise<RawTextDocVersion[]> {
+  fetchExternalDocVersion(_docId: string): Promise<RawTextDocVersion[]> {
     // No-op: There are no external versions for raw text docs, do nothing.
     return Promise.resolve([]);
   }
 
   convertExternalDocVersionsToIGDocVersion(
-    externalDocVersion: RawTextDocVersion[],
-    lastRealVersion: IGDocVersion
+    _externalDocVersion: RawTextDocVersion[],
+    _lastRealVersion: IGDocVersion
   ): Promise<IGDocVersion[]> {
     // No-op: There are no external versions for raw text docs, do nothing.
     return Promise.resolve([]);
   }
 
-  async handleDocEdits(docId: string, edits: DocEdit[]): Promise<void> {
+  async handleDocEdits(_docId: string, _edits: DocEdit[]): Promise<void> {
     throw new Error('Not implemented');
   }
 }

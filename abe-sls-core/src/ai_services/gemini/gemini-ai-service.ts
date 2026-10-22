@@ -4,7 +4,11 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import { GoogleGenerativeAI, StartChatParams } from '@google/generative-ai';
+import {
+  GoogleGenerativeAI,
+  StartChatParams,
+  Tool,
+} from '@google/generative-ai';
 import { AiService } from '../abstract-classes/abstract-ai-service.js';
 import {
   AiServiceResponse,
@@ -27,7 +31,7 @@ import {
   PromptRoles,
 } from '../../types.js';
 import { Schema } from 'jsonschema';
-import { RETRY_ATTEMPTS, AI_DEFAULT_TEMP } from '../../constants.js';
+import { RETRY_ATTEMPTS } from '../../constants.js';
 import { EnhancedGenerateContentResponse } from '@google/generative-ai/dist/types';
 import {
   GenerateContentCandidate,
@@ -64,7 +68,10 @@ export interface GeminiJsonResponse {
 /**
  * Required: GEMINI_API_KEY environment variable
  */
-export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
+export class GeminiAiService extends AiService<
+  GeminiReqType,
+  GoogleGenerativeAI
+> {
   private static instance: GeminiAiService;
   aiServiceClient: GoogleGenerativeAI;
 
@@ -233,7 +240,7 @@ export class GeminiAiService extends AiService<GeminiReqType, GeminiResType> {
         {
           googleSearch: {},
           // gemini typescript types are not updated to include googleSearch, PR currently open: https://github.com/google-gemini/generative-ai-js/pull/370
-        } as any,
+        } as Tool,
       ];
     }
     return {

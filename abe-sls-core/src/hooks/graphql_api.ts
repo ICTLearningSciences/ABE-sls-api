@@ -327,6 +327,7 @@ export function convertGQLDocumentTimelineToStoredDocumentTimeline(
     timelinePoints: gqlDocumentTimeline.timelinePoints.map((timelinePoint) => {
       const copy = JSON.parse(JSON.stringify(timelinePoint));
       if (copy.version) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         delete (copy as any).version;
       }
       return {

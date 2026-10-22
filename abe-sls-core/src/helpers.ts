@@ -55,6 +55,7 @@ export function numberChangesUsingDiffWords(
   return totalChanges;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function extractErrorMessageFromError(err: any | unknown): string {
   if (err instanceof Error) {
     return err.message;
@@ -64,8 +65,8 @@ export function extractErrorMessageFromError(err: any | unknown): string {
     try {
       const error = JSON.stringify(err);
       return error;
-    } catch (err) {
-      return 'Cannot stringify error, unknown error structure';
+    } catch (_e) {
+      return `Cannot stringify error, unknown error structure \n ${_e}`;
     }
   }
 }
@@ -98,8 +99,8 @@ export function isJsonString(str: string | undefined | null): boolean {
   }
   try {
     JSON.parse(str);
-  } catch (e) {
-    console.log(`Error parsing string: ${str}`);
+  } catch (_e) {
+    console.log(`Error parsing string: ${str} \n ${_e}`);
     return false;
   }
   return true;

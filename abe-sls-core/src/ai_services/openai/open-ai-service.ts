@@ -24,7 +24,7 @@ import {
   userEssayPromptFormat,
   validateJsonResponse,
 } from '../../helpers.js';
-import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
+import { RETRY_ATTEMPTS } from '../../constants.js';
 import {
   AiStepData,
   AiServiceResponse,
@@ -60,7 +60,7 @@ export type OpenAiPromptResponse = AiServiceResponse<
 /**
  * Required: OPENAI_API_KEY environment variable
  */
-export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
+export class OpenAiService extends AiService<OpenAiReqType, OpenAI> {
   private static instance: OpenAiService;
   aiServiceClient: OpenAI;
 
@@ -156,6 +156,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAiResType> {
     req.tools = [{ type: 'web_search' }];
     // Forces the model to use the web_search tool, 'web_search' is a valid tool type, but not yet defined in the OpenAI API for tool_choice.
     req.tool_choice = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       type: 'web_search' as any,
     };
     req.input = (req.input as InputMessageType[]).map((message) => {

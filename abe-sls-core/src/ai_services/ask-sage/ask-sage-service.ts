@@ -48,15 +48,12 @@ interface ApiRequestData {
 }
 
 interface SageRes {
-  added_obj: any;
   emdedding_down: boolean;
   message: string;
   references: string;
   response: string;
   status: number;
-  tool_calls: any;
   type: string;
-  usage: any;
   uuid: string;
   vectors_down: boolean;
 }
@@ -71,9 +68,10 @@ export type SagePromptResponse = AiServiceResponse<SageReqType, SageResType>;
 /**
  * Required: SAGE_API_KEY environment variable
  */
-export class AskSageService extends AiService<SageReqType, SageResType> {
+export class AskSageService extends AiService<SageReqType> {
   private static instance: AskSageService;
-  aiServiceClient: any;
+  //
+  aiServiceClient: undefined;
 
   constructor(llmModelConfigs: AiServiceModelConfigs[]) {
     super(

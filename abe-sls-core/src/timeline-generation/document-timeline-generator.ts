@@ -157,8 +157,9 @@ export const NUM_GENERATED_PER_REQUEST = 5;
 
 export async function createSlices(
   versions: IGDocVersion[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   externalDocVersions: any[],
-  docService: DocService<any>
+  docService: DocService<unknown>
 ): Promise<TimelineSlice[]> {
   const slices: TimelineSlice[] = [];
   let currentSlice: IGDocVersion[] = [];
@@ -379,8 +380,9 @@ export class DocumentTimelineGenerator {
     jobId: string,
     userId: string,
     docId: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     externalDocVersions: any[],
-    docService: DocService<any>
+    docService: DocService<unknown>
   ): Promise<GQLDocumentTimeline> {
     const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
     const docVersions = await fetchGoogleDocVersion(docId, true);
