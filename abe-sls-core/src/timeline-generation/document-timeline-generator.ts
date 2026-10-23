@@ -22,7 +22,7 @@ import {
 import { collectGoogleDocSlicesOutsideOfSessions } from './google-doc-version-handlers.js';
 import { reverseOutlinePromptRequest } from './reverse-outline.js';
 import { changeSummaryPromptRequest } from './change-summary.js';
-import { AiAsyncJobStatus, TargetAiModelServiceType } from '../types.js';
+import { TargetAiModelServiceType } from '../types.js';
 import {
   AiServiceFactory,
   AvailableAiServiceNames,
@@ -77,7 +77,7 @@ function fillInExistingReverseOutlines(
       };
     }
   );
-  timelinePoints.forEach((timelinePoint, i) => {
+  timelinePoints.forEach((timelinePoint, _i) => {
     if (!timelinePoint.reverseOutline) {
       const existingTextOutline = docTextOutlines.find(
         (docTextOutline) =>
@@ -106,7 +106,7 @@ function mergeExistingTimelinePoints(
   if (!existingTimelinePoints || existingTimelinePoints.length === 0) {
     return timelinePoints;
   }
-  return timelinePoints.map((timelinePoint, i) => {
+  return timelinePoints.map((timelinePoint, _i) => {
     const existingTimelinePoint = existingTimelinePoints.find(
       (existingTimelinePoint) =>
         existingTimelinePoint.version.docId === timelinePoint.version.docId &&
@@ -157,8 +157,9 @@ export const NUM_GENERATED_PER_REQUEST = 5;
 
 export async function createSlices(
   versions: IGDocVersion[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   externalDocVersions: any[],
-  docService: DocService<any>
+  docService: DocService<unknown>
 ): Promise<TimelineSlice[]> {
   const slices: TimelineSlice[] = [];
   let currentSlice: IGDocVersion[] = [];
@@ -379,8 +380,9 @@ export class DocumentTimelineGenerator {
     jobId: string,
     userId: string,
     docId: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     externalDocVersions: any[],
-    docService: DocService<any>
+    docService: DocService<unknown>
   ): Promise<GQLDocumentTimeline> {
     const documentDBManager = DocumentDBFactory.getDocumentDBManagerInstance();
     const docVersions = await fetchGoogleDocVersion(docId, true);
@@ -409,7 +411,7 @@ export class DocumentTimelineGenerator {
     });
     // CURRENT: what is fetchDocTimline returning?
     // Current: issue for subsequent timeline requests because of existing document timeline
-    let _existingDocumentTimeline = await fetchDocTimeline(userId, docId);
+    const _existingDocumentTimeline = await fetchDocTimeline(userId, docId);
     let existingDocumentTimeline: GQLDocumentTimeline | undefined;
     if (_existingDocumentTimeline) {
       existingDocumentTimeline = await this.hydrateGQLDocumentTimeline(

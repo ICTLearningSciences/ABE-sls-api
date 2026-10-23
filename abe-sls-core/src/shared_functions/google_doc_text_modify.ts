@@ -26,7 +26,7 @@ export const googleDocTextModify = async (
     removeGoogleDocText,
     insertGoogleDocText,
   } = useWithGoogleApi();
-  const { drive, docs } = await getGoogleAPIs();
+  const { docs } = await getGoogleAPIs();
 
   console.log(`action: ${action}, targetText: ${targetText}, docId: ${docId}`);
   try {

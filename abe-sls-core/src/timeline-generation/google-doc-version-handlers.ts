@@ -21,8 +21,9 @@ interface VersionBoundaries {
  */
 export async function collectGoogleDocSlicesOutsideOfSessions(
   currentSlices: TimelineSlice[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   externalDocVersions: any[],
-  docService: DocService<any>
+  docService: DocService<unknown>
 ): Promise<TimelineSlice[]> {
   if (!currentSlices.length) {
     console.log('No current slices');

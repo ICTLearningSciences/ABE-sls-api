@@ -17,11 +17,11 @@ export interface CompleteChatResponse<Req, Res> {
   answer: string; // primary answer from AI service
 }
 
-export abstract class AiService<Req, Res> {
+export abstract class AiService<Req, ServiceClientType = undefined> {
   serviceName: string;
   defaultAiServiceModel: TargetAiModelServiceType;
   llmModelConfigs: AiServiceModelConfigs[];
-  abstract aiServiceClient: any;
+  abstract aiServiceClient: ServiceClientType;
 
   constructor(
     serviceName: string,
@@ -38,7 +38,7 @@ export abstract class AiService<Req, Res> {
 
   abstract convertContextDataToServiceParams(
     requestContext: AiRequestContext
-  ): any;
+  ): Req;
 
   abstract completeChat(
     context: AiRequestContext

@@ -5,7 +5,7 @@ Permission to use, copy, modify, and distribute this software and its documentat
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
 import { google, drive_v3, docs_v1 } from 'googleapis';
-import axios, { AxiosRequestConfig } from 'axios';
+import { AxiosRequestConfig } from 'axios';
 import { exponentialBackoff } from '../helpers.js';
 import { DocData } from '../types.js';
 
@@ -315,7 +315,7 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     }
     const permissionPromises = emailsToGiveAccess.map(async (email) => {
       try {
-        const res = await driveAPI.permissions.create({
+        await driveAPI.permissions.create({
           sendNotificationEmail: false,
           fileId: docId,
           requestBody: {
@@ -340,7 +340,7 @@ export function useWithGoogleApi(): UseWithGoogleApi {
               type: 'anyone',
             },
           },
-          (err, res) => {
+          (err, _res) => {
             if (err) {
               reject(err);
             } else {
@@ -355,18 +355,10 @@ export function useWithGoogleApi(): UseWithGoogleApi {
     return { docId, webViewLink, createdTime };
   }
 
-  async function getFileLastModifier(driveAPI: drive_v3.Drive, fileId: string) {
-    const driveFileLastModifier = await driveAPI.files.get({
-      fileId: fileId,
-      fields: 'lastModifyingUser',
-    });
-    return driveFileLastModifier.data.lastModifyingUser;
-  }
-
   async function getGoogleDocVersions(
     driveAPI: drive_v3.Drive,
     docsId: string,
-    driveAccessToken: string
+    _driveAccessToken: string
   ): Promise<drive_v3.Schema$Revision[]> {
     const revisions = await driveAPI.revisions.list({
       fileId: docsId,

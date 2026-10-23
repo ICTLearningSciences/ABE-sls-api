@@ -1,0 +1,26 @@
+name: test
+on: push
+defaults:
+  run:
+    shell: bash
+    working-directory: abe-sls-core
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install
+        run: npm ci
+      # - name: test audit
+      #   run: npm run test:audit
+      - name: test format
+        run: npm run test:format
+      - name: test lint
+        run: npm run test:lint
+      - name: test types
+        run: npm run test:types
+      - name: test license
+        run: npm run test:license
+      - name: test behaviors
+        run: npm run test

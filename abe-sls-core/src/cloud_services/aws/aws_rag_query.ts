@@ -10,11 +10,7 @@ import {
   RetrieveCommandInput,
 } from '@aws-sdk/client-bedrock-agent-runtime';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import {
-  RagDocumentResult,
-  RagQuery,
-  RagSearchResult,
-} from '../generic_classes/rag/rag_query.js';
+import { RagQuery, RagSearchResult } from '../generic_classes/rag/rag_query.js';
 import { CloudServices } from '../generic_classes/types.js';
 import requireEnv, { getSourceFileNameFromRagResult } from '../../helpers.js';
 import { buildFilter } from './helpers.js';

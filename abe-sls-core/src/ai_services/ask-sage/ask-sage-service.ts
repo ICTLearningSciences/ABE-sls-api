@@ -4,7 +4,6 @@ Permission to use, copy, modify, and distribute this software and its documentat
 
 The full terms of this copyright and license should always be found in the root directory of this software deliverable as "license.txt" and if these terms are not found with this software, please contact the USC Stevens Center for the full license.
 */
-import * as https from 'https';
 import dotenv from 'dotenv';
 import {
   convertRagDataToPrompt,
@@ -49,15 +48,12 @@ interface ApiRequestData {
 }
 
 interface SageRes {
-  added_obj: any;
   emdedding_down: boolean;
   message: string;
   references: string;
   response: string;
   status: number;
-  tool_calls: any;
   type: string;
-  usage: any;
   uuid: string;
   vectors_down: boolean;
 }
@@ -72,9 +68,10 @@ export type SagePromptResponse = AiServiceResponse<SageReqType, SageResType>;
 /**
  * Required: SAGE_API_KEY environment variable
  */
-export class AskSageService extends AiService<SageReqType, SageResType> {
+export class AskSageService extends AiService<SageReqType> {
   private static instance: AskSageService;
-  aiServiceClient: any;
+  //
+  aiServiceClient: undefined;
 
   constructor(llmModelConfigs: AiServiceModelConfigs[]) {
     super(

@@ -7,7 +7,6 @@ The full terms of this copyright and license should always be found in the root 
 import { DocData } from '../types.js';
 import { DocService } from './abstract-doc-service.js';
 import { DocEdit } from './helpers/edit-doc-helpers.js';
-import { getDocData as _getDocData } from '../api.js';
 import { AuthHeaders } from '../shared_functions/ai_steps_request/helpers.js';
 import { fetchMostRecentVersion } from '../hooks/graphql_api.js';
 import { IGDocVersion } from '../timeline-generation/types.js';
@@ -49,20 +48,18 @@ export class MicrosoftDocService extends DocService<MicrosoftDocVersion> {
     return MicrosoftDocService.instance;
   }
 
-  fetchExternalDocVersion(docId: string): Promise<MicrosoftDocVersion[]> {
-    // TODO: implement
+  fetchExternalDocVersion(_docId: string): Promise<MicrosoftDocVersion[]> {
     return Promise.resolve([]);
   }
 
   convertExternalDocVersionsToIGDocVersion(
-    externalDocVersion: MicrosoftDocVersion[],
-    lastRealVersion: IGDocVersion
+    _externalDocVersion: MicrosoftDocVersion[],
+    _lastRealVersion: IGDocVersion
   ): Promise<IGDocVersion[]> {
-    // TODO: implement
     return Promise.resolve([]);
   }
 
-  async handleDocEdits(docId: string, edits: DocEdit[]): Promise<void> {
-    throw new Error('Not implemented');
+  async handleDocEdits(_docId: string, _edits: DocEdit[]): Promise<void> {
+    return Promise.resolve();
   }
 }

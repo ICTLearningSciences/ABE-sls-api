@@ -51,10 +51,7 @@ export type AnthropicPromptResponse = AiServiceResponse<
 /**
  * Required: ANTHROPIC_API_KEY environment variable
  */
-export class AnthropicService extends AiService<
-  AnthropicReqType,
-  AnthropicResType
-> {
+export class AnthropicService extends AiService<AnthropicReqType, Anthropic> {
   private static instance: AnthropicService;
   aiServiceClient: Anthropic;
 
@@ -127,7 +124,7 @@ export class AnthropicService extends AiService<
   }
 
   async executeAnthropic(params: AnthropicReqType) {
-    let id = uuid();
+    const id = uuid();
     console.log(
       `Executing Anthropic request ${id} starting at ${new Date().toISOString()}`
     );
