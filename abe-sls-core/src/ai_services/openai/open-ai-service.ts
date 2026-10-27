@@ -171,7 +171,7 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAI> {
     });
     req.input.push({
       role: PromptRoles.USER,
-      content: 'IMPORTANT: Limit your web search to a single search query.',
+      content: 'IMPORTANT: Limit your web search to a maximum of 3 search queries.',
     });
     return req;
   }

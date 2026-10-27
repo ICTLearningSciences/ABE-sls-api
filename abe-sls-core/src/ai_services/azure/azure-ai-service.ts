@@ -240,7 +240,7 @@ export class AzureOpenAiService extends AiService<
       request.tool_choice = { type: 'web_search' as any };
       inputMessages.push({
         role: PromptRoles.SYSTEM,
-        content: 'IMPORTANT: Limit your web search to a single search query.',
+        content: 'IMPORTANT: Limit your web search to a maximum of 3 search queries.',
       });
     }
 
