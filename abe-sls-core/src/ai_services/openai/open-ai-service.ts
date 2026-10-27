@@ -169,6 +169,10 @@ export class OpenAiService extends AiService<OpenAiReqType, OpenAI> {
       }
       return message;
     });
+    req.input.push({
+      role: PromptRoles.USER,
+      content: 'IMPORTANT: Limit your web search to a single search query.',
+    });
     return req;
   }
 
