@@ -238,6 +238,11 @@ export class AzureOpenAiService extends AiService<
       // Forces the model to use the web_search tool, 'web_search' is a valid tool type, but not yet defined in the Azure OpenAI API for tool_choice.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       request.tool_choice = { type: 'web_search' as any };
+      inputMessages.push({
+        role: PromptRoles.SYSTEM,
+        content:
+          'IMPORTANT: Limit your web search to a maximum of 3 search queries.',
+      });
     }
 
     request.input = inputMessages;
