@@ -86,34 +86,35 @@ export class AiServiceHandler {
         previousOutput,
         ragData,
       });
-      let { aiStepData, answer } = res;
+      const { aiStepData, answer } = res;
       allStepsData.push(aiStepData);
+
+      let editedAnswer = answer;
 
       if (curAiStep.editDoc) {
         const editDocResponse = JSON.parse(answer) as EditDocResponse;
         await docHandler.handleDocEdits(docsId, editDocResponse.edits);
-        answer = editDocResponse.responseMessage;
+        editedAnswer = editDocResponse.responseMessage;
       }
 
-      previousOutput = answer;
-      finalAnswer = answer;
+      previousOutput = editedAnswer;
+      finalAnswer = editedAnswer;
     }
     try {
       await storePromptRun(docsId, userId, aiSteps, allStepsData);
     } catch (err) {
       console.error('Failed to store prompt run in gql');
       console.log(err);
-    } finally {
-      return {
-        aiAllStepsData: allStepsData,
-        answer: finalAnswer,
-        sources: ragData.map((rag) => ({
-          title: rag.title,
-          fileName: rag.sourceFileName,
-          url: rag.sourceUrl,
-        })),
-      };
     }
+    return {
+      aiAllStepsData: allStepsData,
+      answer: finalAnswer,
+      sources: ragData.map((rag) => ({
+        title: rag.title,
+        fileName: rag.sourceFileName,
+        url: rag.sourceUrl,
+      })),
+    };
   }
 
   async executeGenericLlmRequest(

@@ -50,11 +50,8 @@ interface ChatResponse {
   choices: Array<{
     message: {
       content: string;
-      [key: string]: any;
     };
-    [key: string]: any;
   }>;
-  [key: string]: any;
 }
 
 export const DefaultCamoGptConfig = {
@@ -76,9 +73,9 @@ export type CamoGptPromptResponse = AiServiceResponse<
 /**
  * Required: CAMO_GPT_API_KEY environment variable
  */
-export class CamoGptService extends AiService<CamoGptReqType, CamoGptResType> {
+export class CamoGptService extends AiService<CamoGptReqType> {
   private static instance: CamoGptService;
-  aiServiceClient: any;
+  aiServiceClient: undefined;
 
   constructor(llmModelConfigs: AiServiceModelConfigs[]) {
     super(

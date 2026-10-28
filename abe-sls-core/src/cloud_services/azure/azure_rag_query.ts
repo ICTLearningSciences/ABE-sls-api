@@ -12,11 +12,7 @@ import {
   VectorQuery,
   AzureKeyCredential,
 } from '@azure/search-documents';
-import {
-  RagDocumentResult,
-  RagQuery,
-  RagSearchResult,
-} from '../generic_classes/rag/rag_query.js';
+import { RagQuery, RagSearchResult } from '../generic_classes/rag/rag_query.js';
 import { CloudServices } from '../generic_classes/types.js';
 import requireEnv from '../../helpers.js';
 import { buildFilter } from './helpers.js';
@@ -34,7 +30,7 @@ export class AzureRagQuery extends RagQuery {
   private semanticConfigurationName = requireEnv('SEMANTIC_CONFIGURATION_NAME');
 
   private openai: AzureOpenAI;
-  private searchClient: SearchClient<any>;
+  private searchClient: SearchClient<object>;
 
   constructor() {
     super();
@@ -65,7 +61,7 @@ export class AzureRagQuery extends RagQuery {
     const filter = buildFilter(metadataFilters);
 
     // Create vector query
-    const vectorQuery: VectorQuery<any> = {
+    const vectorQuery: VectorQuery<object> = {
       vector: embedding.data[0].embedding,
       kNearestNeighborsCount: topN,
       fields: ['text_vector'],
@@ -74,7 +70,7 @@ export class AzureRagQuery extends RagQuery {
     };
 
     // Create search options
-    const searchOptions: SearchOptions<any> = {
+    const searchOptions: SearchOptions<object> = {
       top: topN,
       select: ['title', 'chunk'] as const,
       includeTotalCount: true,
@@ -90,10 +86,9 @@ export class AzureRagQuery extends RagQuery {
     };
 
     // Execute search
-    const results: SearchDocumentsResult<any> = await this.searchClient.search(
-      queryString,
-      searchOptions
-    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const results: SearchDocumentsResult<Record<string, any>> =
+      await this.searchClient.search(queryString, searchOptions);
 
     // Extract and format results
     const ragResults: RagSearchResult[] = [];
@@ -110,15 +105,15 @@ export class AzureRagQuery extends RagQuery {
     return ragResults;
   }
 
-  async fetchRagDocument(docName: string): Promise<string> {
+  async fetchRagDocument(_docName: string): Promise<string> {
     return '';
   }
 
-  async listRagDocuments(): Promise<Object[]> {
+  async listRagDocuments(): Promise<object[]> {
     return [];
   }
 
-  async getSignedUploadUrl(fileName: string): Promise<string> {
+  async getSignedUploadUrl(_fileName: string): Promise<string> {
     return '';
   }
 }

@@ -17,7 +17,6 @@ export interface RagDocumentResult {
  * Handles querying RAG stores.
  */
 export abstract class RagQuery {
-  private static instance: any = null;
   abstract cloudService: CloudServices;
 
   abstract queryRagStore(
@@ -28,7 +27,7 @@ export abstract class RagQuery {
 
   abstract fetchRagDocument(docName: string): Promise<string>;
 
-  abstract listRagDocuments(): Promise<Object[]>;
+  abstract listRagDocuments(): Promise<object[]>;
 
   abstract getSignedUploadUrl(fileName: string): Promise<string>;
 }

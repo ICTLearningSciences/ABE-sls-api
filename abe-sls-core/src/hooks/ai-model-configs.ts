@@ -23,9 +23,6 @@ export class AiModelConfigs {
   }
 
   public async initialize(): Promise<void> {
-    if (this.initialized) {
-      return;
-    }
     this.configs = await fetchAiServiceModelConfigs();
     this.initialized = true;
   }

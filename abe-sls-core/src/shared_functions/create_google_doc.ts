@@ -19,7 +19,7 @@ export const createGoogleDoc = async (
   courseAssignmentId: string
 ) => {
   const { getGoogleAPIs, createGoogleDoc } = useWithGoogleApi();
-  const { drive, docs } = await getGoogleAPIs();
+  const { drive } = await getGoogleAPIs();
   if (!userId) {
     throw new Error('userId is required');
   }

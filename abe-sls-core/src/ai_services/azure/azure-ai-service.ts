@@ -26,7 +26,7 @@ import {
   AvailableAiServiceNames,
 } from '../ai-service-factory.js';
 import { Schema } from 'jsonschema';
-import { AI_DEFAULT_TEMP, RETRY_ATTEMPTS } from '../../constants.js';
+import { RETRY_ATTEMPTS } from '../../constants.js';
 import { v4 as uuid } from 'uuid';
 import {
   ResponseCreateParamsNonStreaming,
@@ -63,7 +63,7 @@ export const DefaultAzureOpenAiConfig = {
  */
 export class AzureOpenAiService extends AiService<
   AzureOpenAiReqType,
-  AzureOpenAiResType
+  AzureOpenAI
 > {
   private static instance: AzureOpenAiService;
   aiServiceClient: AzureOpenAI;
@@ -138,7 +138,7 @@ export class AzureOpenAiService extends AiService<
   }
 
   async executeAzureOpenAi(params: AzureOpenAiReqType) {
-    let id = uuid();
+    const id = uuid();
     console.log(
       `Executing Azure OpenAI request ${id} starting at ${new Date().toISOString()} with params: ${JSON.stringify(params, null, 2)}`
     );
@@ -223,7 +223,7 @@ export class AzureOpenAiService extends AiService<
     }
 
     aiStep.prompts.forEach((prompt) => {
-      let text = prompt.promptText;
+      const text = prompt.promptText;
       inputMessages.push({
         role: prompt.promptRole || PromptRoles.USER,
         content: text,
@@ -236,7 +236,13 @@ export class AzureOpenAiService extends AiService<
     if (aiStep.webSearch && llmModelInfo.supportsWebSearch) {
       request.tools = [{ type: 'web_search' }];
       // Forces the model to use the web_search tool, 'web_search' is a valid tool type, but not yet defined in the Azure OpenAI API for tool_choice.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       request.tool_choice = { type: 'web_search' as any };
+      inputMessages.push({
+        role: PromptRoles.SYSTEM,
+        content:
+          'IMPORTANT: Limit your web search to a maximum of 3 search queries.',
+      });
     }
 
     request.input = inputMessages;

@@ -65,7 +65,6 @@ export interface TimelineStatusRes {
 }
 
 export abstract class DocumentDBManager {
-  protected static clientInstance: any = null;
   abstract cloudService: CloudServices;
 
   abstract setStepsJobInProgress(jobId: string): Promise<void>;
